@@ -23,8 +23,8 @@ export default function LoginPage() {
 
           {/* Huellitas decorativas */}
           <PawIcon className="absolute right-[24%] top-9 h-16 w-16 rotate-[15deg] text-popim-paw" />
-          <PawIcon className="absolute right-[6%] top-[110px] h-14 w-14 rotate-[20deg] text-popim-paw" />
-          <PawIcon className="absolute bottom-16 left-8 h-12 w-12 -rotate-[10deg] text-popim-paw" />
+          <PawIcon className="absolute right-[6%] top-27.5 h-14 w-14 rotate-20 text-popim-paw" />
+          <PawIcon className="absolute bottom-16 left-8 h-12 w-12 rotate-[-10deg] text-popim-paw" />
 
           {/* Mascota semitransparente al centro */}
           <Image
@@ -32,7 +32,7 @@ export default function LoginPage() {
             alt=""
             width={450}
             height={450}
-            className="absolute bottom-[160px] left-1/2 -translate-x-1/2 opacity-60"
+            className="absolute bottom-40 left-1/2 -translate-x-1/2 opacity-60"
           />
 
           {/* Lema sobre la mascota */}
