@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function HeaderPopim() {
   return (
     <header
-      className="mx-auto flex max-w-[1080px] items-center gap-4 rounded-full px-6 py-3 sm:px-8"
+      className="mx-auto flex max-w-270 items-center gap-4 rounded-full px-6 py-3 sm:px-8"
       style={{
         background:
           "linear-gradient(90deg, var(--color-popim-header-from) 35%, var(--color-popim-header-to) 100%)",
