@@ -11,7 +11,7 @@ export default function LoginPage() {
       <HeaderPopim />
 
       {/* Tarjeta central: dos mitades pegadas */}
-      <div className="mx-auto mt-10 grid min-h-[500px] max-w-[980px] overflow-hidden rounded-[40px] shadow-sm lg:grid-cols-2">
+      <div className="mx-auto mt-10 grid min-h-125 max-w-245 overflow-hidden rounded-[40px] shadow-sm lg:grid-cols-2">
         {/* ---------- Panel izquierdo (solo en pantallas grandes) ---------- */}
         <section className="relative hidden overflow-hidden bg-popim-primary lg:block">
           <div className="absolute left-10 top-9">
@@ -22,7 +22,7 @@ export default function LoginPage() {
           </div>
 
           {/* Huellitas decorativas */}
-          <PawIcon className="absolute right-[24%] top-9 h-16 w-16 rotate-[15deg] text-popim-paw" />
+          <PawIcon className="absolute right-[24%] top-9 h-16 w-16 rotate-15 text-popim-paw" />
           <PawIcon className="absolute right-[6%] top-27.5 h-14 w-14 rotate-20 text-popim-paw" />
           <PawIcon className="absolute bottom-16 left-8 h-12 w-12 rotate-[-10deg] text-popim-paw" />
 
