@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+/* Paleta POPIM: Tailwind crea clases como bg-popim-primary a partir de estos nombres */
+@theme {
+  --color-popim-page: #e7ebee;
+  --color-popim-header-from: #87b1ce;
+  --color-popim-header-to: #446886;
+  --color-popim-primary: #5189a4;
+  --color-popim-primary-dark: #446886;
+  --color-popim-paw: #396073;
+  --color-popim-ink: #35576b;
+  --color-popim-muted: #7b8a94;
+}
+
+/* Tipografías: se conectan con las variables que define layout.js */
+@theme inline {
+  --font-sans: var(--font-lexend);
+  --font-slab: var(--font-zilla);
+}
