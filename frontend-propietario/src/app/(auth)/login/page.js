@@ -28,11 +28,11 @@ export default function LoginPage() {
 
           {/* Mascota semitransparente al centro */}
           <Image
-            src="/Imagenes/LogoPopim.png"
+            src="/Imagenes/nacka.png"
             alt=""
             width={450}
             height={450}
-            className="absolute bottom-40 left-1/2 -translate-x-1/2 opacity-60"
+            className="absolute bottom-20 left-1/2 -translate-x-1/2 opacity-60"
           />
 
           {/* Lema sobre la mascota */}
