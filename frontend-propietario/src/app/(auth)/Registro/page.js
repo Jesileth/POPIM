@@ -10,6 +10,7 @@ import BotonPrimario from "@/Componentes/BotonPrimario";
 import Mensaje from "@/Componentes/Mensaje";
 import { registrarPropietario } from "@/servicios/auth";
 import {
+  formatearCedula,
   normalizarCedula,
   normalizarEmail,
   validarCedula,
@@ -66,8 +67,8 @@ export default function RegistroPage() {
 
       <form onSubmit={enviar} noValidate className="mt-6 flex flex-col gap-4">
         <CampoTexto id="nombre" etiqueta="Nombre Completo" autoComplete="name" error={errores.nombre} />
-        <CampoTexto id="email" etiqueta="Correo Electronico" tipo="email" autoComplete="email" error={errores.email} />
-        <CampoTexto id="cedula" etiqueta="Cédula de identidad" error={errores.cedula} />
+        <CampoTexto id="email" etiqueta="Correo Electronico" tipo="email" placeholder="Ejemplo@popim.com" autoComplete="email" error={errores.email} />
+        <CampoTexto id="cedula" etiqueta="Cédula de identidad" formato={formatearCedula} maxLength={16} autoComplete="off" error={errores.cedula} />
         <CampoTexto
           id="password"
           etiqueta="Contraseña"

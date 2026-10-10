@@ -39,3 +39,17 @@ export function validarConfirmacion(password, confirmar) {
 export function validarCodigo(valor) {
   return /^\d{6}$/.test((valor ?? "").trim()) ? "" : "El código tiene 6 dígitos.";
 }
+
+// Da formato mientras se escribe: 001-270109-0000X
+export function formatearCedula(valor) {
+  const limpio = valor.toUpperCase().replace(/[^0-9A-Z]/g, "");
+  const digitos = limpio.slice(0, 13).replace(/\D/g, "");
+  // La letra final solo se acepta cuando ya están los 13 dígitos
+  const letra = digitos.length === 13 ? limpio.slice(13, 14).replace(/[^A-Z]/g, "") : "";
+
+  const parte1 = digitos.slice(0, 3);
+  const parte2 = digitos.slice(3, 9);
+  const parte3 = digitos.slice(9, 13) + letra;
+
+  return [parte1, parte2, parte3].filter(Boolean).join("-");
+}

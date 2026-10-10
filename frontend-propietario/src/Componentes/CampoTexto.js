@@ -1,4 +1,5 @@
 
+"use client"
 
 export default function CampoTexto({
   id,
@@ -10,8 +11,14 @@ export default function CampoTexto({
   maxLength,
   disabled = false,
   error = "",
+  formato, // función opcional que arregla el texto mientras se escribe
 }) {
   const idError = `${id}-error`;
+
+  function alEscribir(evento) {
+    evento.target.value = formato(evento.target.value);
+  }
+
 
   return (
     <div>
@@ -27,6 +34,7 @@ export default function CampoTexto({
         inputMode={inputMode}
         maxLength={maxLength}
         disabled={disabled}
+        onChange={formato ? alEscribir : undefined}
         required
         aria-invalid={error ? "true" : undefined}
         aria-describedby={error ? idError : undefined}
