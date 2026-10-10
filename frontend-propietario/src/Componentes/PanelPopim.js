@@ -13,9 +13,9 @@ export default function PanelPopim({ lema }) {
         </p>
       </div>
 
-      <PawIcon className="absolute right-[24%] top-9 h-16 w-16 rotate-[15deg] text-popim-paw" />
-      <PawIcon className="absolute right-[6%] top-[110px] h-14 w-14 rotate-[20deg] text-popim-paw" />
-      <PawIcon className="absolute bottom-16 left-8 h-12 w-12 -rotate-[10deg] text-popim-paw" />
+      <PawIcon className="absolute right-[24%] top-9 h-16 w-16 rotate-15 text-popim-paw" />
+      <PawIcon className="absolute right-[6%] top-27.5 h-14 w-14 rotate-20 text-popim-paw" />
+      <PawIcon className="absolute bottom-16 left-8 h-12 w-12 rotate-[-10deg] text-popim-paw" />
 
       <Image
         src="/Imagenes/LogoPopim.png"
