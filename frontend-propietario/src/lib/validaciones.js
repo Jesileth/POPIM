@@ -30,3 +30,12 @@ export function validarPassword(valor) {
     ? ""
     : `La contraseña debe tener al menos ${MIN_PASSWORD} caracteres.`; //mandamos a llamar a la constante
 }
+
+export function validarConfirmacion(password, confirmar) {
+  if (!confirmar) return "Confirma tu contraseña.";
+  return password === confirmar ? "" : "Las contraseñas no coinciden.";
+}
+
+export function validarCodigo(valor) {
+  return /^\d{6}$/.test((valor ?? "").trim()) ? "" : "El código tiene 6 dígitos.";
+}

@@ -26,7 +26,7 @@ export default function LoginPage() {
           <PawIcon className="absolute right-[6%] top-27.5 h-14 w-14 rotate-20 text-popim-paw" />
           <PawIcon className="absolute bottom-16 left-8 h-12 w-12 rotate-[-10deg] text-popim-paw" />
 
-          {/* Mascota semitransparente al centro */}
+          {/* Mascota semitransparente al centro del panel*/}
           <Image
             src="/Imagenes/nacka.png"
             alt=""
