@@ -198,6 +198,7 @@ export default function RecuperarPasswordPage() {
             Ingrésalo a continuación.
           </p>
 
+
           {/* Bloque 1: código. Enter dentro de las casillas también verifica. */}
           <form onSubmit={verificar} noValidate className="mt-6 flex flex-col gap-3">
             <CodigoOtp
@@ -283,7 +284,14 @@ export default function RecuperarPasswordPage() {
                 Guardar Nueva Contraseña
               </BotonPrimario>
             </form>
+            
           )}
+          <p className="mt-8 text-center text-xs">
+            ¿Recordaste tu contraseña?{" "}
+            <Link href="/login" className="text-popim-primary underline">
+              Iniciar Sesión.
+            </Link>
+          </p>
         </>
       )}
     </div>

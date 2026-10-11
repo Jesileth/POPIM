@@ -22,12 +22,13 @@ export default function PanelPopim({ lema }) {
         alt=""
         width={450}
         height={450}
-        className="absolute bottom-20 left-1/2 -translate-x-1/2 opacity-60"
+        priority
+        className="absolute bottom-25 left-1/2 -translate-x-1/2 opacity-60"
       />
 
       <p
         key={lema}
-        className="absolute bottom-32.5 left-5 right-5 animate-aparecer text-4xl font-semibold leading-[1.4] text-white"
+        className="absolute bottom-27.5 left-5 right-5 animate-aparecer text-4xl font-semibold leading-[1.4] text-white"
       >
         {lema}
       </p>
