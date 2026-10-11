@@ -46,10 +46,13 @@ export async function simular(ruta, metodo, cuerpo) {
     default:
       return { ok: false, estado: 404, error: "Ruta no encontrada." };
 
-    case "/auth/recuperacion/confirmar":
+    case "/auth/recuperacion/verificar":
       if (cuerpo.codigo !== "123456") {
         return { ok: false, estado: 400, error: "El código es incorrecto o ya expiró." };
       }
+      return { ok: true, estado: 200, datos: { tokenRestablecimiento: "token-de-prueba" } };
+
+    case "/auth/recuperacion/restablecer":
       return { ok: true, estado: 200, datos: {} };
   }
 }

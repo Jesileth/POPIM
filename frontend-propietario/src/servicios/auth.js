@@ -9,4 +9,5 @@ export const registrarPropietario = post("/auth/registro");
 export const buscarPerfilPendiente = post("/auth/activacion/buscar");
 export const activarCuenta = post("/auth/activacion/confirmar");
 export const solicitarCodigo = post("/auth/recuperacion/solicitar");
-export const confirmarRecuperacion = post("/auth/recuperacion/confirmar");
+export const verificarCodigo = post("/auth/recuperacion/verificar");
+export const restablecerPassword = post("/auth/recuperacion/restablecer");

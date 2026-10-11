@@ -8,7 +8,7 @@ import CodigoOtp from "@/Componentes/CodigoOtp";
 import BotonPrimario from "@/Componentes/BotonPrimario";
 import Mensaje from "@/Componentes/Mensaje";
 import { usePanel } from "@/lib/panelContexto";
-import { confirmarRecuperacion, solicitarCodigo } from "@/servicios/auth";
+import { restablecerPassword, solicitarCodigo, verificarCodigo } from "@/servicios/auth";
 import {
   enmascararEmail,
   normalizarEmail,
@@ -33,11 +33,12 @@ export default function RecuperarPasswordPage() {
   const [paso, setPaso] = useState("correo"); // "correo" o "codigo"
   const [correo, setCorreo] = useState("");
   const [codigo, setCodigo] = useState("");
+  const [tokenRestablecimiento, setTokenRestablecimiento] = useState(""); // lo entrega el backend
   const [segundos, setSegundos] = useState(DURACION_CODIGO);
   const [errores, setErrores] = useState({});
   const [errorGeneral, setErrorGeneral] = useState("");
   const [info, setInfo] = useState("");
-  const [cargando, setCargando] = useState(false);
+  const [cargando, setCargando] = useState(""); // "", "correo", "verificar", "reenviar" o "guardar"
 
   // Cuenta regresiva: solo corre en el paso 2.
   // Es visual: el backend es quien decide si el código sigue vigente.
@@ -50,6 +51,7 @@ export default function RecuperarPasswordPage() {
   }, [paso]);
 
   const expirado = segundos === 0;
+  const codigoVerificado = Boolean(tokenRestablecimiento);
 
   // PASO 1: pedir el código al correo
   async function pedirCodigo(evento) {
@@ -62,9 +64,9 @@ export default function RecuperarPasswordPage() {
     if (error) return;
 
     const correoLimpio = normalizarEmail(email);
-    setCargando(true);
+    setCargando("correo");
     const respuesta = await solicitarCodigo({ email: correoLimpio });
-    setCargando(false);
+    setCargando("");
 
     if (!respuesta.ok) {
       setErrorGeneral(respuesta.error);
@@ -82,51 +84,67 @@ export default function RecuperarPasswordPage() {
     setErrorGeneral("");
     setInfo("");
 
-    setCargando(true);
+    setCargando("reenviar");
     const respuesta = await solicitarCodigo({ email: correo });
-    setCargando(false);
+    setCargando("");
 
     if (!respuesta.ok) {
       setErrorGeneral(respuesta.error);
       return;
     }
     setCodigo("");
+    setTokenRestablecimiento("");
     setSegundos(DURACION_CODIGO);
     setInfo("Te enviamos un código nuevo. El anterior ya no sirve.");
   }
 
-  // PASO 2: código + nueva contraseña, todo junto
+  // PASO 2A: verificar el código. Si es correcto, se muestran los campos de contraseña.
+  async function verificar(evento) {
+    evento.preventDefault();
+    const error = validarCodigo(codigo);
+    setErrores({ codigo: error });
+    setErrorGeneral("");
+    setInfo("");
+    if (error) return;
+
+    setCargando("verificar");
+    const respuesta = await verificarCodigo({ email: correo, codigo });
+    setCargando("");
+
+    if (!respuesta.ok) {
+      setErrores({ codigo: respuesta.error }); // casillas en rojo + mensaje
+      return;
+    }
+    setTokenRestablecimiento(respuesta.datos.tokenRestablecimiento);
+  }
+
+  // PASO 2B: guardar la nueva contraseña
   async function guardar(evento) {
     evento.preventDefault();
     const datos = Object.fromEntries(new FormData(evento.currentTarget));
 
     const nuevosErrores = {
-      codigo: validarCodigo(codigo),
       password: validarPassword(datos.password),
       confirmar: validarConfirmacion(datos.password, datos.confirmar),
     };
     setErrores(nuevosErrores);
     setErrorGeneral("");
-    setInfo("");
     if (Object.values(nuevosErrores).some(Boolean)) return;
 
-    if (expirado) {
-      setErrorGeneral("El código expiró. Pide uno nuevo.");
-      return;
-    }
-
-    setCargando(true);
-    const respuesta = await confirmarRecuperacion({
-      email: correo,
-      codigo,
+    setCargando("guardar");
+    const respuesta = await restablecerPassword({
+      tokenRestablecimiento,
       password: datos.password,
     });
-    setCargando(false);
+    setCargando("");
 
     if (!respuesta.ok) {
-      // Código incorrecto: se marcan las casillas. Cualquier otro error va en un aviso.
-      if (respuesta.estado === 400) setErrores({ codigo: respuesta.error });
-      else setErrorGeneral(respuesta.error);
+      if (respuesta.estado === 410) {
+        // Venció el tiempo para cambiar la contraseña: hay que verificar de nuevo
+        setTokenRestablecimiento("");
+        setCodigo("");
+      }
+      setErrorGeneral(respuesta.error);
       return;
     }
     router.push("/login"); // el lema especial se descarta solo al cambiar de pantalla
@@ -153,7 +171,7 @@ export default function RecuperarPasswordPage() {
               autoComplete="email"
               error={errores.email}
             />
-            <BotonPrimario cargando={cargando}>Enviar Código</BotonPrimario>
+            <BotonPrimario cargando={cargando === "correo"}>Enviar Código</BotonPrimario>
             {errorGeneral && <Mensaje tipo="error">{errorGeneral}</Mensaje>}
             <Mensaje tipo="aviso">
               El código es de un solo uso y expira 15 minutos después de enviado, por
@@ -180,62 +198,92 @@ export default function RecuperarPasswordPage() {
             Ingrésalo a continuación.
           </p>
 
-          <form onSubmit={guardar} noValidate className="mt-6 flex flex-col gap-3">
+          {/* Bloque 1: código. Enter dentro de las casillas también verifica. */}
+          <form onSubmit={verificar} noValidate className="mt-6 flex flex-col gap-3">
             <CodigoOtp
               valor={codigo}
               onChange={setCodigo}
               error={errores.codigo}
-              disabled={expirado}
+              disabled={codigoVerificado || expirado}
             />
 
-            <p role="timer" className="text-center text-xs text-popim-alerta">
-              {expirado
-                ? "El código expiró. Pide uno nuevo."
-                : `Expira en ${formatearTiempo(segundos)}`}
-            </p>
+            {codigoVerificado ? (
+              <Mensaje tipo="info">Código verificado. Ahora crea tu nueva contraseña.</Mensaje>
+            ) : (
+              <>
+                <p role="timer" className="text-center text-xs text-popim-alerta">
+                  {expirado
+                    ? "El código expiró. Pide uno nuevo."
+                    : `Expira en ${formatearTiempo(segundos)}`}
+                </p>
 
-            <p className="text-center text-xs">
-              ¿No te llegó el correo?{" "}
-              <button
-                type="button"
-                onClick={reenviarCodigo}
-                disabled={cargando}
-                className="text-popim-primary underline disabled:opacity-60"
-              >
-                Reenviar.
-              </button>
-            </p>
+                <BotonPrimario
+                  cargando={cargando === "verificar"}
+                  disabled={expirado || cargando !== ""}
+                >
+                  Verificar Código
+                </BotonPrimario>
+
+                <p className="text-center text-xs">
+                  ¿No te llegó el correo?{" "}
+                  <button
+                    type="button"
+                    onClick={reenviarCodigo}
+                    disabled={cargando !== ""}
+                    className="text-popim-primary underline disabled:opacity-60"
+                  >
+                    Reenviar.
+                  </button>
+                </p>
+              </>
+            )}
 
             {info && <Mensaje tipo="info">{info}</Mensaje>}
-
-            <div className="my-1 flex items-center gap-3 text-[11px] text-popim-muted">
-              <span className="h-px flex-1 bg-popim-muted/40" />
-              luego
-              <span className="h-px flex-1 bg-popim-muted/40" />
-            </div>
-
-            <CampoTexto
-              id="password"
-              etiqueta="Nueva contraseña."
-              tipo="password"
-              placeholder="Mínimo 8 caracteres"
-              autoComplete="new-password"
-              error={errores.password}
-            />
-            <CampoTexto
-              id="confirmar"
-              etiqueta="Confirmar contraseña."
-              tipo="password"
-              placeholder="Mínimo 8 caracteres"
-              autoComplete="new-password"
-              error={errores.confirmar}
-            />
-
-            {errorGeneral && <Mensaje tipo="error">{errorGeneral}</Mensaje>}
-            <BotonPrimario variante="exito" cargando={cargando}>
-              Guardar Nueva Contraseña
-            </BotonPrimario>
+            {!codigoVerificado && errorGeneral && (
+              <Mensaje tipo="error">{errorGeneral}</Mensaje>
+            )}
           </form>
+
+          {/* Bloque 2: solo aparece cuando el código fue correcto */}
+          {codigoVerificado && (
+            <form
+              onSubmit={guardar}
+              noValidate
+              className="mt-3 flex animate-aparecer flex-col gap-4 motion-reduce:animate-none"
+            >
+              <div className="flex items-center gap-3 text-[11px] text-popim-muted">
+                <span className="h-px flex-1 bg-popim-muted/40" />
+                luego
+                <span className="h-px flex-1 bg-popim-muted/40" />
+              </div>
+
+              <CampoTexto
+                id="password"
+                etiqueta="Nueva contraseña."
+                tipo="password"
+                placeholder="Mínimo 8 caracteres"
+                autoComplete="new-password"
+                error={errores.password}
+              />
+              <CampoTexto
+                id="confirmar"
+                etiqueta="Confirmar contraseña."
+                tipo="password"
+                placeholder="Mínimo 8 caracteres"
+                autoComplete="new-password"
+                error={errores.confirmar}
+              />
+
+              {errorGeneral && <Mensaje tipo="error">{errorGeneral}</Mensaje>}
+              <BotonPrimario
+                variante="exito"
+                cargando={cargando === "guardar"}
+                disabled={cargando !== ""}
+              >
+                Guardar Nueva Contraseña
+              </BotonPrimario>
+            </form>
+          )}
         </>
       )}
     </div>
