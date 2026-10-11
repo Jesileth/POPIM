@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CampoTexto from "@/Componentes/CampoTexto";
+import CodigoOtp from "@/Componentes/CodigoOtp";
 import BotonPrimario from "@/Componentes/BotonPrimario";
 import Mensaje from "@/Componentes/Mensaje";
+import { usePanel } from "@/lib/panelContexto";
 import { confirmarRecuperacion, solicitarCodigo } from "@/servicios/auth";
 import {
+  enmascararEmail,
   normalizarEmail,
   validarCodigo,
   validarConfirmacion,
@@ -15,14 +18,38 @@ import {
   validarPassword,
 } from "@/lib/validaciones";
 
+const DURACION_CODIGO = 15 * 60; // 15 minutos (REQ-001 y RNF-15)
+
+function formatearTiempo(segundos) {
+  const minutos = String(Math.floor(segundos / 60)).padStart(2, "0");
+  const resto = String(segundos % 60).padStart(2, "0");
+  return `${minutos}:${resto}`;
+}
+
 export default function RecuperarPasswordPage() {
   const router = useRouter();
+  const { fijarLema } = usePanel();
+
   const [paso, setPaso] = useState("correo"); // "correo" o "codigo"
   const [correo, setCorreo] = useState("");
+  const [codigo, setCodigo] = useState("");
+  const [segundos, setSegundos] = useState(DURACION_CODIGO);
   const [errores, setErrores] = useState({});
   const [errorGeneral, setErrorGeneral] = useState("");
-  const [infoReenvio, setInfoReenvio] = useState("");
+  const [info, setInfo] = useState("");
   const [cargando, setCargando] = useState(false);
+
+  // Cuenta regresiva: solo corre en el paso 2.
+  // Es visual: el backend es quien decide si el código sigue vigente.
+  useEffect(() => {
+    if (paso !== "codigo") return;
+    const reloj = setInterval(() => {
+      setSegundos((actual) => (actual > 0 ? actual - 1 : 0));
+    }, 1000);
+    return () => clearInterval(reloj);
+  }, [paso]);
+
+  const expirado = segundos === 0;
 
   // PASO 1: pedir el código al correo
   async function pedirCodigo(evento) {
@@ -34,22 +61,27 @@ export default function RecuperarPasswordPage() {
     setErrorGeneral("");
     if (error) return;
 
+    const correoLimpio = normalizarEmail(email);
     setCargando(true);
-    const respuesta = await solicitarCodigo({ email: normalizarEmail(email) });
+    const respuesta = await solicitarCodigo({ email: correoLimpio });
     setCargando(false);
 
     if (!respuesta.ok) {
       setErrorGeneral(respuesta.error);
       return;
     }
-    setCorreo(normalizarEmail(email));
+    setCorreo(correoLimpio);
     setErrores({});
+    setSegundos(DURACION_CODIGO);
     setPaso("codigo");
+    fijarLema("Revisa tu correo.");
   }
 
   async function reenviarCodigo() {
+    setErrores({});
     setErrorGeneral("");
-    setInfoReenvio("");
+    setInfo("");
+
     setCargando(true);
     const respuesta = await solicitarCodigo({ email: correo });
     setCargando(false);
@@ -58,46 +90,56 @@ export default function RecuperarPasswordPage() {
       setErrorGeneral(respuesta.error);
       return;
     }
-    setInfoReenvio("Te enviamos un código nuevo. El anterior ya no sirve.");
+    setCodigo("");
+    setSegundos(DURACION_CODIGO);
+    setInfo("Te enviamos un código nuevo. El anterior ya no sirve.");
   }
 
-  // PASO 2: código + nueva contraseña
-  async function cambiarPassword(evento) {
+  // PASO 2: código + nueva contraseña, todo junto
+  async function guardar(evento) {
     evento.preventDefault();
     const datos = Object.fromEntries(new FormData(evento.currentTarget));
 
     const nuevosErrores = {
-      codigo: validarCodigo(datos.codigo),
+      codigo: validarCodigo(codigo),
       password: validarPassword(datos.password),
       confirmar: validarConfirmacion(datos.password, datos.confirmar),
     };
     setErrores(nuevosErrores);
     setErrorGeneral("");
-    setInfoReenvio("");
+    setInfo("");
     if (Object.values(nuevosErrores).some(Boolean)) return;
+
+    if (expirado) {
+      setErrorGeneral("El código expiró. Pide uno nuevo.");
+      return;
+    }
 
     setCargando(true);
     const respuesta = await confirmarRecuperacion({
       email: correo,
-      codigo: datos.codigo.trim(),
+      codigo,
       password: datos.password,
     });
     setCargando(false);
 
     if (!respuesta.ok) {
-      setErrorGeneral(respuesta.error);
+      // Código incorrecto: se marcan las casillas. Cualquier otro error va en un aviso.
+      if (respuesta.estado === 400) setErrores({ codigo: respuesta.error });
+      else setErrorGeneral(respuesta.error);
       return;
     }
-    router.push("/login"); // el panel vuelve deslizándose a la izquierda
+    router.push("/login"); // el lema especial se descarta solo al cambiar de pantalla
   }
 
   return (
-    <>
-      <p className="text-sm text-popim-muted">Recuperación de acceso</p>
-      <h1 className="mt-1 text-4xl font-semibold text-popim-ink">Recuperar Contraseña</h1>
-
+    <div key={paso} className="animate-aparecer motion-reduce:animate-none">
       {paso === "correo" ? (
         <>
+          <p className="text-sm text-popim-muted">Recuperación de acceso</p>
+          <h1 className="mt-1 text-4xl font-semibold text-popim-ink">
+            Recuperar Contraseña
+          </h1>
           <p className="mt-3 max-w-sm text-base text-popim-muted">
             Ingresa el correo asociado a tu cuenta. Te enviaremos un código de verificación.
           </p>
@@ -118,25 +160,60 @@ export default function RecuperarPasswordPage() {
               seguridad.
             </Mensaje>
           </form>
+
+          <p className="mt-8 text-center text-xs">
+            ¿Recordaste tu contraseña?{" "}
+            <Link href="/login" className="text-popim-primary underline">
+              Iniciar Sesión.
+            </Link>
+          </p>
         </>
       ) : (
         <>
+          <p className="text-sm text-popim-muted">Un paso más.</p>
+          <h1 className="mt-1 text-4xl font-semibold text-popim-ink">
+            Verifica tu identidad
+          </h1>
           <p className="mt-3 max-w-sm text-base text-popim-muted">
-            Enviamos un código de 6 dígitos a{" "}
-            <span className="font-semibold text-popim-ink">{correo}</span>. Escríbelo y
-            elige tu nueva contraseña.
+            Enviamos un código a{" "}
+            <span className="font-semibold text-popim-ink">{enmascararEmail(correo)}</span>.
+            Ingrésalo a continuación.
           </p>
 
-          <form onSubmit={cambiarPassword} noValidate className="mt-6 flex flex-col gap-4">
-            <CampoTexto
-              id="codigo"
-              etiqueta="Código de verificación."
-              placeholder="6 dígitos"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
+          <form onSubmit={guardar} noValidate className="mt-6 flex flex-col gap-3">
+            <CodigoOtp
+              valor={codigo}
+              onChange={setCodigo}
               error={errores.codigo}
+              disabled={expirado}
             />
+
+            <p role="timer" className="text-center text-xs text-popim-alerta">
+              {expirado
+                ? "El código expiró. Pide uno nuevo."
+                : `Expira en ${formatearTiempo(segundos)}`}
+            </p>
+
+            <p className="text-center text-xs">
+              ¿No te llegó el correo?{" "}
+              <button
+                type="button"
+                onClick={reenviarCodigo}
+                disabled={cargando}
+                className="text-popim-primary underline disabled:opacity-60"
+              >
+                Reenviar.
+              </button>
+            </p>
+
+            {info && <Mensaje tipo="info">{info}</Mensaje>}
+
+            <div className="my-1 flex items-center gap-3 text-[11px] text-popim-muted">
+              <span className="h-px flex-1 bg-popim-muted/40" />
+              luego
+              <span className="h-px flex-1 bg-popim-muted/40" />
+            </div>
+
             <CampoTexto
               id="password"
               etiqueta="Nueva contraseña."
@@ -155,32 +232,12 @@ export default function RecuperarPasswordPage() {
             />
 
             {errorGeneral && <Mensaje tipo="error">{errorGeneral}</Mensaje>}
-            {infoReenvio && <Mensaje tipo="info">{infoReenvio}</Mensaje>}
-            <BotonPrimario cargando={cargando}>Cambiar contraseña</BotonPrimario>
+            <BotonPrimario variante="exito" cargando={cargando}>
+              Guardar Nueva Contraseña
+            </BotonPrimario>
           </form>
-
-          <p className="mt-3 text-center text-xs">
-            ¿No llegó?{" "}
-            <button
-              type="button"
-              onClick={reenviarCodigo}
-              disabled={cargando}
-              className="text-popim-primary underline disabled:opacity-60"
-            >
-              Reenviar código.
-            </button>
-          </p>
         </>
       )}
-
-      <p className="mt-8 text-center text-xs">
-        ¿Recordaste tu contraseña?{" "}
-        <Link href="/login" className="text-popim-primary underline">
-          Iniciar Sesión.
-        </Link>
-      </p>
-    </>
+    </div>
   );
 }
-
-
