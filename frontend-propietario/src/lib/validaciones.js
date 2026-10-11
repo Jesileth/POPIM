@@ -13,7 +13,7 @@ export function validarEmail(valor) {
   if (!valor || !valor.trim()) return "Escribe tu correo electrónico.";
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor.trim())
     ? ""
-    : "Escribe un correo válido, por ejemplo nombre@popim.com.";
+    : "Escribe un correo válido, por ejemplo Prueba@popim.com.";
 }
 
 // Validando la cédula en Formato nicaragüense: 3 dígitos + 6 dígitos + 4 dígitos + 1 letra (001-010190-0001A)

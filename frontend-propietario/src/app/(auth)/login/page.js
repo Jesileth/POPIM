@@ -75,8 +75,7 @@ export default function LoginPage() {
             <Link
               href="/recuperar-password"
               className="text-sm italic text-popim-primary underline"
-            >
-              ¿Olvidaste tu contraseña?
+            > ¿Olvidaste tu contraseña?
             </Link>
           </div>
         </div>
