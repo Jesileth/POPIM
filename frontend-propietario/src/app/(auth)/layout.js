@@ -76,7 +76,7 @@ export default function AuthLayout({ children }) {
       <main className="px-4 py-6 sm:px-8 sm:py-10">
         <HeaderPopim />
 
-        <div className="relative mx-auto mt-10 min-h-125 max-w-245 overflow-hidden rounded-[40px] bg-white shadow-sm">
+        <div className="relative mx-auto mt-10 lg:min-h-150 max-w-245 overflow-hidden rounded-[40px] bg-white shadow-sm">
           {/* Panel azul: se desliza de un lado al otro (solo en pantallas grandes) */}
           <div
             aria-hidden="true"
@@ -89,7 +89,7 @@ export default function AuthLayout({ children }) {
 
           {/* Formulario: ocupa la mitad que el panel deja libre */}
           <div
-            className={`flex min-h-125 lg:w-1/2 ${
+            className={`flex lg:min-h-150 lg:w-1/2 ${
               panelDerecha ? "lg:ml-0" : "lg:ml-[50%]"
             }`}
           >
