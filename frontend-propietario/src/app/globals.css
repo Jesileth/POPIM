@@ -10,6 +10,21 @@
   --color-popim-paw: #396073;
   --color-popim-ink: #35576b;
   --color-popim-muted: #7b8a94;
+
+  --color-popim-aviso: #d6e5ef;
+  --color-popim-aviso-borde: #a7c0d3;
+
+  --color-popim-exito: #51a496;
+  --color-popim-exito-dark: #3f8b7e;
+  --color-popim-alerta: #9c4d4d;
+
+  --animate-aparecer: aparecer 0.5s ease-out;
+
+  @keyframes aparecer {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
 }
 
 /* Tipografías: se conectan con las variables que define layout.js */
