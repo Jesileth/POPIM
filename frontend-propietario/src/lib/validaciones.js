@@ -53,3 +53,10 @@ export function formatearCedula(valor) {
 
   return [parte1, parte2, parte3].filter(Boolean).join("-");
 }
+
+//validaciones del correo enmascarado al recuperar contraseña
+export function enmascararEmail(email) {
+  const [usuario, dominio] = email.split("@");
+  if (!dominio) return email;
+  return `${usuario.slice(0, 2)}•••@${dominio}`;
+}

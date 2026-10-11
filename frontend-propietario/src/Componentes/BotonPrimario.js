@@ -1,10 +1,18 @@
 
+const VARIANTES = {
+  primario:
+    "bg-popim-primary hover:bg-popim-primary-dark focus-visible:outline-popim-primary",
+  exito:
+    "bg-popim-exito hover:bg-popim-exito-dark focus-visible:outline-popim-exito",
+};
+
 export default function BotonPrimario({
   children,
   type = "submit",
   cargando = false,
   disabled = false,
   onClick,
+  variante = "primario",
 }) {
   return (
     <button
@@ -12,7 +20,7 @@ export default function BotonPrimario({
       onClick={onClick}
       disabled={cargando || disabled}
       aria-busy={cargando}
-      className="mt-1 h-11 w-full rounded-xl bg-popim-primary font-medium text-white transition hover:bg-popim-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-popim-primary disabled:cursor-not-allowed disabled:opacity-60"
+      className={`mt-1 h-11 w-full rounded-xl font-medium text-white transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${VARIANTES[variante]}`}
     >
       {cargando ? "Procesando..." : children}
     </button>
