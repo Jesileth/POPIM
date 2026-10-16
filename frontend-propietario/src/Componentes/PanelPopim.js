@@ -18,12 +18,12 @@ export default function PanelPopim({ lema }) {
       <PawIcon className="absolute bottom-16 left-8 h-12 w-12 rotate-[-10deg] text-popim-paw" />
 
       <Image
-        src="/Imagenes/nacka.png"
+        src="/Imagenes/mascotas.png"
         alt=""
         width={450}
         height={450}
         priority
-        className="absolute bottom-25 left-1/2 -translate-x-1/2 opacity-60"
+        className="absolute bottom-25 left-1/2 -translate-x-1/2 opacity-75"
       />
 
       <p
