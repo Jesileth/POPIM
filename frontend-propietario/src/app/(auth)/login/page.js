@@ -50,7 +50,9 @@ export default function LoginPage() {
       <p className="text-sm uppercase tracking-wide text-popim-muted">
         Bienvenido de vuelta.
       </p>
-      <h1 className="mt-1 text-4xl font-semibold text-popim-ink">Iniciar Sesión.</h1>
+      <h1 className="mt-1 text-4xl font-baloo text-popim-ink"
+      style={{ fontWeight: 500 }}
+      >Iniciar Sesión.</h1>
       <p className="mt-3 max-w-xs text-base text-popim-muted">
         Ingresa con el correo electrónico y la contraseña de tu cuenta de propietario.
       </p>
