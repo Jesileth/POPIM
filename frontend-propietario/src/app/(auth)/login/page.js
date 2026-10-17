@@ -84,6 +84,44 @@ export default function LoginPage() {
         <BotonPrimario cargando={cargando}>Iniciar Sesión.</BotonPrimario>
       </form>
 
+              {/* Divisor con etiqueta */}
+      <div className="mt-6 flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.15em] text-popim-etiqueta">
+        <span className="h-px flex-1 bg-popim-linea" />
+        Primer ingreso
+        <span className="h-px flex-1 bg-popim-linea" />
+      </div>
+
+      {/* Caja informativa */}
+      <div className="mt-4 flex items-center gap-3 rounded-2xl bg-popim-info px-5 py-4">
+        <svg
+          viewBox="0 0 24 24"
+          className="h-6 w-6 shrink-0 text-popim-info-acento"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="9.5" />
+          <path d="M12 11v5.5" />
+          <path d="M12 7.6h.01" strokeWidth="2.2" />
+        </svg>
+
+        <div className="text-[13px] leading-snug text-popim-info-texto">
+          <p>¿Te registraste en la clínica con el recepcionista?</p>
+          <Link
+            href="/activar-cuenta"
+            className="mt-0.5 block text-center text-[13px] font-semibold text-popim-info-acento hover:underline"
+          >
+            Activa tu cuenta aquí
+          </Link>
+        </div>
+      </div>
+    
+  
+
+
+     {/*
       <p className="mt-5 text-center text-xs">
         ¿Te registraste en la clínica con el recepcionista pero es tu primer ingreso?
         <br />
@@ -91,6 +129,7 @@ export default function LoginPage() {
           Activa tu cuenta aquí.
         </Link>
       </p>
+      */}
 
       <p className="mt-8 text-center text-xs">
         ¿Aún no tienes una cuenta?{" "}

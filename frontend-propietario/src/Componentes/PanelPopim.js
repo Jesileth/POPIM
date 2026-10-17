@@ -8,7 +8,17 @@ export default function PanelPopim({ lema }) {
     <section className="relative h-full overflow-hidden bg-popim-primary">
       <div className="absolute left-10 top-9">
         <p className="text-5xl font-semibold leading-none text-white">POPIM</p>
-        <p className="mt-2 font-slab text-xl text-[#1f3a4a]">
+        <p className="mt-2 font-poppins text-xl text-[#1f3a4a]"
+        style={{
+                display: 'inline-block',
+                fontSize: '12px',
+                letterSpacing: '.14em',
+                textTransform: 'uppercase',
+                background: 'rgba(255,255,255,0.16)',
+                padding: '6px 12px',
+                borderRadius: '99px'
+              }}
+        >
           Red de clinicas veterinarias
         </p>
       </div>
