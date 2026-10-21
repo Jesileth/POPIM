@@ -1,7 +1,6 @@
 
 // modificamos todo jaj 
 
-
 "use client";
 
 import { useState } from "react";
@@ -9,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CampoTexto from "@/Componentes/CampoTexto";
 import BotonPrimario from "@/Componentes/BotonPrimario";
+import { IconInfo } from "@/Componentes/Iconos";
 import Mensaje from "@/Componentes/Mensaje";
 import { iniciarSesion } from "@/servicios/auth";
 import { normalizarEmail, validarEmail, validarObligatorio } from "@/lib/validaciones";
@@ -95,21 +95,7 @@ export default function LoginPage() {
 
       {/* Caja informativa */}
       <div className="mt-4 flex items-center gap-3 rounded-2xl bg-popim-info px-5 py-4">
-        <svg
-          viewBox="0 0 24 24"
-          className="h-6 w-6 shrink-0 text-popim-info-acento"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          aria-hidden="true"
-        >
-          {/* Signo de exclamación en circulo */}
-          <circle cx="12" cy="12" r="9.5" />
-          <path d="M12 11v5.5" />
-          <path d="M12 7.6h.01" strokeWidth="2.2" />
-        </svg>
-
+        <IconInfo size={22} className="shrink-0 text-popim-info-acento" />
 
         <div className="text-[13px] leading-snug text-popim-info-texto">
           <p>¿Te registraste en la clínica con el recepcionista?</p>
