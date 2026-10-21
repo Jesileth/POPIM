@@ -104,10 +104,12 @@ export default function LoginPage() {
           strokeLinecap="round"
           aria-hidden="true"
         >
+          {/* Signo de exclamación en circulo */}
           <circle cx="12" cy="12" r="9.5" />
           <path d="M12 11v5.5" />
           <path d="M12 7.6h.01" strokeWidth="2.2" />
         </svg>
+
 
         <div className="text-[13px] leading-snug text-popim-info-texto">
           <p>¿Te registraste en la clínica con el recepcionista?</p>
@@ -120,8 +122,6 @@ export default function LoginPage() {
         </div>
       </div>
     
-  
-
 
      {/*
       <p className="mt-5 text-center text-xs">

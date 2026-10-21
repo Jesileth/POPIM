@@ -14,7 +14,7 @@ export default function PanelPopim({ lema }) {
                 fontSize: '12px',
                 letterSpacing: '.14em',
                 textTransform: 'uppercase',
-                background: 'rgba(255,255,255,0.16)',
+                background: 'rgba(255,255,255,0.80)', /* el que esta despues del color es para la opacidad*/
                 padding: '6px 12px',
                 borderRadius: '99px'
               }}
