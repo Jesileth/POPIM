@@ -7,6 +7,7 @@ import CampoTexto from "@/Componentes/CampoTexto";
 import CodigoOtp from "@/Componentes/CodigoOtp";
 import BotonPrimario from "@/Componentes/BotonPrimario";
 import Mensaje from "@/Componentes/Mensaje";
+import { IconMail } from "@/Componentes/Iconos";
 import { usePanel } from "@/lib/panelContexto";
 import { restablecerPassword, solicitarCodigo, verificarCodigo } from "@/servicios/auth";
 import {
@@ -17,6 +18,8 @@ import {
   validarEmail,
   validarPassword,
 } from "@/lib/validaciones";
+
+const Iconcorreo = <IconMail size={18} color="#4A6A7A" />;
 
 const DURACION_CODIGO = 15 * 60; // 15 minutos (REQ-001 y RNF-15)
 
@@ -169,6 +172,7 @@ export default function RecuperarPasswordPage() {
               tipo="email"
               placeholder="Correo Electronico"
               autoComplete="email"
+              icono="Iconcorreo" // recuerda que al declarar el icono es con "" y no con {}
               error={errores.email}
             />
             <BotonPrimario cargando={cargando === "correo"}>Enviar Código</BotonPrimario>
@@ -264,6 +268,7 @@ export default function RecuperarPasswordPage() {
                 tipo="password"
                 placeholder="Mínimo 8 caracteres"
                 autoComplete="new-password"
+                icono= "candado"
                 error={errores.password}
               />
               <CampoTexto
@@ -272,6 +277,7 @@ export default function RecuperarPasswordPage() {
                 tipo="password"
                 placeholder="Mínimo 8 caracteres"
                 autoComplete="new-password"
+                icono= "candado"
                 error={errores.confirmar}
               />
 

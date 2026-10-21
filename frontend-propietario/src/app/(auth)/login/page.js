@@ -8,8 +8,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CampoTexto from "@/Componentes/CampoTexto";
 import BotonPrimario from "@/Componentes/BotonPrimario";
-import { IconInfo } from "@/Componentes/Iconos";
 import Mensaje from "@/Componentes/Mensaje";
+import { IconInfo } from "@/Componentes/Iconos";
 import { iniciarSesion } from "@/servicios/auth";
 import { normalizarEmail, validarEmail, validarObligatorio } from "@/lib/validaciones";
 
@@ -35,6 +35,7 @@ export default function LoginPage() {
     const respuesta = await iniciarSesion({
       email: normalizarEmail(datos.email),
       password: datos.password,
+      recordarme: Boolean(datos.recordarme), // la casilla marcada llega como "on"
     });
     setCargando(false);
 
@@ -47,57 +48,66 @@ export default function LoginPage() {
 
   return (
     <>
-      <p className="text-sm uppercase tracking-wide text-popim-muted">
-        Bienvenido de vuelta.
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-popim-primary">
+        Bienvenido de vuelta
       </p>
-      <h1 className="mt-1 text-4xl font-baloo text-popim-ink"
-      style={{ fontWeight: 500 }}
-      >Iniciar Sesión.</h1>
-      <p className="mt-3 max-w-xs text-base text-popim-muted">
+      <h1 className="mt-1.5 text-3xl font-bold text-popim-ink">Iniciar sesión</h1>
+      <p className="mt-2 max-w-sm text-sm leading-relaxed text-popim-muted">
         Ingresa con el correo electrónico y la contraseña de tu cuenta de propietario.
       </p>
 
-      <form onSubmit={enviar} noValidate className="mt-6 flex flex-col gap-4">
+      <form onSubmit={enviar} noValidate className="mt-5 flex flex-col gap-4">
         <CampoTexto
           id="email"
-          etiqueta="Correo Electrónico."
+          etiqueta="Correo electrónico"
           tipo="email"
+          placeholder="nombre@correo.com"
           autoComplete="email"
+          icono="Iconcorreo"
           error={errores.email}
         />
-        <div>
-          <CampoTexto
-            id="password"
-            etiqueta="Contraseña."
-            tipo="password"
-            autoComplete="current-password"
-            error={errores.password}
-          />
-          <div className="mt-2 text-right">
-            <Link
-              href="/recuperar-password"
-              className="text-sm italic text-popim-primary underline"
-            > ¿Olvidaste tu contraseña?
-            </Link>
-          </div>
+        <CampoTexto
+          id="password"
+          etiqueta="Contraseña"
+          tipo="password"
+          placeholder="Tu contraseña"
+          autoComplete="current-password"
+          icono="candado"
+          error={errores.password}
+        />
+
+        <div className="flex items-center justify-between gap-3">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-popim-muted">
+            <input
+              type="checkbox"
+              name="recordarme"
+              className="h-4 w-4 cursor-pointer rounded accent-popim-primary"
+            />
+            Recordarme
+          </label>
+          <Link
+            href="/recuperar-password"
+            className="text-sm font-semibold text-popim-primary hover:underline"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
         </div>
 
         {errorGeneral && <Mensaje tipo="error">{errorGeneral}</Mensaje>}
-        <BotonPrimario cargando={cargando}>Iniciar Sesión.</BotonPrimario>
+        <BotonPrimario cargando={cargando}>Iniciar sesión</BotonPrimario>
       </form>
 
-              {/* Divisor con etiqueta */}
-      <div className="mt-6 flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.15em] text-popim-etiqueta">
+      {/* Divisor con etiqueta */}
+      <div className="mt-5 flex items-center gap-3 text-[10px] font-medium uppercase tracking-[0.15em] text-popim-etiqueta">
         <span className="h-px flex-1 bg-popim-linea" />
         Primer ingreso
         <span className="h-px flex-1 bg-popim-linea" />
       </div>
 
       {/* Caja informativa */}
-      <div className="mt-4 flex items-center gap-3 rounded-2xl bg-popim-info px-5 py-4">
-        <IconInfo size={22} className="shrink-0 text-popim-info-acento" />
-
-        <div className="text-[13px] leading-snug text-popim-info-texto">
+      <div className="mt-3 flex items-center gap-3 rounded-2xl bg-popim-info px-4 py-2.5">
+        <IconInfo size={20} className="shrink-0 text-popim-info-acento" />
+        <div className="text-xs leading-tight text-popim-info-texto">
           <p>¿Te registraste en la clínica con el recepcionista?</p>
           <Link
             href="/activar-cuenta"

@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { IconEye, IconEyeSlash, IconLock, IconMail } from "@/Componentes/Iconos";
 
-const ICONOS = { correo: IconMail, candado: IconLock };
+const ICONOS = { Iconcorreo: IconMail, candado: IconLock };
 
 export default function CampoTexto({
   id,
@@ -17,7 +17,7 @@ export default function CampoTexto({
   disabled = false,
   error = "",
   formato, // función opcional que arregla el texto mientras se escribe
-  icono, // "correo" o "candado" (opcional)
+  icono, // "Iconcorreo" o "candado" (opcional)
 }) 
 {
   const [visible, setVisible] = useState(false);

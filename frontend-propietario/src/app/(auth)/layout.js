@@ -12,13 +12,14 @@ import { PanelContexto } from "@/lib/panelContexto";
 // En qué lado va el panel azul y qué lema muestra en cada pantalla.
 // Para cambiar un lado, cambia "izquierda" por "derecha" (o al revés).
 const CONFIG_PANEL = {
-  "/login": { lado: "izquierda", lema: "Tu mascota, en buenas manos." },
-  "/registro": { lado: "derecha", lema: "Tu mascota, en buenas manos." },
+  "/login": { lado: "izquierda", lema: ["Tu mascota,", "en buenas manos."] },
+  "/registro": { lado: "derecha", lema: ["Tu mascota,", "en buenas manos."] },
   "/registro-mascota": { lado: "izquierda", lema: "Un último paso." },
   "/activar-cuenta": { lado: "izquierda", lema: "Ya tienes un perfil con nosotros." },
   "/recuperar-password": { lado: "izquierda", lema: "¿Olvidaste tu contraseña?" },
 };
 
+//#region codigo anterior
 /*export default function AuthLayout({ children }) {
   const ruta = usePathname();
   const { lado, lema } = CONFIG_PANEL[ruta] ?? CONFIG_PANEL["/login"];
@@ -56,6 +57,10 @@ const CONFIG_PANEL = {
     </main>
   );
 }*/
+//#endregion
+
+// Altura mínima de la tarjeta: se ajusta al alto de la ventana (entre 520 y 640 px)
+const ALTURA_TARJETA = "lg:min-h-[clamp(520px,calc(100dvh_-_140px),640px)]";
 
 export default function AuthLayout({ children }) {
   const ruta = usePathname();
@@ -87,15 +92,15 @@ export default function AuthLayout({ children }) {
             <PanelPopim lema={lemaExtra ?? lema} />
           </div>
 
-          {/* Formulario: ocupa la mitad que el panel deja libre */}
+           {/* Formulario: ocupa la mitad que el panel deja libre */}
           <div
-            className={`flex lg:min-h-150 lg:w-1/2 ${
+            className={`flex lg:w-1/2 ${ALTURA_TARJETA} ${
               panelDerecha ? "lg:ml-0" : "lg:ml-[50%]"
             }`}
           >
             <div
               key={ruta}
-              className="flex w-full animate-aparecer flex-col justify-center px-8 py-10 motion-reduce:animate-none sm:px-12"
+              className="flex w-full animate-aparecer flex-col justify-center px-8 py-7 motion-reduce:animate-none sm:px-12"
             >
               {children}
             </div>
