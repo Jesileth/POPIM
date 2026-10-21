@@ -105,9 +105,9 @@ export default function LoginPage() {
       </div>
 
       {/* Caja informativa */}
-      <div className="mt-3 flex items-center gap-3 rounded-2xl bg-popim-info px-4 py-2.5">
+      <div className="mt-3 flex items-center justify-center gap-3 rounded-2xl bg-popim-info px-4 py-2.5">
         <IconInfo size={20} className="shrink-0 text-popim-info-acento" />
-        <div className="text-xs leading-tight text-popim-info-texto">
+        <div className="space-y-1 text-xs leading-tight text-popim-info-texto">
           <p>¿Te registraste en la clínica con el recepcionista?</p>
           <Link
             href="/activar-cuenta"
