@@ -1,7 +1,7 @@
 // Íconos de Bootstrap Icons (https://icons.getbootstrap.com) 
 // Para agregar otro: abre el ícono en la web, recuerda johaaa copiar su <path ... /> y crea una función nueva abajo.
 
-export default function IconMail({ size = 24, className = "", color = "currentColor" }) {
+function Icono({ size = 24, className = "", color = "currentColor", children }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -10,9 +10,9 @@ export default function IconMail({ size = 24, className = "", color = "currentCo
       fill={color}
       className={className}
       viewBox="0 0 16 16"
-      aria-label="mail icon"
-    >  {/* children se usa para meter el <path> dentro del svg */}
-      {children}
+      aria-hidden="true" // correción de aria-label="mail icon" a arrea hidden
+    >
+      {children} {/*children se usa para meter el <path> dentro del svg */}
     </svg>
   );
 }
