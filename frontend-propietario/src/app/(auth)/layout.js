@@ -80,8 +80,9 @@ export default function AuthLayout({ children }) {
     <PanelContexto.Provider value={{ fijarLema: setLemaExtra }}>
       <main className="px-4 py-6 sm:px-8 sm:py-10">
         <HeaderPopim />
-
-        <div className="relative mx-auto mt-10 lg:min-h-150 max-w-245 overflow-hidden rounded-[40px] bg-white shadow-sm">
+        
+        {/* <div className="relative mx-auto mt-10 lg:min-h-150 max-w-245 overflow-hidden rounded-[40px] bg-white shadow-sm">*/}
+        <div className="relative mx-auto mt-10 lg:min-h-150 max-w-245 overflow-hidden rounded-[40px] bg-white shadow-sm border border-[#f4f3f3]">
           {/* Panel azul: se desliza de un lado al otro (solo en pantallas grandes) */}
           <div
             aria-hidden="true"
@@ -110,3 +111,27 @@ export default function AuthLayout({ children }) {
     </PanelContexto.Provider>
   );
 }
+
+
+//#region CodPara hacerlo más pequeño
+/*
+        <div className="mx-auto mt-10 max-w-245 overflow-hidden rounded-[32px] border border-[#d7e1ea] bg-white shadow-sm">
+          <div className="grid lg:grid-cols-2">
+            <div className={panelDerecha ? "order-2" : "order-1"}>
+              <div className="flex min-h-[520px] items-center justify-center px-8 py-7 sm:px-12">
+                {children}
+              </div>
+            </div>
+
+            <div className={panelDerecha ? "order-1" : "order-2"}>
+              <div className="h-full bg-[#cfe5f1]">
+                <PanelPopim lema={lemaExtra ?? lema} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </PanelContexto.Provider>
+  );
+*/
+//#endregion

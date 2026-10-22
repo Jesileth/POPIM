@@ -2,9 +2,9 @@
 "use client";
 
 import { useState } from "react";
-import { IconEye, IconEyeSlash, IconLock, IconMail } from "@/Componentes/Iconos";
+import { IconEye, IconEyeSlash, IconIDCard, IconLock, IconMail, IconPerson } from "@/Componentes/Iconos";
 
-const ICONOS = { Iconcorreo: IconMail, candado: IconLock };
+const ICONOS = { Iconcorreo: IconMail, candado: IconLock, IconCedula: IconIDCard, IconPersons: IconPerson};
 
 export default function CampoTexto({
   id,
