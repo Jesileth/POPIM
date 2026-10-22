@@ -14,7 +14,7 @@ import { PanelContexto } from "@/lib/panelContexto";
 const CONFIG_PANEL = {
   "/login": { lado: "izquierda", lema: ["Tu mascota,", "en buenas manos."] },
   "/registro": { lado: "derecha", lema: ["Tu mascota,", "en buenas manos."] },
-  "/registro-mascota": { lado: "derecha", lema: "Un último paso." },
+  "/registro-mascota": { lado: "derecha", lema: ["Un último", "paso."] },
   "/activar-cuenta": { lado: "derecha", lema: ["Ya tienes un perfil", "con nosotros."] },
   "/recuperar-password": { lado: "izquierda", lema: "¿Olvidaste tu contraseña?" },
 };

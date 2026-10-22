@@ -1,10 +1,10 @@
 "use client";
 
-//Importamos todo lo que necesitamos
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import CampoTexto from "@/Componentes/CampoTexto";
 import CampoSelect from "@/Componentes/CampoSelect";
+import CampoEdad from "@/Componentes/CampoEdad";
 import BotonPrimario from "@/Componentes/BotonPrimario";
 import Mensaje from "@/Componentes/Mensaje";
 import { registrarMascota } from "@/servicios/mascotas";
@@ -32,7 +32,7 @@ export default function RegistroMascotaPage() {
       especie: validarObligatorio(datos.especie, "Selecciona la especie."),
       sexo: validarObligatorio(datos.sexo, "Selecciona el sexo."),
       raza: validarObligatorio(datos.raza, "Escribe la raza."),
-      edad: validarEdad(datos.edad),
+      edad: validarEdad(datos.edad, datos.unidadEdad),
       fechaNacimiento: validarFechaNacimiento(datos.fechaNacimiento),
     };
     setErrores(nuevosErrores);
@@ -46,6 +46,7 @@ export default function RegistroMascotaPage() {
       sexo: datos.sexo,
       raza: datos.raza.trim(),
       edad: Number(datos.edad),
+      unidadEdad: datos.unidadEdad, // "anios" o "meses"
       fechaNacimiento: datos.fechaNacimiento || null,
     });
     setCargando(false);
@@ -80,30 +81,18 @@ export default function RegistroMascotaPage() {
           <CampoSelect id="sexo" etiqueta="Sexo" opciones={SEXOS} error={errores.sexo} />
         </div>
 
+        <CampoEdad error={errores.edad} />
+
         <div className="grid grid-cols-2 gap-4">
           <CampoTexto id="raza" etiqueta="Raza" placeholder="Ej. Labrador" error={errores.raza} />
           <CampoTexto
-            id="edad"
-            etiqueta="Edad (años)"
-            tipo="number"
-            placeholder="Ej. 3"
-            inputMode="numeric"
-            min={0}
-            error={errores.edad}
+            id="fechaNacimiento"
+            etiqueta="Nacimiento (opcional)"
+            tipo="date"
+            obligatorio={false}
+            error={errores.fechaNacimiento}
           />
         </div>
-
-        <CampoTexto
-          id="fechaNacimiento"
-          etiqueta="Fecha de nacimiento (opcional)"
-          tipo="date"
-          obligatorio={false}
-          error={errores.fechaNacimiento}
-        />
-
-        <p className="text-xs text-popim-muted">
-          El sistema asignará un Código Único de mascota automáticamente al guardar.
-        </p>
 
         {errorGeneral && <Mensaje tipo="error">{errorGeneral}</Mensaje>}
         <BotonPrimario cargando={cargando}>Registrar mascota y continuar</BotonPrimario>
