@@ -66,14 +66,15 @@ export default function RegistroPage() {
       </p>
 
       <form onSubmit={enviar} noValidate className="mt-6 flex flex-col gap-4">
-        <CampoTexto id="nombre" etiqueta="Nombre Completo" autoComplete="name" error={errores.nombre} />
-        <CampoTexto id="email" etiqueta="Correo Electronico" tipo="email" placeholder="Ejemplo@popim.com" autoComplete="email" error={errores.email} />
-        <CampoTexto id="cedula" etiqueta="Cédula de identidad" placeholder="001-010102-1000X"  formato={formatearCedula} maxLength={16} autoComplete="off" error={errores.cedula} />
+        <CampoTexto id="nombre" etiqueta="Nombre Completo" autoComplete="name" icono="Persona" error={errores.nombre} />
+        <CampoTexto id="email" etiqueta="Correo Electronico" tipo="email" placeholder="Ejemplo@popim.com" autoComplete="email" icono="Iconcorreo" error={errores.email} />
+        <CampoTexto id="cedula" etiqueta="Cédula de identidad" placeholder="001-010102-1000X"  formato={formatearCedula} maxLength={16} autoComplete="off" icono="Identificación" error={errores.cedula} />
         <CampoTexto
           id="password"
           etiqueta="Contraseña"
           tipo="password"
           placeholder="Mínimo 8 caracteres"
+          icono= "candado"
           autoComplete="new-password"
           error={errores.password}
         />

@@ -1,36 +1,83 @@
-
-
 import Image from "next/image";
 import PawIcon from "@/Componentes/PawIcon";
+import { IconCheck } from "@/Componentes/Iconos";
 
-export default function PanelPopim({ lema }) {
+const BENEFICIOS_POR_DEFECTO = ["Citas en línea", "Historial clínico", "Datos seguros"];
+
+export default function PanelPopim({ lema, beneficios = BENEFICIOS_POR_DEFECTO }) {
+  // El titular llega como lista de dos líneas (oscura + azul) o como un texto simple
+  const [linea1, linea2] = Array.isArray(lema) ? lema : [lema, ""];
+
   return (
-    <section className="relative h-full overflow-hidden bg-popim-primary">
-      <div className="absolute left-10 top-9">
-        <p className="text-5xl font-semibold leading-none text-white">POPIM</p>
-        <p className="mt-2 font-slab text-xl text-[#1f3a4a]">
-          Red de clinicas veterinarias
+    <section
+      className="relative h-full overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(180deg, var(--color-popim-panel-inicio), var(--color-popim-panel-fin))",
+      }}
+    >
+      {/* PARTE DE ARRIBA: etiqueta, titular, subtítulo y chips */}
+      <div className="relative z-10 px-9 pt-9">
+        <span className="inline-block rounded-full bg-popim-chip px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-popim-primary">
+          Red de clínicas veterinarias
+        </span>
+
+        {/* La key hace que el fundido se repita cada vez que cambia el titular */}
+        <h2
+          key={`${linea1}${linea2}`}
+          className="mt-5 animate-aparecer text-3xl font-bold leading-[1.15] text-popim-ink motion-reduce:animate-none"
+        >
+          {linea1}
+          {linea2 && (
+            <>
+              <br />
+              <span className="text-popim-primary">{linea2}</span>
+            </>
+          )}
+        </h2>
+
+        <p className="mt-3 max-w-xs text-sm leading-snug text-popim-texto">
+          Agenda citas y revisa la salud de tu mascota en cualquier clínica de la red.
         </p>
+
+        <ul className="mt-4 flex flex-wrap gap-2">
+          {beneficios.map((beneficio) => (
+            <li
+              key={beneficio}
+              className="flex items-center gap-1.5 rounded-full bg-popim-chip px-3 py-1 text-[11px] text-popim-texto"
+            >
+              <IconCheck size={13} />
+              {beneficio}
+            </li>
+          ))}
+        </ul>
       </div>
 
-      <PawIcon className="absolute right-[24%] top-9 h-16 w-16 rotate-15 text-popim-paw" />
-      <PawIcon className="absolute right-[6%] top-27.5 h-14 w-14 rotate-20 text-popim-paw" />
-      <PawIcon className="absolute bottom-16 left-8 h-12 w-12 rotate-[-10deg] text-popim-paw" />
+      {/* PATITAS decorativas: arriba a la derecha y a los lados del arco */}
+      <PawIcon className="absolute right-[8%] top-12 h-8 w-8 rotate-18 text-popim-paw" />
+      <PawIcon className="absolute right-[22%] top-25 h-6 w-6 rotate-[-10deg] text-popim-paw" />
+      <PawIcon className="absolute bottom-42.5 left-[3.5%] h-7 w-7 rotate-[-14deg] text-popim-paw" />
+      <PawIcon className="absolute bottom-24 left-[6%] h-6 w-6 rotate-10 text-popim-paw" />
+      <PawIcon className="absolute bottom-7 left-[4%] h-5 w-5 rotate-20 text-popim-paw" />
+      <PawIcon className="absolute bottom-47.5 right-[4%] h-7 w-7 rotate-16 text-popim-paw" />
+      <PawIcon className="absolute bottom-28 right-[7%] h-6 w-6 rotate-[-8deg] text-popim-paw" />
 
-      <Image
-        src="/Imagenes/nacka.png"
-        alt=""
-        width={450}
-        height={450}
-        className="absolute bottom-20 left-1/2 -translate-x-1/2 opacity-60"
-      />
-
-      <p
-        key={lema}
-        className="absolute bottom-32.5 left-5 right-5 animate-aparecer text-4xl font-semibold leading-[1.4] text-white"
-      >
-        {lema}
-      </p>
+      {/* PARTE DE ABAJO: arco claro con la foto, pegado al borde inferior */}
+      <div className="absolute inset-x-0 bottom-0 flex justify-center">
+        <div className="relative h-53.75 w-100 rounded-t-full bg-white/55"> {/*Circulo*/}
+          <Image
+            src="/Imagenes/mascotas.png"
+            alt=""
+            width={900}
+            height={420}
+            className="absolute bottom-0 left-1/2 h-auto w-[120%] -translate-x-1/2"
+            style={{
+            transform: "scale(1.19) translateY(70px)",
+            transformOrigin: "center bottom",
+          }}
+          />
+        </div>
+      </div>
     </section>
   );
 }

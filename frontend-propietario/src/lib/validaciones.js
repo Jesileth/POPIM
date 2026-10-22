@@ -60,3 +60,24 @@ export function enmascararEmail(email) {
   if (!dominio) return email;
   return `${usuario.slice(0, 2)}•••@${dominio}`;
 }
+
+
+// Edad en años o en meses, siempre un número entero mayor que 0
+export function validarEdad(valor, unidad = "anios") {
+  if (valor === undefined || valor === "") return "Escribe la edad de tu mascota.";
+  const edad = Number(valor);
+  const esMeses = unidad === "meses";
+  const maximo = esMeses ? 480 : 40;
+  if (!Number.isInteger(edad) || edad < 1 || edad > maximo) {
+    return `Escribe un número entero entre 1 y ${maximo} ${esMeses ? "meses" : "años"}.`;
+  }
+  return "";
+}
+
+// La fecha es opcional: si está vacía no hay error
+export function validarFechaNacimiento(valor) {
+  if (!valor) return "";
+  const fecha = new Date(`${valor}T00:00:00`);
+  if (Number.isNaN(fecha.getTime())) return "Escribe una fecha válida.";
+  return fecha > new Date() ? "La fecha no puede ser futura." : "";
+}

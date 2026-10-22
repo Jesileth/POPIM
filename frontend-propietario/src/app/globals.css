@@ -1,22 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 /* Paleta POPIM: Tailwind crea clases como bg-popim-primary a partir de estos nombres */
 @theme {
-  --color-popim-page: #e7ebee;
+  /*Colores de fondos*/
+  --color-popim-page: #f8fbfe;
+  --color-popim-campo: #f5f9fd;
+  --color-popim-chip: #f8fbfe;
+  --color-popim-panel-inicio: #e3effa;
+  --color-popim-panel-fin: #cfe3f6;
+  --color-popim-info: #e7f1fb;
+
+  /*Azul de los botones */
   --color-popim-header-from: #87b1ce;
   --color-popim-header-to: #446886;
-  --color-popim-primary: #5189a4;
-  --color-popim-primary-dark: #446886;
-  --color-popim-paw: #396073;
-  --color-popim-ink: #35576b;
-  --color-popim-muted: #7b8a94;
+  --color-popim-primary: #3f75b3; /*5189A4*/
+  --color-popim-primary-dark: #335f96;
+  --color-popim-paw: #b8d4ee;
 
-  --color-popim-aviso: #d6e5ef;
+  /*Textos*/
+  --color-popim-ink: #24415f; /*35576b*/
+  --color-popim-texto: #4d6682;
+  --color-popim-muted: #69808f;
+  --color-popim-etiqueta: #8aa0b3;
+  --color-popim-placeholder: #9db0c0;
+  --color-popim-info-texto: #4d6682;
+  --color-popim-info-acento: #3f75b3;
+
+  /*ALertas y mensajes*/
+  --color-popim-aviso: #e7f1fb;
   --color-popim-aviso-borde: #a7c0d3;
 
   --color-popim-exito: #51a496;
   --color-popim-exito-dark: #3f8b7e;
   --color-popim-alerta: #9c4d4d;
+
+  --color-popim-info: #e7f1fb;
+  --color-popim-linea: #dbe6f0;
+ 
 
   --animate-aparecer: aparecer 0.5s ease-out;
 
@@ -31,4 +52,11 @@
 @theme inline {
   --font-sans: var(--font-lexend);
   --font-slab: var(--font-zilla);
+}
+
+/*FUENTESSS*/
+
+
+.font-baloo {
+  font-family: 'Baloo 2', cursive, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 }

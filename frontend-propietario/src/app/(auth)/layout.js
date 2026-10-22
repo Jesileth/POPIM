@@ -12,13 +12,14 @@ import { PanelContexto } from "@/lib/panelContexto";
 // En qué lado va el panel azul y qué lema muestra en cada pantalla.
 // Para cambiar un lado, cambia "izquierda" por "derecha" (o al revés).
 const CONFIG_PANEL = {
-  "/login": { lado: "izquierda", lema: "Tu mascota, en buenas manos." },
-  "/registro": { lado: "derecha", lema: "Tu mascota, en buenas manos." },
-  "/registro-mascota": { lado: "izquierda", lema: "Un último paso." },
-  "/activar-cuenta": { lado: "izquierda", lema: "Ya tienes un perfil con nosotros." },
+  "/login": { lado: "izquierda", lema: ["Tu mascota,", "en buenas manos."] },
+  "/registro": { lado: "derecha", lema: ["Tu mascota,", "en buenas manos."] },
+  "/registro-mascota": { lado: "derecha", lema: ["Un último", "paso."] },
+  "/activar-cuenta": { lado: "derecha", lema: ["Ya tienes un perfil", "con nosotros."] },
   "/recuperar-password": { lado: "izquierda", lema: "¿Olvidaste tu contraseña?" },
 };
 
+//#region codigo anterior
 /*export default function AuthLayout({ children }) {
   const ruta = usePathname();
   const { lado, lema } = CONFIG_PANEL[ruta] ?? CONFIG_PANEL["/login"];
@@ -56,6 +57,10 @@ const CONFIG_PANEL = {
     </main>
   );
 }*/
+//#endregion
+
+// Altura mínima de la tarjeta: se ajusta al alto de la ventana (entre 520 y 640 px)
+const ALTURA_TARJETA = "lg:min-h-[clamp(520px,calc(100dvh_-_140px),640px)]";
 
 export default function AuthLayout({ children }) {
   const ruta = usePathname();
@@ -75,8 +80,9 @@ export default function AuthLayout({ children }) {
     <PanelContexto.Provider value={{ fijarLema: setLemaExtra }}>
       <main className="px-4 py-6 sm:px-8 sm:py-10">
         <HeaderPopim />
-
-        <div className="relative mx-auto mt-10 min-h-125 max-w-245 overflow-hidden rounded-[40px] bg-white shadow-sm">
+        
+        {/* <div className="relative mx-auto mt-10 lg:min-h-150 max-w-245 overflow-hidden rounded-[40px] bg-white shadow-sm">*/}
+        <div className="relative mx-auto mt-10 lg:min-h-150 max-w-245 overflow-hidden rounded-[40px] bg-white shadow-sm border border-[#f4f3f3]">
           {/* Panel azul: se desliza de un lado al otro (solo en pantallas grandes) */}
           <div
             aria-hidden="true"
@@ -87,15 +93,15 @@ export default function AuthLayout({ children }) {
             <PanelPopim lema={lemaExtra ?? lema} />
           </div>
 
-          {/* Formulario: ocupa la mitad que el panel deja libre */}
+           {/* Formulario: ocupa la mitad que el panel deja libre */}
           <div
-            className={`flex min-h-125 lg:w-1/2 ${
+            className={`flex lg:w-1/2 ${ALTURA_TARJETA} ${
               panelDerecha ? "lg:ml-0" : "lg:ml-[50%]"
             }`}
           >
             <div
               key={ruta}
-              className="flex w-full animate-aparecer flex-col justify-center px-8 py-10 motion-reduce:animate-none sm:px-12"
+              className="flex w-full animate-aparecer flex-col justify-center px-8 py-7 motion-reduce:animate-none sm:px-12"
             >
               {children}
             </div>
@@ -105,3 +111,27 @@ export default function AuthLayout({ children }) {
     </PanelContexto.Provider>
   );
 }
+
+
+//#region CodPara hacerlo más pequeño
+/*
+        <div className="mx-auto mt-10 max-w-245 overflow-hidden rounded-[32px] border border-[#d7e1ea] bg-white shadow-sm">
+          <div className="grid lg:grid-cols-2">
+            <div className={panelDerecha ? "order-2" : "order-1"}>
+              <div className="flex min-h-[520px] items-center justify-center px-8 py-7 sm:px-12">
+                {children}
+              </div>
+            </div>
+
+            <div className={panelDerecha ? "order-1" : "order-2"}>
+              <div className="h-full bg-[#cfe5f1]">
+                <PanelPopim lema={lemaExtra ?? lema} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </PanelContexto.Provider>
+  );
+*/
+//#endregion

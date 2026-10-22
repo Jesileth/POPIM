@@ -1,11 +1,9 @@
-
-
 export default function CampoSelect({ id, etiqueta, opciones, error = "" }) {
   const idError = `${id}-error`;
 
   return (
     <div>
-      <label htmlFor={id} className="mb-1 block text-sm font-semibold">
+      <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-popim-ink">
         {etiqueta}
       </label>
       <select
@@ -15,8 +13,8 @@ export default function CampoSelect({ id, etiqueta, opciones, error = "" }) {
         defaultValue=""
         aria-invalid={error ? "true" : undefined}
         aria-describedby={error ? idError : undefined}
-        className={`h-11 w-full rounded-lg border bg-white px-3 text-sm text-popim-ink outline-none focus:ring-2 focus:ring-popim-primary ${
-          error ? "border-red-700" : "border-popim-ink/70"
+        className={`h-12 w-full rounded-xl border bg-popim-campo px-4 text-sm text-popim-ink outline-none transition focus:border-popim-primary focus:ring-4 focus:ring-popim-primary/15 ${
+          error ? "border-red-700" : "border-popim-linea"
         }`}
       >
         <option value="" disabled>
