@@ -14,7 +14,7 @@ export default function Mensaje({ tipo = "aviso", children }) {
       className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-xs ${estilos}`}
     >
       {tipo === "aviso" && <IconStopwatch size={14} className="mt-px shrink-0" />}
-      <p>{children}</p>
+      <p className="w-full text-center leading-snug">{children}</p>
     </div>
   );
 }

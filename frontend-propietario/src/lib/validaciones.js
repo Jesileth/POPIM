@@ -60,3 +60,23 @@ export function enmascararEmail(email) {
   if (!dominio) return email;
   return `${usuario.slice(0, 2)}•••@${dominio}`;
 }
+
+
+// Edad en años enteros (0 si tiene menos de un año) !!MEJORA A REALIZAR ACA
+export function validarEdad(valor) {
+  if (valor === undefined || valor === "") {
+    return "Escribe la edad en años (0 si es menor de un año).";
+  }
+  const edad = Number(valor);
+  return Number.isInteger(edad) && edad >= 0 && edad <= 40
+    ? ""
+    : "La edad debe ser un número entero entre 0 y 40.";
+}
+
+// La fecha es opcional: si está vacía no hay error
+export function validarFechaNacimiento(valor) {
+  if (!valor) return "";
+  const fecha = new Date(`${valor}T00:00:00`);
+  if (Number.isNaN(fecha.getTime())) return "Escribe una fecha válida.";
+  return fecha > new Date() ? "La fecha no puede ser futura." : "";
+}

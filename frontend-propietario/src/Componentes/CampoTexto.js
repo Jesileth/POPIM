@@ -4,8 +4,9 @@
 import { useState } from "react";
 import { IconEye, IconEyeSlash, IconIDCard, IconLock, IconMail, IconPerson } from "@/Componentes/Iconos";
 
-const ICONOS = { Iconcorreo: IconMail, candado: IconLock, IconCedula: IconIDCard, IconPersons: IconPerson};
+const ICONOS = { Iconcorreo: IconMail, candado: IconLock, Identificación: IconIDCard, Persona: IconPerson};
 
+// Aca se definen los props del componente 
 export default function CampoTexto({
   id,
   etiqueta,
@@ -18,6 +19,9 @@ export default function CampoTexto({
   error = "",
   formato, // función opcional que arregla el texto mientras se escribe
   icono, // "Iconcorreo" o "candado" (opcional)
+  obligatorio = true,
+  min,
+  max,
 }) 
 {
   const [visible, setVisible] = useState(false);
@@ -53,7 +57,9 @@ export default function CampoTexto({
           maxLength={maxLength}
           disabled={disabled}
           onChange={formato ? alEscribir : undefined}
-          required
+          required={obligatorio}
+          min={min}
+          max={max}
           aria-invalid={error ? "true" : undefined}
           aria-describedby={error ? idError : undefined}
           className={`h-12 w-full rounded-xl border bg-popim-campo text-sm text-popim-ink outline-none transition placeholder:text-popim-placeholder focus:border-popim-primary focus:ring-4 focus:ring-popim-primary/15 disabled:cursor-not-allowed disabled:opacity-60 ${
