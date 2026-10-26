@@ -3,19 +3,61 @@
 
 const esperar = (ms) => new Promise((resolver) => setTimeout(resolver, ms));
 
+// agregamos las cosas que van en las tablas 
+const ESPECIES_MOCK = [
+  { id: 1, nombre: "Canino" },
+  { id: 2, nombre: "Felino" },
+  { id: 3, nombre: "Ave" },
+  { id: 4, nombre: "Roedor" },
+  { id: 5, nombre: "Reptil" },
+  { id: 6, nombre: "Otro" },
+];
+
+const RAZAS_MOCK = {
+  1: ["Mestizo", "Labrador Retriever", "Pastor Alemán", "Golden Retriever", "Bulldog", "Poodle", "Chihuahua", "Shih Tzu", "Pug"],
+  2: ["Mestizo", "Siamés", "Persa", "Maine Coon", "Angora", "Bengalí"],
+  3: ["Canario", "Periquito", "Cacatúa", "Loro"],
+  4: ["Hámster", "Cobayo", "Ratón", "Jerbo"],
+  5: ["Iguana", "Tortuga", "Gecko"],
+  6: [], // sin razas: el campo Raza queda desactivado
+};
+
+
 export async function simular(ruta, metodo, cuerpo) {
   await esperar(700); // simula el tiempo de respuesta del servidor, solo es un load falso jaja
+
+    if (ruta === "/catalogos/especies") {
+    return { ok: true, estado: 200, datos: { especies: ESPECIES_MOCK } };
+  }
+
+  const coincidencia = ruta.match(/^\/catalogos\/especies\/(\d+)\/razas$/);
+  if (coincidencia) {
+    const especieId = Number(coincidencia[1]);
+    const nombres = RAZAS_MOCK[especieId] ?? [];
+    return {
+      ok: true,
+      estado: 200,
+      datos: {
+        razas: nombres.map((nombre, indice) => ({ id: especieId * 100 + indice + 1, nombre })),
+      },
+    };
+  }
   
   switch (ruta) {
     case "/auth/login":
-      if (cuerpo.email === "error@popim.com") {
+
+      if (cuerpo.identificador === "error@popim.com") {
         return { ok: false, estado: 401, error: "Correo o contraseña incorrectos." };
       }
       return { ok: true, estado: 200, datos: { usuario: { id: "1", nombre: "Propietario de prueba", rol: "propietario" } } };
 
-    case "/auth/registro":
+
+     case "/auth/registro":
       if (cuerpo.email === "repetido@popim.com") {
         return { ok: false, estado: 409, campo: "email", error: "Este correo ya está registrado." };
+      }
+      if (cuerpo.telefono === "88888888") {
+        return { ok: false, estado: 409, campo: "telefono", error: "Este teléfono ya está registrado." };
       }
       if (cuerpo.cedula === "0010101900001A") {
         return { ok: false, estado: 409, campo: "cedula", error: "Esta cédula ya está registrada." };
@@ -56,3 +98,5 @@ export async function simular(ruta, metodo, cuerpo) {
       return { ok: true, estado: 200, datos: {} };
   }
 }
+
+
