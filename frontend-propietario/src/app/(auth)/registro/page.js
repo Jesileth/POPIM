@@ -17,7 +17,11 @@ import {
   validarEmail,
   validarObligatorio,
   validarPassword,
+  validarTelefono,
+  normalizarTelefono,
+  formatearTelefono
 } from "@/lib/validaciones";
+
 
 export default function RegistroPage() {
   const router = useRouter();
@@ -34,6 +38,7 @@ export default function RegistroPage() {
       email: validarEmail(datos.email),
       cedula: validarCedula(datos.cedula),
       password: validarPassword(datos.password),
+      telefono: validarTelefono(datos.telefono),
     };
     setErrores(nuevosErrores);
     setErrorGeneral("");
@@ -45,6 +50,7 @@ export default function RegistroPage() {
       email: normalizarEmail(datos.email),
       cedula: normalizarCedula(datos.cedula),
       password: datos.password,
+      telefono: normalizarTelefono(datos.telefono),
     });
     setCargando(false);
 
@@ -68,6 +74,7 @@ export default function RegistroPage() {
       <form onSubmit={enviar} noValidate className="mt-6 flex flex-col gap-4">
         <CampoTexto id="nombre" etiqueta="Nombre Completo" autoComplete="name" icono="Persona" error={errores.nombre} />
         <CampoTexto id="email" etiqueta="Correo Electronico" tipo="email" placeholder="Ejemplo@popim.com" autoComplete="email" icono="Iconcorreo" error={errores.email} />
+        <CampoTexto id="telefono" etiqueta="Teléfono"  tipo="tel" placeholder="8888-8888" autoComplete="tel" inputMode="tel" maxLength={9} icono="telefono" formato={formatearTelefono}  error={errores.telefono} />
         <CampoTexto id="cedula" etiqueta="Cédula de identidad" placeholder="001-010102-1000X"  formato={formatearCedula} maxLength={16} autoComplete="off" icono="Identificación" error={errores.cedula} />
         <CampoTexto
           id="password"

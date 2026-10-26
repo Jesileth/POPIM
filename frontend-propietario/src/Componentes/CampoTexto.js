@@ -2,9 +2,9 @@
 "use client";
 
 import { useState } from "react";
-import { IconEye, IconEyeSlash, IconIDCard, IconLock, IconMail, IconPerson } from "@/Componentes/Iconos";
+import { IconEye, IconEyeSlash, IconIDCard, IconLock, IconMail, IconPerson, Iconphone } from "@/Componentes/Iconos";
 
-const ICONOS = { Iconcorreo: IconMail, candado: IconLock, Identificación: IconIDCard, Persona: IconPerson};
+const ICONOS = { Iconcorreo: IconMail, candado: IconLock, Identificación: IconIDCard, Persona: IconPerson, telefono: Iconphone};
 
 // Aca se definen los props del componente 
 export default function CampoTexto({

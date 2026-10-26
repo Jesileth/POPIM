@@ -81,3 +81,36 @@ export function validarFechaNacimiento(valor) {
   if (Number.isNaN(fecha.getTime())) return "Escribe una fecha válida.";
   return fecha > new Date() ? "La fecha no puede ser futura." : "";
 }
+
+// ---------- Teléfono (8 dígitos, Nicaragua) ----------
+
+// Deja solo los dígitos; si pegan "+505 8888 8888" quita el 505
+export function normalizarTelefono(valor) {
+  let digitos = valor.replace(/\D/g, "");
+  if (digitos.length > 8 && digitos.startsWith("505")) digitos = digitos.slice(3);
+  return digitos.slice(0, 8);
+}
+
+// Da formato mientras se escribe: 8888-8888
+export function formatearTelefono(valor) {
+  const digitos = normalizarTelefono(valor);
+  return digitos.length > 4 ? `${digitos.slice(0, 4)}-${digitos.slice(4)}` : digitos;
+}
+
+export function validarTelefono(valor) {
+  if (!valor || !valor.trim()) return "Escribe tu número de teléfono.";
+  return /^[2578]\d{7}$/.test(normalizarTelefono(valor))
+    ? ""
+    : "El teléfono debe tener 8 dígitos, por ejemplo 8888-8888.";
+}
+
+// ---------- Login: correo o teléfono en el mismo campo ----------
+
+export function validarIdentificadorLogin(valor) {
+  if (!valor || !valor.trim()) return "Escribe tu correo o tu teléfono.";
+  return valor.includes("@") ? validarEmail(valor) : validarTelefono(valor);
+}
+
+export function normalizarIdentificadorLogin(valor) {
+  return valor.includes("@") ? normalizarEmail(valor) : normalizarTelefono(valor);
+}
