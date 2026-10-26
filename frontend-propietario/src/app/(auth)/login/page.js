@@ -11,7 +11,7 @@ import BotonPrimario from "@/Componentes/BotonPrimario";
 import Mensaje from "@/Componentes/Mensaje";
 import { IconInfo } from "@/Componentes/Iconos";
 import { iniciarSesion } from "@/servicios/auth";
-import { normalizarEmail, validarEmail, validarObligatorio } from "@/lib/validaciones";
+import { validarObligatorio, normalizarIdentificadorLogin, validarIdentificadorLogin } from "@/lib/validaciones";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,8 +23,8 @@ export default function LoginPage() {
     evento.preventDefault();
     const datos = Object.fromEntries(new FormData(evento.currentTarget));
 
-    const nuevosErrores = {
-      email: validarEmail(datos.email),
+      const nuevosErrores = {
+      identificador: validarIdentificadorLogin(datos.identificador),
       password: validarObligatorio(datos.password, "Escribe tu contraseña."),
     };
     setErrores(nuevosErrores);
@@ -33,9 +33,9 @@ export default function LoginPage() {
 
     setCargando(true);
     const respuesta = await iniciarSesion({
-      email: normalizarEmail(datos.email),
+      identificador: normalizarIdentificadorLogin(datos.identificador),
       password: datos.password,
-      recordarme: Boolean(datos.recordarme), // la casilla marcada llega como "on"
+      recordarme: Boolean(datos.recordarme),
     });
     setCargando(false);
 
@@ -57,14 +57,13 @@ export default function LoginPage() {
       </p>
 
       <form onSubmit={enviar} noValidate className="mt-5 flex flex-col gap-4">
-        <CampoTexto
-          id="email"
-          etiqueta="Correo electrónico"
-          tipo="email"
-          placeholder="nombre@correo.com"
-          autoComplete="email"
-          icono="Iconcorreo"
-          error={errores.email}
+          <CampoTexto
+          id="identificador"
+          etiqueta="Correo electrónico o teléfono"
+          placeholder="nombre@correo.com o 8888-8888"
+          autoComplete="username"
+          icono="correo"
+          error={errores.identificador}
         />
         <CampoTexto
           id="password"
