@@ -253,7 +253,7 @@ export default function SolicitarCitaPage() {
       <EncabezadoPagina
         etiqueta="Tu espacio"
         titulo="Solicitar cita"
-        descripcion="Elige una clínica de la red, un veterinario y un horario disponible."
+        descripcion="Elige una clínica de la red de veterinarios a cargo, el personal que te va a atender y un horario disponible."
       />
 
       <div className="mt-6">

@@ -63,7 +63,7 @@ export default function MisMascotasPage() {
         )}
 
         {mascotas?.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
             {mascotas.map((mascota) => (
               <TarjetaMascota key={mascota.id} mascota={mascota} />
             ))}

@@ -87,7 +87,7 @@ export default function PortalLayout({ children }) {
             <IconList size={22} />
           </button>
           <nav aria-label="Ruta de navegación" className="flex items-center gap-2 text-sm">
-            <span className="text-popim-etiqueta">Portal del propietario</span>
+            <span className="text-popim-etiqueta">POPIM propietario</span>
             <IconChevronRight size={12} className="text-popim-etiqueta" />
             <span className="font-semibold text-popim-ink">{itemActual?.etiqueta ?? "Inicio"}</span>
           </nav>
