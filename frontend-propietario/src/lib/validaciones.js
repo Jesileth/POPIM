@@ -66,7 +66,7 @@ export function enmascararEmail(email) {
 export function validarEdad(valor, unidad = "anios") {
   if (valor === undefined || valor === "") return "Escribe la edad de tu mascota.";
   const edad = Number(valor);
-  const esMeses = unidad === "meses";
+   const esMeses = unidad === "MESES";
   const maximo = esMeses ? 480 : 40;
   if (!Number.isInteger(edad) || edad < 1 || edad > maximo) {
     return `Escribe un número entero entre 1 y ${maximo} ${esMeses ? "meses" : "años"}.`;

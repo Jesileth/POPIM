@@ -1,6 +1,6 @@
 const UNIDADES = [
-  { valor: "anios", texto: "Años" },
-  { valor: "meses", texto: "Meses" },
+  { valor: "ANIOS", texto: "Años" },
+  { valor: "MESES", texto: "Meses" },
 ];
 
 export default function CampoEdad({ error = "" }) {
