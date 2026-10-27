@@ -79,3 +79,38 @@ export function resumirHorario(horarios = []) {
     })
     .join(" · ");
 }
+
+
+/*Agregamos estos nuevos formatos */
+
+// Suma días a "AAAA-MM-DD" y devuelve "AAAA-MM-DD"
+export function sumarDias(fecha, dias) {
+  const resultado = new Date(`${fecha}T00:00:00`);
+
+  resultado.setDate(resultado.getDate() + dias);
+
+  const mes = String(resultado.getMonth() + 1).padStart(2, "0"); /*simpre  2 digitos*/
+  const dia = String(resultado.getDate()).padStart(2, "0");
+
+  return `${resultado.getFullYear()}-${mes}-${dia}`;
+}
+
+// 184320 → "180 KB"
+export function formatearTamano(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+// "2026-10-07T10:30:00" → "7 oct 2026, 10:30"
+export function formatearFechaHora(fechaHora) {
+  return new Intl.DateTimeFormat("es", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(fechaHora));
+}

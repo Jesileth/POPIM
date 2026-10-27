@@ -41,3 +41,34 @@ export async function peticion(ruta, { metodo = "GET", cuerpo } = {}) {
     };
   }
 }
+
+export async function descargarArchivo(ruta, nombreSugerido) {
+  let blob;
+
+  if (USAR_MOCK) {
+    blob = new Blob(
+      ["Archivo de ejemplo del modo de prueba. Con el backend se descargará el archivo real."],
+      { type: "text/plain" },
+    );
+  } else {
+    try {
+      const respuesta = await fetch(`${API_URL}${ruta}`, { credentials: "include" });
+      if (!respuesta.ok) {
+        return { ok: false, estado: respuesta.status, error: "No pudimos descargar el archivo. Intenta de nuevo." };
+      }
+      blob = await respuesta.blob();
+    } catch {
+      return { ok: false, estado: 0, error: "No pudimos conectar con el servidor. Revisa tu conexión." };
+    }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const enlace = document.createElement("a");
+  enlace.href = url;
+  enlace.download = USAR_MOCK ? `${nombreSugerido}.txt` : nombreSugerido;
+  document.body.appendChild(enlace);
+  enlace.click();
+  enlace.remove();
+  URL.revokeObjectURL(url);
+  return { ok: true, estado: 200 };
+}
