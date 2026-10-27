@@ -93,7 +93,7 @@ export default function PortalLayout({ children }) {
           </nav>
         </div>
 
-        <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-8 sm:py-8">{children}</main>
+        <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-8 sm:py-8">{children}</main>
       </div>
     </div>
   );
