@@ -63,6 +63,7 @@ export default function PanelPopim({ lema, beneficios = BENEFICIOS_POR_DEFECTO }
       <PawIcon className="absolute bottom-28 right-[7%] h-6 w-6 rotate-[-8deg] text-popim-paw" />
 
       {/* PARTE DE ABAJO: arco claro con la foto, pegado al borde inferior */}
+      {/* José Torres - Cambios en transform : translateY pasa de 40px a 4.375rem*/}
       <div className="absolute inset-x-0 bottom-0 flex justify-center">
         <div className="relative h-53.75 w-100 rounded-t-full bg-white/55"> {/*Circulo*/}
           <Image
@@ -72,7 +73,7 @@ export default function PanelPopim({ lema, beneficios = BENEFICIOS_POR_DEFECTO }
             height={420}
             className="absolute bottom-0 left-1/2 h-auto w-[120%] -translate-x-1/2"
             style={{
-            transform: "scale(1.19) translateY(70px)",
+            transform: "scale(1.19) translateY(4.375rem)",
             transformOrigin: "center bottom",
           }}
           />

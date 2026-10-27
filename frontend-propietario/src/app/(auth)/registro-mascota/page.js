@@ -118,7 +118,7 @@ export default function RegistroMascotaPage() {
         No podrás continuar al portal sin registrar al menos una mascota a tu nombre.
       </p>
 
-      <form onSubmit={enviar} noValidate className="mt-5 flex flex-col gap-4">
+      <form onSubmit={enviar} noValidate className="mt-5 flex flex-col gap-3">
         <CampoTexto
           id="nombre"
           etiqueta="Nombre de la mascota"
@@ -126,7 +126,7 @@ export default function RegistroMascotaPage() {
           error={errores.nombre}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
           <CampoSelect
             id="especie"
             etiqueta="Especie"
@@ -140,7 +140,7 @@ export default function RegistroMascotaPage() {
 
         <CampoEdad error={errores.edad} />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
           <CampoSelect
             key={especieId}
             id="raza"

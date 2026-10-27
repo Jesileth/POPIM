@@ -66,12 +66,12 @@ export default function RegistroPage() {
   return (
     <>
       <p className="text-sm text-popim-muted">Nuevo en POPIM</p>
-      <h1 className="mt-1 text-4xl font-semibold text-popim-ink">Crear Cuenta.</h1>
-      <p className="mt-3 text-base text-popim-muted">
+      <h1 className="mt-1 text-3xl font-semibold text-popim-ink">Crear Cuenta.</h1>
+      <p className="mt-2 text-base text-popim-muted">
         Estos datos identificarán tu perfil en toda la red de clínicas.
       </p>
 
-      <form onSubmit={enviar} noValidate className="mt-6 flex flex-col gap-4">
+      <form onSubmit={enviar} noValidate className="mt-4 flex flex-col gap-3">
         <CampoTexto id="nombre" etiqueta="Nombre Completo" autoComplete="name" icono="Persona" error={errores.nombre} />
         <CampoTexto id="email" etiqueta="Correo Electronico" tipo="email" placeholder="Ejemplo@popim.com" autoComplete="email" icono="Iconcorreo" error={errores.email} />
         <CampoTexto id="telefono" etiqueta="Teléfono"  tipo="tel" placeholder="8888-8888" autoComplete="tel" inputMode="tel" maxLength={9} icono="telefono" formato={formatearTelefono}  error={errores.telefono} />
@@ -90,7 +90,7 @@ export default function RegistroPage() {
         <BotonPrimario cargando={cargando}>Crear Cuenta</BotonPrimario>
       </form>
 
-      <p className="mt-5 text-center text-xs">
+      <p className="mt-4 text-center text-xs">
         ¿Ya tienes cuenta?{" "}
         <Link href="/login" className="text-popim-primary underline">
           Iniciar Sesión.

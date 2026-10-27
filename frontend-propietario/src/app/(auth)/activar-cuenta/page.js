@@ -80,7 +80,7 @@ export default function ActivarCuentaPage() {
         ref={formulario}
         onSubmit={activar}
         noValidate
-        className="mt-5 flex flex-col gap-4"
+        className="mt-5 flex flex-col gap-3"
       >
         <CampoTexto
           id="identificador"

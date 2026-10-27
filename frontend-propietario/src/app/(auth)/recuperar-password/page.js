@@ -158,14 +158,14 @@ export default function RecuperarPasswordPage() {
       {paso === "correo" ? (
         <>
           <p className="text-sm text-popim-muted">Recuperación de acceso</p>
-          <h1 className="mt-1 text-4xl font-semibold text-popim-ink">
+          <h1 className="mt-1 text-3xl font-semibold text-popim-ink">
             Recuperar Contraseña
           </h1>
-          <p className="mt-3 max-w-sm text-base text-popim-muted">
+          <p className="mt-2 max-w-sm text-sm text-popim-muted">
             Ingresa el correo asociado a tu cuenta. Te enviaremos un código de verificación.
           </p>
 
-          <form onSubmit={pedirCodigo} noValidate className="mt-6 flex flex-col gap-4">
+          <form onSubmit={pedirCodigo} noValidate className="mt-4 flex flex-col gap-3">
             <CampoTexto
               id="email"
               etiqueta="Correo Electrónico."
@@ -183,7 +183,7 @@ export default function RecuperarPasswordPage() {
             </Mensaje>
           </form>
 
-          <p className="mt-8 text-center text-xs">
+          <p className="mt-4 text-center text-xs">
             ¿Recordaste tu contraseña?{" "}
             <Link href="/login" className="text-popim-primary underline">
               Iniciar Sesión.
@@ -204,7 +204,7 @@ export default function RecuperarPasswordPage() {
 
 
           {/* Bloque 1: código. Enter dentro de las casillas también verifica. */}
-          <form onSubmit={verificar} noValidate className="mt-6 flex flex-col gap-3">
+          <form onSubmit={verificar} noValidate className="mt-4 flex flex-col gap-3">
             <CodigoOtp
               valor={codigo}
               onChange={setCodigo}
@@ -292,7 +292,7 @@ export default function RecuperarPasswordPage() {
             </form>
             
           )}
-          <p className="mt-8 text-center text-xs">
+          <p className="mt-4 text-center text-xs">
             ¿Recordaste tu contraseña?{" "}
             <Link href="/login" className="text-popim-primary underline">
               Iniciar Sesión.

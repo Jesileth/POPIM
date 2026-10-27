@@ -83,7 +83,7 @@ export default function CodigoOtp({ valor, onChange, error = "", disabled = fals
             disabled={disabled}
             aria-label={`Dígito ${i + 1} de ${LARGO}`}
             aria-invalid={error ? "true" : undefined}
-            className={`h-12 w-10 rounded-xl border bg-popim-campo text-center text-lg font-semibold text-popim-ink outline-none transition focus:border-popim-primary focus:ring-4 focus:ring-popim-primary/15 disabled:cursor-not-allowed disabled:opacity-60 sm:h-14 sm:w-12 ${
+            className={`h-12 min-w-0 flex-1 rounded-xl border bg-popim-campo text-center text-lg font-semibold text-popim-ink outline-none transition focus:border-popim-primary focus:ring-4 focus:ring-popim-primary/15 disabled:cursor-not-allowed disabled:opacity-60 sm:h-14 sm:w-12 ${
               error ? "border-red-700" : "border-popim-linea"
             }`}
           />

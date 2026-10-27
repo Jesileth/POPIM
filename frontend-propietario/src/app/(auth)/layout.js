@@ -78,11 +78,12 @@ export default function AuthLayout({ children }) {
 
   return (
     <PanelContexto.Provider value={{ fijarLema: setLemaExtra }}>
-      <main className="px-4 py-6 sm:px-8 sm:py-10">
+      {/*José Torres - agregar w-full si se desea que el header ocupe todo el ancho de la pantalla*/}
+      <main className="flex min-h-dvh flex-col px-4 py-4 sm:px-8 sm:py-6 lg:justify-center">
         <HeaderPopim />
         
         {/* <div className="relative mx-auto mt-10 lg:min-h-150 max-w-245 overflow-hidden rounded-[40px] bg-white shadow-sm">*/}
-        <div className="relative mx-auto mt-10 lg:min-h-150 max-w-245 overflow-hidden rounded-[40px] bg-white shadow-sm border border-[#f4f3f3]">
+        <div className="relative mx-auto mt-14 w-full lg:min-h-150 max-w-245 overflow-hidden rounded-[40px] bg-white shadow-sm border border-[#f4f3f3] lg:mt-5 lg:flex lg:min-h-152 lg:rounded-[40px]">
           {/* Panel azul: se desliza de un lado al otro (solo en pantallas grandes) */}
           <div
             aria-hidden="true"
@@ -101,7 +102,7 @@ export default function AuthLayout({ children }) {
           >
             <div
               key={ruta}
-              className="flex w-full animate-aparecer flex-col justify-center px-8 py-7 motion-reduce:animate-none sm:px-12"
+              className="flex w-full animate-aparecer flex-col justify-center px-8 py-7 motion-reduce:animate-none sm:px-12 lg:py-5"
             >
               {children}
             </div>

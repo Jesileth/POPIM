@@ -34,8 +34,13 @@ export default function CampoTexto({
   }
 
   return (
-    <div>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-popim-ink">
+    /*José Torres 
+      - DIV pasa a tener classname relative
+      - Cambios realizados en label classname : mb de 1.5 pasa a 1 
+      - Cambios realizados en input classname : h de 12 a h11
+    */
+    <div className="relative">
+      <label htmlFor={id} className="mb-1 block text-sm font-semibold text-popim-ink">
         {etiqueta}
       </label>
 
@@ -62,7 +67,7 @@ export default function CampoTexto({
           max={max}
           aria-invalid={error ? "true" : undefined}
           aria-describedby={error ? idError : undefined}
-          className={`h-12 w-full rounded-xl border bg-popim-campo text-sm text-popim-ink outline-none transition placeholder:text-popim-placeholder focus:border-popim-primary focus:ring-4 focus:ring-popim-primary/15 disabled:cursor-not-allowed disabled:opacity-60 ${
+          className={`h-11 w-full rounded-xl border bg-popim-campo text-sm text-popim-ink outline-none transition placeholder:text-popim-placeholder focus:border-popim-primary focus:ring-4 focus:ring-popim-primary/15 disabled:cursor-not-allowed disabled:opacity-60 ${
             IconoCampo ? "pl-11" : "pl-4"
           } ${esPassword ? "pr-12" : "pr-4"} ${
             error ? "border-red-700" : "border-popim-linea"
@@ -84,7 +89,7 @@ export default function CampoTexto({
       </div>
 
       {error && (
-        <p id={idError} role="alert" className="mt-1 text-xs text-red-700">
+        <p id={idError} role="alert" className="mt-1 h-1.5 text-[11px] leading-4 text-red-700">
           {error}
         </p>
       )}
