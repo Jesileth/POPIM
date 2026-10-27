@@ -140,6 +140,7 @@ const CITAS = [
     mascota: refMascota("m2"),
     veterinario: refVeterinario("v2"),
     clinica: refClinica("c1"),
+    consultaId: "k1",
   },
   {
     id: "ci3",
