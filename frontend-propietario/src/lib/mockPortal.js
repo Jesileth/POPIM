@@ -54,7 +54,7 @@ const MASCOTAS = [
   {
     id: "m2",
     codigoUnico: "PET-1190-QW",
-    nombre: "Michi",
+    nombre: "Molly",
     especie: { id: 2, nombre: "Felino" },
     raza: { id: 40, nombre: "Angora" }, // 
     sexo: "MACHO",
