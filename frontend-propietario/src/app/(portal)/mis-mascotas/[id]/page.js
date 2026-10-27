@@ -17,6 +17,7 @@ import {
 } from "@/servicios/mascotas";
 import { useCarga } from "@/lib/useCarga";
 import { formatearEdad, formatearFecha, formatearHora } from "@/lib/formato";
+import { CLINICAS } from "@/lib/mockPortal";
 
 const PESTANAS = [
   { id: "resumen", texto: "Resumen" },
@@ -29,6 +30,12 @@ const ACTIVAS = ["SOLICITADA", "CONFIRMADA", "ATENCION"];
 const Cargando = () => (
   <div role="status" aria-label="Cargando" className="h-40 animate-pulse rounded-2xl border border-popim-linea bg-white" />
 );
+
+const obtenerNombreClinica = (clinicaId) => {
+  const clinica = CLINICAS.find((c) => c.id === clinicaId);
+  return clinica ? clinica.nombreComercial : "";
+};
+
 
 function VolverAMascotas() {
   return (
@@ -105,21 +112,25 @@ function Resumen({ mascota }) {
 }
 
 // ---------- Pestaña: Cartilla de vacunación y desparasitación ----------
-function Cartilla({ mascotaId }) {
-  const { datos, error } = useCarga(obtenerCartilla, mascotaId);
-  if (error) return <Mensaje tipo="error">{error}</Mensaje>;
-  if (!datos) return <Cargando />;
+function Cartilla({ mascotaId }) 
+{
+    const { datos, error } = useCarga(obtenerCartilla, mascotaId);
+    if (error) return <Mensaje tipo="error">{error}</Mensaje>;
+    if (!datos) return <Cargando />;
 
-  const dosis = datos.dosis;
-  const vencidas = dosis.filter((d) => d.estado.codigo === "VENCIDA").length;
-  const grupos = [
-    { tipo: "VACUNA", titulo: "Vacunas", icono: IconShieldPlus },
-    { tipo: "DESPARASITANTE", titulo: "Desparasitación", icono: IconCapsule },
-  ];
+    const dosis = datos.dosis;
+    const vencidas = dosis.filter((d) => d.estado.codigo === "VENCIDA").length;
+    const grupos = 
+    [
+        { tipo: "VACUNA", titulo: "Vacunas", icono: IconShieldPlus },
+        { tipo: "DESPARASITANTE", titulo: "Desparasitación", icono: IconCapsule },
+    ];
 
+// mensaje si tiene pendiente dosis 
   return (
     <div className="space-y-5">
-      {vencidas > 0 && (
+      {vencidas > 0 && 
+      (
         <Mensaje tipo="aviso">
           {vencidas === 1 ? "Tienes 1 dosis vencida." : `Tienes ${vencidas} dosis vencidas.`} Solicita una cita para ponerla al día.
         </Mensaje>
@@ -136,13 +147,14 @@ function Cartilla({ mascotaId }) {
               <p className="text-sm text-popim-muted">Aún no hay registros en esta sección.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[34rem] text-left text-sm">
+                <table className="w-full min-w-136 text-left text-sm">
                   <thead>
                     <tr className="text-xs uppercase tracking-wide text-popim-etiqueta">
                       <th className="pb-2 pr-4 font-semibold">Producto</th>
                       <th className="pb-2 pr-4 font-semibold">Programada</th>
                       <th className="pb-2 pr-4 font-semibold">Aplicada</th>
-                      <th className="pb-2 pr-4 font-semibold">Estado</th>
+                      <th className="pb-2 pr-4 text-center font-semibold">Estado</th>
+                      <th className="pb-2 pr-4 font-semibold">Clinica</th>
                       <th className="pb-2 font-semibold">Detalle</th>
                     </tr>
                   </thead>
@@ -154,9 +166,13 @@ function Cartilla({ mascotaId }) {
                         <td className="py-3 pr-4 text-popim-texto">
                           {fila.fechaAplicada ? formatearFecha(fila.fechaAplicada) : "—"}
                         </td>
-                        <td className="py-3 pr-4">
+
+                        <td className="py-3 pr-4 text-center">
                           <InsigniaCita estado={fila.estado} />
                         </td>
+
+                        <td className="py-3 text-xs text-popim-muted">{obtenerNombreClinica(fila.clinicaId)}</td>
+                       
                         <td className="py-3 text-xs text-popim-muted">
                           {[fila.lote && `Lote ${fila.lote}`, fila.aplicadaPor, fila.observaciones]
                             .filter(Boolean)

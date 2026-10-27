@@ -9,7 +9,7 @@ const ESTILOS = {
 export default function InsigniaCita({ estado }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ring-inset ${
+      className={`inline-flex w-20 items-center justify-center rounded-full py-1 text-[11px] font-semibold ring-1 ring-inset ${
         ESTILOS[estado.codigo] ?? ESTILOS.SOLICITADA
       }`}
     >
