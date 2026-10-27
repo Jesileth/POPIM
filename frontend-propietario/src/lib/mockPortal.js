@@ -156,6 +156,140 @@ const CITAS = [
   },
 ];
 
+const hace = (dias, hora = "10:00:00") => `${enDias(-dias)}T${hora}`;
+
+const DOSIS = {
+  PENDIENTE: { codigo: "PENDIENTE", nombre: "Pendiente" },
+  APLICADA: { codigo: "APLICADA", nombre: "Aplicada" },
+  VENCIDA: { codigo: "VENCIDA", nombre: "Vencida" },
+};
+
+const DETALLES_MASCOTA = {
+  m1: { fechaNacimiento: null, fechaRegistro: hace(400, "09:00:00") },
+  m2: { fechaNacimiento: enDias(-240), fechaRegistro: hace(240, "09:00:00") },
+};
+
+// Cartillas + Dosis_preventivas (la dosis vencida es la que el backend marca con el estado 603)
+const CARTILLAS = {
+  m1: [
+    { id: "dp1", producto: { id: 1, tipo: "VACUNA", nombre: "Antirrábica" }, fechaProgramada: enDias(-200), fechaAplicada: enDias(-200), estado: DOSIS.APLICADA, lote: "RB-2231", observaciones: null, aplicadaPor: "Dra. Mariana Rojas" },
+    { id: "dp2", producto: { id: 2, tipo: "VACUNA", nombre: "Parvovirus" }, fechaProgramada: enDias(-200), fechaAplicada: enDias(-200), estado: DOSIS.APLICADA, lote: "PV-1180", observaciones: null, aplicadaPor: "Dra. Mariana Rojas" },
+    { id: "dp3", producto: { id: 1, tipo: "VACUNA", nombre: "Antirrábica" }, fechaProgramada: enDias(165), fechaAplicada: null, estado: DOSIS.PENDIENTE, lote: null, observaciones: "Refuerzo anual", aplicadaPor: null },
+    { id: "dp4", producto: { id: 4, tipo: "DESPARASITANTE", nombre: "Desparasitante interno" }, fechaProgramada: enDias(-15), fechaAplicada: null, estado: DOSIS.VENCIDA, lote: null, observaciones: null, aplicadaPor: null },
+    { id: "dp5", producto: { id: 5, tipo: "DESPARASITANTE", nombre: "Desparasitante externo" }, fechaProgramada: enDias(10), fechaAplicada: null, estado: DOSIS.PENDIENTE, lote: null, observaciones: null, aplicadaPor: null },
+  ],
+  m2: [
+    { id: "dp11", producto: { id: 3, tipo: "VACUNA", nombre: "Triple felina" }, fechaProgramada: enDias(-100), fechaAplicada: enDias(-100), estado: DOSIS.APLICADA, lote: "TF-0902", observaciones: null, aplicadaPor: "Dra. Mariana Rojas" },
+    { id: "dp12", producto: { id: 4, tipo: "DESPARASITANTE", nombre: "Desparasitante interno" }, fechaProgramada: enDias(-20), fechaAplicada: enDias(-20), estado: DOSIS.APLICADA, lote: "DI-0455", observaciones: null, aplicadaPor: "Dr. Julián López" },
+    { id: "dp13", producto: { id: 3, tipo: "VACUNA", nombre: "Triple felina" }, fechaProgramada: enDias(20), fechaAplicada: null, estado: DOSIS.PENDIENTE, lote: null, observaciones: "Refuerzo", aplicadaPor: null },
+  ],
+};
+
+// Resultados_examen (consultaId null = resultado del historial general, REQ-018)
+const EXAMENES = [
+  { id: "e1", mascotaId: "m2", consultaId: "k1", tipoExamen: { id: 1, nombre: "Hemograma" }, nombreOriginal: "hemograma-michi.pdf", mimeType: "application/pdf", tamanoBytes: 184320, fechaCarga: hace(20, "11:30:00") },
+  { id: "e2", mascotaId: "m1", consultaId: "k2", tipoExamen: { id: 3, nombre: "Radiografía" }, nombreOriginal: "radiografia-abdomen-pelusa.jpg", mimeType: "image/jpeg", tamanoBytes: 2411724, fechaCarga: hace(60, "21:10:00") },
+  { id: "e3", mascotaId: "m1", consultaId: null, tipoExamen: { id: 5, nombre: "Coproparasitológico" }, nombreOriginal: "coproparasitologico.pdf", mimeType: "application/pdf", tamanoBytes: 96000, fechaCarga: hace(120, "09:15:00") },
+];
+
+const CONSULTAS = [
+  {
+    id: "k1",
+    mascotaId: "m2",
+    citaId: "ci2",
+    fechaInicio: hace(20, "10:05:00"),
+    fechaCierre: hace(20, "10:50:00"),
+    esEmergencia: false,
+    prioridad: "NORMAL",
+    observacionesGenerales: "Piel con irritación leve en el abdomen. Evitar cambios bruscos de alimento mientras dure el tratamiento.",
+    pesoKg: "4.20",
+    temperaturaC: "38.6",
+    frecuenciaCardiaca: 140,
+    veterinario: { id: "v2", nombreCompleto: "Dr. Julián López", especialidad: "Dermatología", numeroLicencia: "VET-2231" },
+    clinica: refClinica("c1"),
+    hallazgos: [{ id: "h1", descripcion: "Enrojecimiento y descamación en la zona abdominal.", fecha: hace(20, "10:20:00") }],
+    diagnosticos: [
+      { id: "d1", padecimiento: { id: 12, codigo: "DER-004", nombre: "Dermatitis alérgica", clasificacion: "Dermatológico" }, descripcion: "Probable alergia alimentaria.", fecha: hace(20, "10:35:00") },
+    ],
+    tratamientos: [
+      { id: "t1", diagnosticoId: "d1", descripcion: "Baños medicados dos veces por semana.", fechaInicio: enDias(-20), duracionDias: 14, indicaciones: "Dejar actuar el shampoo 10 minutos y secar bien el pelaje." },
+      { id: "t2", diagnosticoId: "d1", descripcion: "Dieta hipoalergénica.", fechaInicio: enDias(-20), duracionDias: 60, indicaciones: "No ofrecer premios ni comida casera durante el tratamiento." },
+    ],
+    receta: {
+      id: "r1",
+      fecha: hace(20, "10:45:00"),
+      observaciones: "Administrar con alimento. Si hay vómitos, suspender y avisar a la clínica.",
+      items: [
+        { id: 1, medicamento: { id: 3, nombre: "Prednisolona", presentacion: "Tabletas 5 mg" }, dosis: "1/2 tableta", frecuencia: "Cada 12 horas", duracionDias: 7 },
+        { id: 2, medicamento: { id: 9, nombre: "Shampoo de clorhexidina", presentacion: "Frasco 250 ml" }, dosis: "Aplicar y dejar 10 minutos", frecuencia: "2 veces por semana", duracionDias: 14 },
+      ],
+    },
+    dosisAplicadas: [
+      { id: "dp12", producto: { id: 4, tipo: "DESPARASITANTE", nombre: "Desparasitante interno" }, fechaAplicada: enDias(-20), lote: "DI-0455" },
+    ],
+  },
+  {
+    id: "k2",
+    mascotaId: "m1",
+    citaId: null, // emergencia sin cita previa
+    fechaInicio: hace(60, "20:40:00"),
+    fechaCierre: hace(60, "22:00:00"),
+    esEmergencia: true,
+    prioridad: "URGENTE",
+    observacionesGenerales: "Llegó con vómitos repetidos desde la tarde. Se estabilizó en la clínica.",
+    pesoKg: "24.80",
+    temperaturaC: "39.4",
+    frecuenciaCardiaca: 120,
+    veterinario: null, // Consultas no guarda veterinario ni clínica cuando no hay cita
+    clinica: null,
+    hallazgos: [{ id: "h2", descripcion: "Abdomen sensible y deshidratación leve.", fecha: hace(60, "21:00:00") }],
+    diagnosticos: [
+      { id: "d2", padecimiento: { id: 31, codigo: "DIG-002", nombre: "Gastroenteritis aguda", clasificacion: "Digestivo" }, descripcion: null, fecha: hace(60, "21:30:00") },
+    ],
+    tratamientos: [
+      { id: "t3", diagnosticoId: "d2", descripcion: "Fluidoterapia y reposo digestivo.", fechaInicio: enDias(-60), duracionDias: 3, indicaciones: "Dieta blanda en porciones pequeñas." },
+    ],
+    receta: {
+      id: "r2",
+      fecha: hace(60, "21:50:00"),
+      observaciones: null,
+      items: [
+        { id: 3, medicamento: { id: 8, nombre: "Omeprazol", presentacion: "Cápsulas 20 mg" }, dosis: "1 cápsula", frecuencia: "Una vez al día", duracionDias: 5 },
+      ],
+    },
+    dosisAplicadas: [],
+  },
+];
+
+function resumirConsulta(c) {
+  const cita = CITAS.find((x) => x.id === c.citaId);
+  return {
+    id: c.id,
+    fechaInicio: c.fechaInicio,
+    esEmergencia: c.esEmergencia,
+    prioridad: c.prioridad,
+    motivo: cita ? cita.motivoConsulta : null,
+    veterinario: c.veterinario
+      ? { nombreCompleto: c.veterinario.nombreCompleto, especialidad: c.veterinario.especialidad }
+      : null,
+    totalDiagnosticos: c.diagnosticos.length,
+    tieneReceta: Boolean(c.receta),
+    totalExamenes: EXAMENES.filter((e) => e.consultaId === c.id).length,
+  };
+}
+
+function detalleConsulta(c) {
+  const { citaId, mascotaId, ...resto } = c;
+  const cita = CITAS.find((x) => x.id === citaId);
+  return {
+    ...resto,
+    mascota: MASCOTAS.find((m) => m.id === mascotaId),
+    cita: cita ? { id: cita.id, motivoConsulta: cita.motivoConsulta } : null,
+    examenes: EXAMENES.filter((e) => e.consultaId === c.id),
+  };
+}
+
+
 // Bloques = horario del veterinario − citas activas (no se guardan en la base de datos)
 function calcularBloques(veterinarioId, fecha) {
   const vet = VETERINARIOS.find((v) => v.id === veterinarioId);
@@ -249,6 +383,36 @@ export function simularPortal(ruta, metodo, cuerpo) {
     cita.motivoCancelacion = cuerpo.motivoCancelacion;
     return ok({ cita });
   }
+
+      coincide = camino.match(/^\/mascotas\/([^/]+)$/);
+  if (coincide && metodo === "GET") {
+    const mascota = MASCOTAS.find((m) => m.id === coincide[1]);
+    if (!mascota) return fallo(404, "No encontramos esa mascota.");
+    return ok({ mascota: { ...mascota, ...DETALLES_MASCOTA[mascota.id] } });
+  }
+
+  coincide = camino.match(/^\/mascotas\/([^/]+)\/cartilla$/);
+  if (coincide) return ok({ dosis: CARTILLAS[coincide[1]] ?? [] });
+
+  coincide = camino.match(/^\/mascotas\/([^/]+)\/consultas$/);
+  if (coincide) {
+    const consultas = CONSULTAS.filter((c) => c.mascotaId === coincide[1])
+      .map(resumirConsulta)
+      .sort((a, b) => b.fechaInicio.localeCompare(a.fechaInicio));
+    return ok({ consultas });
+  }
+
+  coincide = camino.match(/^\/mascotas\/([^/]+)\/examenes$/);
+  if (coincide) {
+    return ok({ examenes: EXAMENES.filter((e) => e.mascotaId === coincide[1]) });
+  }
+
+  coincide = camino.match(/^\/consultas\/([^/]+)$/);
+  if (coincide) {
+    const consulta = CONSULTAS.find((c) => c.id === coincide[1]);
+    return consulta ? ok({ consulta: detalleConsulta(consulta) }) : fallo(404, "No encontramos esa consulta.");
+  }
+
 
   return null;
 }
