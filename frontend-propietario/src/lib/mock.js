@@ -1,5 +1,6 @@
 /* !! Estas son las respuestas falsas, esto se borra cuando el backend este listo */
 /* !! lee esto joaquin*/
+import { simularPortal } from "@/lib/mockPortal";
 
 const esperar = (ms) => new Promise((resolver) => setTimeout(resolver, ms));
 
@@ -146,6 +147,9 @@ const RAZAS_MOCK = {
 
 export async function simular(ruta, metodo, cuerpo) {
   await esperar(700); // simula el tiempo de respuesta del servidor, solo es un load falso jaja
+
+  const respuestaPortal = simularPortal(ruta, metodo, cuerpo);
+  if (respuestaPortal) return respuestaPortal;
 
     if (ruta === "/catalogos/especies") {
     return { ok: true, estado: 200, datos: { especies: ESPECIES_MOCK } };
