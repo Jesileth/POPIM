@@ -263,7 +263,7 @@ export default function SolicitarCitaPage() {
 
         {mascotas?.length === 0 && (
           <EstadoVacio
-            icono={(props) => <PawIcon className="h-[22px] w-[22px]" {...props} />}
+            icono={(props) => <PawIcon className="h-5.5 w-5.5" {...props} />}
             titulo="Primero registra una mascota"
             texto="Necesitas al menos una mascota registrada para solicitar una cita."
             accion={{ href: "/mis-mascotas/nueva", texto: "Registrar mascota" }}
