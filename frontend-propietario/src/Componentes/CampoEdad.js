@@ -1,3 +1,4 @@
+
 const UNIDADES = [
   { valor: "ANIOS", texto: "Años" },
   { valor: "MESES", texto: "Meses" },
@@ -35,7 +36,7 @@ export default function CampoEdad({ error = "" }) {
                 type="radio"
                 name="unidadEdad"
                 value={valor}
-                defaultChecked={valor === "anios"}
+                defaultChecked={valor === "ANIOS"}
                 className="peer sr-only"
               />
               <span className="flex items-center rounded-lg px-3 text-sm font-semibold text-popim-muted transition peer-checked:bg-popim-primary peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-popim-primary">

@@ -117,25 +117,26 @@ export default function NuevaMascotaPage() {
 
     setCargando(true);
 
-    // Si tu servicio acepta FormData (para enviar foto) o JSON:
     const respuesta = await registrarMascota({
       nombre: datos.nombre.trim(),
-      especieId: Number(datos.especie),
-      razaId: datos.raza ? Number(datos.raza) : null,
+      especieId: datos.especie,
+      razaId: datos.raza,
       sexo: datos.sexo,
       edad: Number(datos.edad),
-      unidadEdad: datos.unidadEdad,
+      unidadEdad: datos.unidadEdad || "anios",
       fechaNacimiento: datos.fechaNacimiento || null,
       foto: fotoArchivo,
     });
+
     setCargando(false);
 
     if (!respuesta.ok) {
-      setErrorGeneral(respuesta.error);
+      setErrorGeneral(respuesta.error || "Ocurrió un error al guardar.");
       return;
     }
 
-    router.push("/mis-mascotas");
+    // Redirección directa que recarga el estado en /mis-mascotas
+    window.location.href = "/mis-mascotas";
   }
 
   let textoRaza = "Selecciona..";

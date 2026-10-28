@@ -40,7 +40,7 @@ const SESION = {
   permisos: ["MASCOTAS_VER", "MASCOTAS_REGISTRAR", "CITAS_VER", "CITAS_SOLICITAR", "CITAS_CANCELAR"],
 };
 
-const MASCOTAS = [
+export const MASCOTAS = [
   {
     id: "m1",
     codigoUnico: "PET-4482-KX",
