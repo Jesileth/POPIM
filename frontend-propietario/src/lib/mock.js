@@ -5,7 +5,7 @@ import { simularPortal } from "@/lib/mockPortal";
 const esperar = (ms) => new Promise((resolver) => setTimeout(resolver, ms));
 
 // agregamos las cosas que van en las tablas 
-const ESPECIES_MOCK = [
+ export const ESPECIES_MOCK = [
   { id: 1, nombre: "Canino" },
   { id: 2, nombre: "Felino" },
   { id: 3, nombre: "Ave" },
@@ -20,7 +20,7 @@ const ESPECIES_MOCK = [
   { id: 12, nombre: "Otro" }
 ];
 
-const RAZAS_MOCK = {
+export const RAZAS_MOCK = {
   1: [
     "Mestizo",
     "Labrador Retriever",
