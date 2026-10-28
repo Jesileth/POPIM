@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import BotonDescarga from "@/Componentes/BotonDescarga";
 import EncabezadoPagina from "@/Componentes/EncabezadoPagina";
 import EstadoVacio from "@/Componentes/EstadoVacio";
 import InsigniaCita from "@/Componentes/InsigniaCita";
 import Mensaje from "@/Componentes/Mensaje";
 import ModalCancelarCita from "@/Componentes/ModalCancelarCita";
-import { IconCalendarCheck, IconGeoAlt } from "@/Componentes/Iconos";
+import { IconCalendarCheck, IconFilePdf, IconGeoAlt } from "@/Componentes/Iconos";
+import { descargarAgendaCitas, descargarComprobanteCita } from "@/lib/pdf";
 import { cancelarCita, listarCitas } from "@/servicios/citas";
 import { ahoraISO, formatearFecha, formatearHora } from "@/lib/formato";
 
@@ -62,8 +65,20 @@ export default function MisCitasPage() {
       <EncabezadoPagina
         etiqueta="Tu espacio"
         titulo="Mis citas"
-        descripcion="Consulta el estado de tus citas y cancela las que ya no necesites."
-      />
+        descripcion="Consulta el estado de tus citas, descarga tu agenda como respaldo y cancela las que ya no necesites."
+      >
+        <BotonDescarga
+          icono={IconFilePdf}
+          disabled={visibles.length === 0}
+          onDescargar={() =>
+            descargarAgendaCitas(visibles, {
+              titulo: filtro === "proximas" ? "Mis próximas citas" : "Historial de citas",
+            })
+          }
+        >
+          Agenda en PDF
+        </BotonDescarga>
+      </EncabezadoPagina>
 
       <div className="mt-6 space-y-4">
         {error && <Mensaje tipo="error">{error}</Mensaje>}
@@ -80,9 +95,7 @@ export default function MisCitasPage() {
               aria-pressed={filtro === opcion.id}
               onClick={() => setFiltro(opcion.id)}
               className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                filtro === opcion.id
-                  ? "bg-popim-primary text-white"
-                  : "text-popim-texto hover:bg-popim-page"
+                filtro === opcion.id ? "bg-popim-primary text-white" : "text-popim-texto hover:bg-popim-page"
               }`}
             >
               {opcion.texto}
@@ -112,9 +125,11 @@ export default function MisCitasPage() {
           <ul className="divide-y divide-popim-linea overflow-hidden rounded-2xl border border-popim-linea bg-white">
             {visibles.map((cita) => {
               const puedeCancelar = CANCELABLES.includes(cita.estado.codigo) && clave(cita) > ahora;
+              const tieneConsulta = cita.estado.codigo === "COMPLETADA" && cita.consultaId;
+
               return (
-                <li key={cita.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
-                  <div className="flex shrink-0 items-center gap-3 sm:w-44">
+                <li key={cita.id} className="flex flex-col gap-3 p-4 sm:p-5 lg:flex-row lg:items-center lg:gap-5">
+                  <div className="flex shrink-0 items-center gap-3 lg:w-44">
                     <span className="rounded-lg bg-popim-info px-2.5 py-1.5 text-xs font-bold text-popim-primary">
                       {formatearHora(cita.horaInicio)}
                     </span>
@@ -138,8 +153,19 @@ export default function MisCitasPage() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2 lg:justify-end">
                     <InsigniaCita estado={cita.estado} />
+                    {tieneConsulta && (
+                      <Link
+                        href={`/consultas/${cita.consultaId}`}
+                        className="inline-flex h-9 items-center rounded-xl bg-popim-primary px-3.5 text-xs font-semibold text-white transition hover:bg-popim-primary-dark"
+                      >
+                        Ver consulta
+                      </Link>
+                    )}
+                    <BotonDescarga icono={IconFilePdf} onDescargar={() => descargarComprobanteCita(cita)}>
+                      PDF
+                    </BotonDescarga>
                     {puedeCancelar && (
                       <button
                         type="button"
@@ -147,7 +173,7 @@ export default function MisCitasPage() {
                           setAviso("");
                           setCitaACancelar(cita);
                         }}
-                        className="rounded-lg border border-popim-linea px-3 py-1.5 text-xs font-semibold text-popim-texto transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                        className="h-9 rounded-xl border border-popim-linea px-3.5 text-xs font-semibold text-popim-texto transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
                       >
                         Cancelar
                       </button>

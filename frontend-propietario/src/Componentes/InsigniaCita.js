@@ -4,6 +4,10 @@ const ESTILOS = {
   ATENCION: "bg-indigo-50 text-indigo-700 ring-indigo-200",
   COMPLETADA: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   CANCELADA: "bg-slate-100 text-slate-600 ring-slate-200",
+
+  PENDIENTE: "bg-amber-50 text-amber-800 ring-amber-200",
+  APLICADA: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  VENCIDA: "bg-red-50 text-red-700 ring-red-200",
 };
 
 export default function InsigniaCita({ estado }) {
