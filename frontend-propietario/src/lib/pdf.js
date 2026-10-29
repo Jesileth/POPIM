@@ -1,4 +1,4 @@
-import { formatearFecha, formatearFechaHora, formatearHora } from "@/lib/formato";
+import { formatearEdad, formatearFecha, formatearFechaHora, formatearHora } from "@/lib/formato";
 
 const AZUL = [63, 117, 179];
 const OSCURO = [36, 65, 95];
@@ -247,4 +247,59 @@ export async function crearRecetaPdf(consulta) {
 export async function descargarRecetaPdf(consulta) {
   const doc = await crearRecetaPdf(consulta);
   doc.save(`receta-${paraArchivo(consulta.mascota.nombre)}-${consulta.receta.fecha.slice(0, 10)}.pdf`);
+}
+
+// ---------- Reporte de salud de una mascota (REQ-019) ----------
+export async function crearReporteSalud(mascota, dosis) {
+  const { doc, autoTable } = await nuevoDocumento();
+  const y = await dibujarEncabezado(doc, "Reporte de salud", `${mascota.nombre} · ${mascota.codigoUnico}`);
+
+  autoTable(doc, {
+    ...ESTILO_FILAS,
+    startY: y + 2,
+    body: [
+      ["Especie y raza", `${mascota.especie.nombre} · ${mascota.raza?.nombre ?? "Mestizo"}`],
+      ["Sexo", mascota.sexo === "MACHO" ? "Macho" : "Hembra"],
+      ["Edad", formatearEdad(mascota.edadActualMeses)],
+    ],
+  });
+
+  let siguiente = doc.lastAutoTable.finalY + 10;
+  for (const [tipo, titulo] of [["VACUNA", "Vacunas"], ["DESPARASITANTE", "Desparasitación"]]) {
+    const filas = dosis
+      .filter((d) => d.producto.tipo === tipo)
+      .sort((a, b) => a.fechaProgramada.localeCompare(b.fechaProgramada));
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(...OSCURO);
+    doc.text(titulo, MARGEN, siguiente);
+
+    autoTable(doc, {
+      startY: siguiente + 3,
+      head: [["Producto", "Programada", "Aplicada", "Estado", "Lote"]],
+      body: filas.length
+        ? filas.map((d) => [
+            d.producto.nombre,
+            formatearFecha(d.fechaProgramada),
+            d.fechaAplicada ? formatearFecha(d.fechaAplicada) : "-",
+            d.estado.nombre,
+            d.lote ?? "-",
+          ])
+        : [["Sin registros", "", "", "", ""]],
+      styles: { fontSize: 10, textColor: OSCURO, cellPadding: 3 },
+      headStyles: { fillColor: AZUL, textColor: 255 },
+      alternateRowStyles: { fillColor: CLARO },
+      margin: { left: MARGEN, right: MARGEN },
+    });
+    siguiente = doc.lastAutoTable.finalY + 10;
+  }
+
+  dibujarPie(doc);
+  return doc;
+}
+
+export async function descargarReporteSalud(mascota, dosis) {
+  const doc = await crearReporteSalud(mascota, dosis);
+  doc.save(`reporte-salud-${paraArchivo(mascota.nombre)}.pdf`);
 }

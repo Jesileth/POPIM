@@ -9,22 +9,24 @@ import Mensaje from "@/Componentes/Mensaje";
 import TarjetaSeccion from "@/Componentes/TarjetaSeccion";
 import { IconArrowLeft, IconCapsule, IconChevronRight, IconShieldPlus } from "@/Componentes/Iconos";
 import { listarCitas } from "@/servicios/citas";
-import {
-  listarConsultasMascota,
-  listarExamenesMascota,
-  obtenerCartilla,
-  obtenerMascota,
+import { listarConsultasMascota, listarExamenesMascota, obtenerCartilla, obtenerMascota,subirFotoMascota, quitarFotoMascota
 } from "@/servicios/mascotas";
 import { useCarga } from "@/lib/useCarga";
 import { formatearEdad, formatearFecha, formatearHora } from "@/lib/formato";
 import { CLINICAS } from "@/lib/mockPortal";
+import BotonDescarga from "@/Componentes/BotonDescarga";
+import SelectorFoto from "@/Componentes/SelectorFoto";
+import { descargarReporteSalud } from "@/lib/pdf";
+
 
 const PESTANAS = [
   { id: "resumen", texto: "Resumen" },
   { id: "cartilla", texto: "Cartilla" },
   { id: "historial", texto: "Historial clínico" },
   { id: "examenes", texto: "Exámenes" },
-];
+]; 
+  
+
 const ACTIVAS = ["SOLICITADA", "CONFIRMADA", "ATENCION"];
 
 const Cargando = () => (
@@ -112,23 +114,25 @@ function Resumen({ mascota }) {
 }
 
 // ---------- Pestaña: Cartilla de vacunación y desparasitación ----------
-function Cartilla({ mascotaId }) 
-{
-    const { datos, error } = useCarga(obtenerCartilla, mascotaId);
-    if (error) return <Mensaje tipo="error">{error}</Mensaje>;
-    if (!datos) return <Cargando />;
+function Cartilla({ mascota }) {
+  const { datos, error } = useCarga(obtenerCartilla, mascota.id);
+  if (error) return <Mensaje tipo="error">{error}</Mensaje>;
+  if (!datos) return <Cargando />;
 
-    const dosis = datos.dosis;
-    const vencidas = dosis.filter((d) => d.estado.codigo === "VENCIDA").length;
-    const grupos = 
-    [
-        { tipo: "VACUNA", titulo: "Vacunas", icono: IconShieldPlus },
-        { tipo: "DESPARASITANTE", titulo: "Desparasitación", icono: IconCapsule },
-    ];
+  const dosis = datos.dosis;
+  const vencidas = dosis.filter((d) => d.estado.codigo === "VENCIDA").length;
+  const grupos = [
+    { tipo: "VACUNA", titulo: "Vacunas", icono: IconShieldPlus },
+    { tipo: "DESPARASITANTE", titulo: "Desparasitación", icono: IconCapsule },
+  ];
 
-// mensaje si tiene pendiente dosis 
   return (
     <div className="space-y-5">
+      <div className="flex justify-end">
+        <BotonDescarga icono={IconFilePdf} onDescargar={() => descargarReporteSalud(mascota, dosis)}>
+          Reporte de salud (PDF)
+        </BotonDescarga>
+      </div>
       {vencidas > 0 && 
       (
         <Mensaje tipo="aviso">
@@ -190,6 +194,7 @@ function Cartilla({ mascotaId })
     </div>
   );
 }
+
 
 // ---------- Pestaña: Historial clínico (por consulta, incluye emergencias sin cita) ----------
 function Historial({ mascotaId }) {
@@ -272,8 +277,24 @@ function Examenes({ mascotaId }) {
 export default function FichaMascotaPage() {
   const { id } = useParams();
   const { datos, error } = useCarga(obtenerMascota, id);
+
   const [pestana, setPestana] = useState("resumen");
   const mascota = datos?.mascota;
+
+const [fotoLocal, setFotoLocal] = useState(undefined);
+
+  async function subirFoto(archivo) {
+    const respuesta = await subirFotoMascota(id, archivo);
+    if (respuesta.ok) setFotoLocal(respuesta.datos.url);
+    return respuesta;
+  }
+
+  async function quitarFoto() {
+    const respuesta = await quitarFotoMascota(id);
+    if (respuesta.ok) setFotoLocal(null);
+    return respuesta;
+  }
+
 
   if (error) {
     return (
@@ -293,9 +314,14 @@ export default function FichaMascotaPage() {
 
       <header className="mt-4 flex flex-col gap-4 border-b border-popim-linea pb-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-popim-info text-2xl font-bold text-popim-primary">
-            {mascota.nombre[0]?.toUpperCase()}
-          </span>
+          <SelectorFoto
+            nombre={mascota.nombre}
+            fotoUrl={fotoLocal !== undefined ? fotoLocal : mascota.fotoUrl}
+            tamano={72}
+            mostrarAcciones={false}
+            onSubir={subirFoto}
+            onQuitar={quitarFoto}
+          />
           <div>
             <h1 className="text-3xl font-bold text-popim-ink">{mascota.nombre}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-popim-muted">

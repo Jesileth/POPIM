@@ -631,5 +631,30 @@ export async function simularPortal(ruta, metodo, cuerpo) {
     return ok({});
   }
 
+    // ----- Registrar mascota -----
+  if (camino === "/mascotas" && metodo === "POST") {
+    const especie = ESPECIES_MOCK.find((e) => e.id === cuerpo.especieId);
+    if (!especie) return fallo(400, "La especie no es válida.", "especie");
+    const nombresRazas = RAZAS_MOCK[especie.id] ?? [];
+    const mascota = {
+      id: `m${MASCOTAS.length + 1}`,
+      codigoUnico: generarCodigo(),
+      nombre: cuerpo.nombre,
+      especie,
+      raza: cuerpo.razaId
+        ? { id: cuerpo.razaId, nombre: nombresRazas[(cuerpo.razaId % 100) - 1] ?? "Mestizo" }
+        : null,
+      sexo: cuerpo.sexo,
+      edadActualMeses: cuerpo.unidadEdad === "ANIOS" ? cuerpo.edad * 12 : cuerpo.edad,
+      fotoUrl: null,
+    };
+    MASCOTAS.push(mascota);
+    DETALLES_MASCOTA[mascota.id] = {
+      fechaNacimiento: cuerpo.fechaNacimiento,
+      fechaRegistro: new Date().toISOString().slice(0, 19),
+    };
+    return ok({ mascota }, 201);
+  }
+
   return null;
 }
