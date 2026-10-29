@@ -1,6 +1,10 @@
+// Datos de prueba del portal (se borra cuando exista el backend).
+// Las mascotas que registres se guardan en el navegador (localStorage) para que no se pierdan al recargar.
+import { ESPECIES_MOCK, RAZAS_MOCK } from "@/lib/mockCatalogos";
+
 const DIAS = ["DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"];
 
-// colocamos los Nombres tal como están en Catalogo_estados
+// Nombres tal como están en Catalogo_estados
 const ESTADOS = {
   SOLICITADA: { codigo: "SOLICITADA", nombre: "Solicitada" },
   CONFIRMADA: { codigo: "CONFIRMADA", nombre: "Confirmada" },
@@ -9,8 +13,14 @@ const ESTADOS = {
   CANCELADA: { codigo: "CANCELADA", nombre: "Cancelada" },
 };
 
+const DOSIS = {
+  PENDIENTE: { codigo: "PENDIENTE", nombre: "Pendiente" },
+  APLICADA: { codigo: "APLICADA", nombre: "Aplicada" },
+  VENCIDA: { codigo: "VENCIDA", nombre: "Vencida" },
+};
+
 const ok = (datos, estado = 200) => ({ ok: true, estado, datos });
-const fallo = (estado, error) => ({ ok: false, estado, error });
+const fallo = (estado, error, campo) => ({ ok: false, estado, error, campo });
 
 const iso = (fecha) =>
   `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}-${String(fecha.getDate()).padStart(2, "0")}`;
@@ -19,6 +29,7 @@ const enDias = (n) => {
   fecha.setDate(fecha.getDate() + n);
   return iso(fecha);
 };
+const hace = (dias, hora = "10:00:00") => `${enDias(-dias)}T${hora}`;
 const aMinutos = (hora) => {
   const [h, m] = hora.split(":").map(Number);
   return h * 60 + m;
@@ -28,6 +39,9 @@ const deMinutos = (min) =>
 const horario = (dias, horaInicio, horaFin) =>
   dias.map((diaSemana) => ({ diaSemana, horaInicio, horaFin }));
 
+// ---------------------------------------------------------------------
+// Sesión
+// ---------------------------------------------------------------------
 const SESION = {
   usuario: { id: "u1", nombreCompleto: "Propietario de Prueba", rol: "PROPIETARIO", fotoPerfilUrl: null },
   // Lo que devolvería la vista v_menu_usuario
@@ -37,33 +51,127 @@ const SESION = {
     { id: 3, etiqueta: "Mis citas", ruta: "/mis-citas", icono: "calendar-check", orden: 3 },
   ],
   // Lo que devolvería la vista v_permisos_usuario
-  permisos: ["MASCOTAS_VER", "MASCOTAS_REGISTRAR", "CITAS_VER", "CITAS_SOLICITAR", "CITAS_CANCELAR"],
+  permisos: [
+    "MASCOTAS_VER", "MASCOTAS_REGISTRAR", "MASCOTAS_EDITAR_FOTO", "CITAS_VER", "CITAS_SOLICITAR",
+    "CITAS_CANCELAR", "EXPEDIENTE_VER", "REPORTE_SALUD_DESCARGAR", "PERFIL_VER", "PERFIL_EDITAR",
+  ],
 };
 
-export const MASCOTAS = [
+// ---------------------------------------------------------------------
+// Mascotas (las dos de prueba; las que registres se agregan al final)
+// ---------------------------------------------------------------------
+const MASCOTAS = [
   {
     id: "m1",
     codigoUnico: "PET-4482-KX",
-    nombre: "Popim",
+    nombre: "Pelusa",
     especie: { id: 1, nombre: "Canino" },
-    raza: { id: 4, nombre: "Mestizo" },
-    sexo: "MACHO",
+    raza: { id: 101, nombre: "Mestizo" },
+    sexo: "HEMBRA",
     edadActualMeses: 26,
     fotoUrl: null,
   },
   {
     id: "m2",
     codigoUnico: "PET-1190-QW",
-    nombre: "Molly",
+    nombre: "Michi",
     especie: { id: 2, nombre: "Felino" },
-    raza: { id: 40, nombre: "Angora" }, // 
-    sexo: "HEMBRA",
+    raza: null, // raza_id NULL = mestizo / no definida
+    sexo: "MACHO",
     edadActualMeses: 8,
     fotoUrl: null,
   },
 ];
 
-export const CLINICAS = [
+const DETALLES_MASCOTA = {
+  m1: { fechaNacimiento: null, fechaRegistro: hace(400, "09:00:00") },
+  m2: { fechaNacimiento: enDias(-240), fechaRegistro: hace(240, "09:00:00") },
+};
+
+// ---------------------------------------------------------------------
+// PERSISTENCIA: guarda en localStorage las mascotas nuevas y las fotos
+// ---------------------------------------------------------------------
+const CLAVE_MOCK = "popim_mock_v1";
+const TOTAL_INICIALES = MASCOTAS.length; // las de prueba (no se guardan, siempre están)
+let persistenciaCargada = false;
+
+// Se ejecuta una sola vez: vuelve a poner en memoria lo que se guardó antes
+function cargarPersistencia() {
+  if (persistenciaCargada || typeof window === "undefined") return;
+  persistenciaCargada = true;
+  try {
+    const guardado = JSON.parse(window.localStorage.getItem(CLAVE_MOCK) ?? "null");
+    if (!guardado) return;
+
+    for (const mascota of guardado.mascotasNuevas ?? []) {
+      MASCOTAS.push(mascota);
+      DETALLES_MASCOTA[mascota.id] = guardado.detalles?.[mascota.id] ?? {
+        fechaNacimiento: null,
+        fechaRegistro: new Date().toISOString().slice(0, 19),
+      };
+    }
+    // Fotos que se cambiaron en las mascotas de prueba
+    for (const [id, foto] of Object.entries(guardado.fotos ?? {})) {
+      const mascota = MASCOTAS.find((m) => m.id === id);
+      if (mascota) mascota.fotoUrl = foto;
+    }
+  } catch {
+    // datos dañados: se ignoran
+  }
+}
+
+// Se llama después de cada cambio. Devuelve false si no hubo espacio.
+function guardarPersistencia() {
+  try {
+    const nuevas = MASCOTAS.slice(TOTAL_INICIALES);
+    window.localStorage.setItem(
+      CLAVE_MOCK,
+      JSON.stringify({
+        mascotasNuevas: nuevas,
+        detalles: Object.fromEntries(nuevas.map((m) => [m.id, DETALLES_MASCOTA[m.id]])),
+        fotos: Object.fromEntries(
+          MASCOTAS.slice(0, TOTAL_INICIALES)
+            .filter((m) => m.fotoUrl?.startsWith("data:"))
+            .map((m) => [m.id, m.fotoUrl]),
+        ),
+      }),
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Convierte la foto en una imagen pequeña (máx. 480 px) lista para guardar en el navegador
+async function archivoADataUrl(archivo, maximo = 480) {
+  if (!archivo) return null;
+  if (typeof archivo === "string") return archivo;
+  try {
+    const imagen = await createImageBitmap(archivo);
+    const escala = Math.min(1, maximo / Math.max(imagen.width, imagen.height));
+    const lienzo = document.createElement("canvas");
+    lienzo.width = Math.round(imagen.width * escala);
+    lienzo.height = Math.round(imagen.height * escala);
+    const contexto = lienzo.getContext("2d");
+    contexto.fillStyle = "#ffffff"; // los PNG transparentes quedan con fondo blanco
+    contexto.fillRect(0, 0, lienzo.width, lienzo.height);
+    contexto.drawImage(imagen, 0, 0, lienzo.width, lienzo.height);
+    return lienzo.toDataURL("image/jpeg", 0.82);
+  } catch {
+    return null;
+  }
+}
+
+// Código único con el formato del documento: PET-4482-KX
+function generarCodigo() {
+  const letras = Array.from({ length: 2 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join("");
+  return `PET-${Math.floor(1000 + Math.random() * 9000)}-${letras}`;
+}
+
+// ---------------------------------------------------------------------
+// Clínicas y veterinarios
+// ---------------------------------------------------------------------
+ export const CLINICAS = [
   { id: "c1", nombreComercial: "POPIM Central - Managua", direccion: "Km 5 Carretera Masaya, Managua", duracionCitaMin: 60 },
   { id: "c2", nombreComercial: "POPIM Altamira - Managua", direccion: "Altamira D'Este, Managua", duracionCitaMin: 60 },
 ];
@@ -116,6 +224,9 @@ const refClinica = (id) => {
   return { id, nombreComercial, direccion };
 };
 
+// ---------------------------------------------------------------------
+// Citas
+// ---------------------------------------------------------------------
 const CITAS = [
   {
     id: "ci1",
@@ -137,10 +248,10 @@ const CITAS = [
     motivoConsulta: "Revisión de la piel",
     estado: ESTADOS.COMPLETADA,
     motivoCancelacion: null,
+    consultaId: "k1",
     mascota: refMascota("m2"),
     veterinario: refVeterinario("v2"),
     clinica: refClinica("c1"),
-    consultaId: "k1",
   },
   {
     id: "ci3",
@@ -156,28 +267,16 @@ const CITAS = [
   },
 ];
 
-const hace = (dias, hora = "10:00:00") => `${enDias(-dias)}T${hora}`;
-
-const DOSIS = {
-  PENDIENTE: { codigo: "PENDIENTE", nombre: "Pendiente" },
-  APLICADA: { codigo: "APLICADA", nombre: "Aplicada" },
-  VENCIDA: { codigo: "VENCIDA", nombre: "Vencida" },
-};
-
-const DETALLES_MASCOTA = {
-  m1: { fechaNacimiento: null, fechaRegistro: hace(400, "09:00:00") },
-  m2: { fechaNacimiento: enDias(-240), fechaRegistro: hace(240, "09:00:00") },
-};
-
-// Cartillas + Dosis_preventivas (la dosis vencida es la que el backend marca con el estado 603)
+// ---------------------------------------------------------------------
+// Cartilla, exámenes y consultas
+// ---------------------------------------------------------------------
 const CARTILLAS = {
   m1: [
-    { id: "dp1", producto: { id: 1, tipo: "VACUNA", nombre: "Antirrábica" }, fechaProgramada: enDias(-200), fechaAplicada: enDias(-200), estado: DOSIS.APLICADA, lote: "RB-2231", observaciones: null, aplicadaPor: "Dra. Mariana Rojas", clinicaId: "c1"},
-    { id: "dp2", producto: { id: 2, tipo: "VACUNA", nombre: "Parvovirus" }, fechaProgramada: enDias(-120), fechaAplicada: enDias(-120), estado: DOSIS.APLICADA, lote: "PV-1180", observaciones: null, aplicadaPor: "Dra. Mariana Rojas", clinicaId: "c1" },
+    { id: "dp1", producto: { id: 1, tipo: "VACUNA", nombre: "Antirrábica" }, fechaProgramada: enDias(-200), fechaAplicada: enDias(-200), estado: DOSIS.APLICADA, lote: "RB-2231", observaciones: null, aplicadaPor: "Dra. Mariana Rojas" },
+    { id: "dp2", producto: { id: 2, tipo: "VACUNA", nombre: "Parvovirus" }, fechaProgramada: enDias(-200), fechaAplicada: enDias(-200), estado: DOSIS.APLICADA, lote: "PV-1180", observaciones: null, aplicadaPor: "Dra. Mariana Rojas" },
     { id: "dp3", producto: { id: 1, tipo: "VACUNA", nombre: "Antirrábica" }, fechaProgramada: enDias(165), fechaAplicada: null, estado: DOSIS.PENDIENTE, lote: null, observaciones: "Refuerzo anual", aplicadaPor: null },
     { id: "dp4", producto: { id: 4, tipo: "DESPARASITANTE", nombre: "Desparasitante interno" }, fechaProgramada: enDias(-15), fechaAplicada: null, estado: DOSIS.VENCIDA, lote: null, observaciones: null, aplicadaPor: null },
-    { id: "dp5", producto: { id: 5, tipo: "DESPARASITANTE", nombre: "Desparasitante externo" }, fechaProgramada: enDias(2), fechaAplicada: null, estado: DOSIS.PENDIENTE, lote: null, observaciones: null, aplicadaPor: null },
-    { id: "dp6", producto: { id: 6, tipo: "DESPARASITANTE", nombre: "Desparasitante interno" }, fechaProgramada: enDias(0), fechaAplicada: enDias(0), estado: DOSIS.APLICADA, lote: "DI-0455-89", observaciones: null, aplicadaPor: "Dr. Julián López", clinicaId: "c2" },
+    { id: "dp5", producto: { id: 5, tipo: "DESPARASITANTE", nombre: "Desparasitante externo" }, fechaProgramada: enDias(10), fechaAplicada: null, estado: DOSIS.PENDIENTE, lote: null, observaciones: null, aplicadaPor: null },
   ],
   m2: [
     { id: "dp11", producto: { id: 3, tipo: "VACUNA", nombre: "Triple felina" }, fechaProgramada: enDias(-100), fechaAplicada: enDias(-100), estado: DOSIS.APLICADA, lote: "TF-0902", observaciones: null, aplicadaPor: "Dra. Mariana Rojas" },
@@ -186,7 +285,7 @@ const CARTILLAS = {
   ],
 };
 
-// Resultados_examen (consultaId null = resultado del historial general, REQ-018)
+// consultaId null = resultado del historial general (REQ-018)
 const EXAMENES = [
   { id: "e1", mascotaId: "m2", consultaId: "k1", tipoExamen: { id: 1, nombre: "Hemograma" }, nombreOriginal: "hemograma-michi.pdf", mimeType: "application/pdf", tamanoBytes: 184320, fechaCarga: hace(20, "11:30:00") },
   { id: "e2", mascotaId: "m1", consultaId: "k2", tipoExamen: { id: 3, nombre: "Radiografía" }, nombreOriginal: "radiografia-abdomen-pelusa.jpg", mimeType: "image/jpeg", tamanoBytes: 2411724, fechaCarga: hace(60, "21:10:00") },
@@ -290,8 +389,26 @@ function detalleConsulta(c) {
   };
 }
 
+// ---------------------------------------------------------------------
+// Perfil del propietario
+// ---------------------------------------------------------------------
+const PERFIL = {
+  usuario: {
+    id: "u1",
+    nombreCompleto: "Propietario de Prueba",
+    correo: "propietario@popim.com",
+    telefono: "88880000",
+    fotoPerfilUrl: null,
+    fechaRegistro: hace(400, "09:00:00"),
+    ultimoAcceso: hace(1, "08:15:00"),
+    estado: { codigo: "ACTIVO", nombre: "Activo" },
+  },
+  propietario: { cedula: "0010101900001A", direccion: "Bello Horizonte, Managua" },
+};
 
-// Bloques = horario del veterinario − citas activas (no se guardan en la base de datos)
+// ---------------------------------------------------------------------
+// Bloques de horario = horario del veterinario − citas activas
+// ---------------------------------------------------------------------
 function calcularBloques(veterinarioId, fecha) {
   const vet = VETERINARIOS.find((v) => v.id === veterinarioId);
   if (!vet || !fecha) return [];
@@ -326,17 +443,107 @@ function calcularBloques(veterinarioId, fecha) {
   return bloques;
 }
 
-// Devuelve una respuesta simulada, o null si la ruta no es del portal
-export function simularPortal(ruta, metodo, cuerpo) {
+// ---------------------------------------------------------------------
+// Router del simulador: devuelve una respuesta, o null si la ruta no es del portal
+// ---------------------------------------------------------------------
+export async function simularPortal(ruta, metodo, cuerpo) {
+  cargarPersistencia();
+
   const [camino, consulta = ""] = ruta.split("?");
   const parametros = new URLSearchParams(consulta);
 
+  // ----- Sesión -----
   if (camino === "/auth/sesion") return ok(SESION);
   if (camino === "/auth/logout") return ok({});
+
+  // ----- Mascotas: listar y registrar -----
   if (camino === "/mascotas" && metodo === "GET") return ok({ mascotas: MASCOTAS });
+
+  if (camino === "/mascotas" && metodo === "POST") {
+    const especie = ESPECIES_MOCK.find((e) => e.id === Number(cuerpo.especieId));
+    if (!especie) return fallo(400, "La especie no es válida.", "especie");
+
+    // El id de la raza es: especie * 100 + posición (ver mock.js)
+    const nombres = RAZAS_MOCK[especie.id] ?? [];
+    const nombreRaza = cuerpo.razaId ? nombres[(Number(cuerpo.razaId) % 100) - 1] : null;
+    const enAnios = String(cuerpo.unidadEdad).toUpperCase() === "ANIOS";
+
+    const mascota = {
+      id: `m${Date.now()}`,
+      codigoUnico: generarCodigo(),
+      nombre: cuerpo.nombre,
+      especie: { id: especie.id, nombre: especie.nombre },
+      raza: nombreRaza ? { id: Number(cuerpo.razaId), nombre: nombreRaza } : null,
+      sexo: cuerpo.sexo,
+      edadActualMeses: enAnios ? Number(cuerpo.edad) * 12 : Number(cuerpo.edad),
+      fotoUrl: await archivoADataUrl(cuerpo.foto),
+    };
+
+    MASCOTAS.push(mascota);
+    DETALLES_MASCOTA[mascota.id] = {
+      fechaNacimiento: cuerpo.fechaNacimiento ?? null,
+      fechaRegistro: new Date().toISOString().slice(0, 19),
+    };
+
+    if (!guardarPersistencia()) {
+      MASCOTAS.pop();
+      delete DETALLES_MASCOTA[mascota.id];
+      return fallo(500, "No hay espacio en el navegador para guardar la mascota. Prueba sin foto o con una más pequeña.");
+    }
+    return ok({ mascota }, 201);
+  }
+
+  // ----- Foto de una mascota -----
+  let coincide = camino.match(/^\/mascotas\/([^/]+)\/foto$/);
+  if (coincide) {
+    const mascota = MASCOTAS.find((m) => m.id === coincide[1]);
+    if (!mascota) return fallo(404, "No encontramos esa mascota.");
+
+    if (metodo === "POST") {
+      const foto = await archivoADataUrl(cuerpo.archivo);
+      if (!foto) return fallo(400, "No pudimos leer la imagen. Prueba con otra.");
+      mascota.fotoUrl = foto;
+    } else if (metodo === "DELETE") {
+      mascota.fotoUrl = null;
+    }
+    guardarPersistencia();
+    return ok(metodo === "POST" ? { url: mascota.fotoUrl } : {});
+  }
+
+  // ----- Ficha de una mascota -----
+  coincide = camino.match(/^\/mascotas\/([^/]+)$/);
+  if (coincide && metodo === "GET") {
+    const mascota = MASCOTAS.find((m) => m.id === coincide[1]);
+    if (!mascota) return fallo(404, "No encontramos esa mascota.");
+    return ok({ mascota: { ...mascota, ...DETALLES_MASCOTA[mascota.id] } });
+  }
+
+  coincide = camino.match(/^\/mascotas\/([^/]+)\/cartilla$/);
+  if (coincide) return ok({ dosis: CARTILLAS[coincide[1]] ?? [] });
+
+  coincide = camino.match(/^\/mascotas\/([^/]+)\/consultas$/);
+  if (coincide) {
+    const consultas = CONSULTAS.filter((c) => c.mascotaId === coincide[1])
+      .map(resumirConsulta)
+      .sort((a, b) => b.fechaInicio.localeCompare(a.fechaInicio));
+    return ok({ consultas });
+  }
+
+  coincide = camino.match(/^\/mascotas\/([^/]+)\/examenes$/);
+  if (coincide) return ok({ examenes: EXAMENES.filter((e) => e.mascotaId === coincide[1]) });
+
+  coincide = camino.match(/^\/consultas\/([^/]+)$/);
+  if (coincide) {
+    const consultaEncontrada = CONSULTAS.find((c) => c.id === coincide[1]);
+    return consultaEncontrada
+      ? ok({ consulta: detalleConsulta(consultaEncontrada) })
+      : fallo(404, "No encontramos esa consulta.");
+  }
+
+  // ----- Clínicas, veterinarios y horarios -----
   if (camino === "/clinicas") return ok({ clinicas: CLINICAS });
 
-  let coincide = camino.match(/^\/clinicas\/([^/]+)\/veterinarios$/);
+  coincide = camino.match(/^\/clinicas\/([^/]+)\/veterinarios$/);
   if (coincide) {
     return ok({ veterinarios: VETERINARIOS.filter((v) => v.clinicaId === coincide[1]) });
   }
@@ -347,9 +554,12 @@ export function simularPortal(ruta, metodo, cuerpo) {
     return ok({ fecha, bloques: calcularBloques(coincide[1], fecha) });
   }
 
+  // ----- Citas -----
   if (camino === "/citas" && metodo === "GET") return ok({ citas: CITAS });
 
   if (camino === "/citas" && metodo === "POST") {
+    if (!MASCOTAS.some((m) => m.id === cuerpo.mascotaId)) return fallo(400, "La mascota no existe.");
+
     const bloque = calcularBloques(cuerpo.veterinarioId, cuerpo.fecha).find(
       (b) => b.horaInicio === cuerpo.horaInicio,
     );
@@ -385,35 +595,41 @@ export function simularPortal(ruta, metodo, cuerpo) {
     return ok({ cita });
   }
 
-      coincide = camino.match(/^\/mascotas\/([^/]+)$/);
-  if (coincide && metodo === "GET") {
-    const mascota = MASCOTAS.find((m) => m.id === coincide[1]);
-    if (!mascota) return fallo(404, "No encontramos esa mascota.");
-    return ok({ mascota: { ...mascota, ...DETALLES_MASCOTA[mascota.id] } });
+  // ----- Perfil del propietario -----
+  if (camino === "/perfil" && metodo === "GET") return ok(PERFIL);
+
+  if (camino === "/perfil" && metodo === "PUT") {
+    if (cuerpo.telefono === "88888888") {
+      return fallo(409, "Este teléfono ya está registrado.", "telefono");
+    }
+    PERFIL.usuario.nombreCompleto = cuerpo.nombreCompleto;
+    PERFIL.usuario.telefono = cuerpo.telefono;
+    PERFIL.propietario.direccion = cuerpo.direccion;
+    SESION.usuario.nombreCompleto = cuerpo.nombreCompleto;
+    return ok(PERFIL);
   }
 
-  coincide = camino.match(/^\/mascotas\/([^/]+)\/cartilla$/);
-  if (coincide) return ok({ dosis: CARTILLAS[coincide[1]] ?? [] });
-
-  coincide = camino.match(/^\/mascotas\/([^/]+)\/consultas$/);
-  if (coincide) {
-    const consultas = CONSULTAS.filter((c) => c.mascotaId === coincide[1])
-      .map(resumirConsulta)
-      .sort((a, b) => b.fechaInicio.localeCompare(a.fechaInicio));
-    return ok({ consultas });
+  if (camino === "/perfil/foto") {
+    if (metodo === "POST") {
+      const url = URL.createObjectURL(cuerpo.archivo);
+      PERFIL.usuario.fotoPerfilUrl = url;
+      SESION.usuario.fotoPerfilUrl = url;
+      return ok({ url });
+    }
+    if (metodo === "DELETE") {
+      PERFIL.usuario.fotoPerfilUrl = null;
+      SESION.usuario.fotoPerfilUrl = null;
+      return ok({});
+    }
   }
 
-  coincide = camino.match(/^\/mascotas\/([^/]+)\/examenes$/);
-  if (coincide) {
-    return ok({ examenes: EXAMENES.filter((e) => e.mascotaId === coincide[1]) });
+  if (camino === "/perfil/password" && metodo === "POST") {
+    // Para probar el error, escribe "incorrecta" como contraseña actual
+    if (cuerpo.passwordActual === "incorrecta") {
+      return fallo(400, "La contraseña actual no es correcta.", "passwordActual");
+    }
+    return ok({});
   }
-
-  coincide = camino.match(/^\/consultas\/([^/]+)$/);
-  if (coincide) {
-    const consulta = CONSULTAS.find((c) => c.id === coincide[1]);
-    return consulta ? ok({ consulta: detalleConsulta(consulta) }) : fallo(404, "No encontramos esa consulta.");
-  }
-
 
   return null;
 }

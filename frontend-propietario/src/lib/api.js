@@ -72,3 +72,30 @@ export async function descargarArchivo(ruta, nombreSugerido) {
   URL.revokeObjectURL(url);
   return { ok: true, estado: 200 };
 }
+
+// Sube un archivo (foto) con multipart/form-data. En modo de prueba lo simula en el navegador.
+export async function subirArchivo(ruta, archivo, campo = "foto") {
+  if (USAR_MOCK) return simular(ruta, "POST", { archivo });
+
+  try {
+    const formulario = new FormData();
+    formulario.append(campo, archivo); // sin Content-Type: el navegador pone el boundary
+    const respuesta = await fetch(`${API_URL}${ruta}`, {
+      method: "POST",
+      credentials: "include",
+      body: formulario,
+    });
+    const datos = await respuesta.json().catch(() => ({}));
+    if (!respuesta.ok) {
+      return {
+        ok: false,
+        estado: respuesta.status,
+        error: datos.mensaje ?? "No pudimos subir el archivo. Intenta de nuevo.",
+        campo: datos.campo,
+      };
+    }
+    return { ok: true, estado: respuesta.status, datos };
+  } catch {
+    return { ok: false, estado: 0, error: "No pudimos conectar con el servidor. Revisa tu conexión." };
+  }
+}

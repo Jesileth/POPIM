@@ -114,3 +114,15 @@ export function validarIdentificadorLogin(valor) {
 export function normalizarIdentificadorLogin(valor) {
   return valor.includes("@") ? normalizarEmail(valor) : normalizarTelefono(valor);
 }
+
+// ---------- Imágenes (foto de perfil y de mascota) ----------
+export const TIPOS_IMAGEN = ["image/jpeg", "image/png", "image/webp"];
+export const MAX_IMAGEN_MB = 2;
+
+export function validarImagen(archivo) {
+  if (!TIPOS_IMAGEN.includes(archivo.type)) return "Usa una imagen JPG, PNG o WebP.";
+  if (archivo.size > MAX_IMAGEN_MB * 1024 * 1024) {
+    return `La imagen no puede pesar más de ${MAX_IMAGEN_MB} MB.`;
+  }
+  return "";
+}

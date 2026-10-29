@@ -10,7 +10,7 @@ import {
   IconCalendarPlus,
   IconList,
 } from "@/Componentes/Iconos";
-import { iniciales } from "@/lib/formato";
+import Avatar from "@/Componentes/Avatar";
 
 // La columna Menus.icono de la base de datos trae uno de estos nombres
 function iconoDeMenu(nombre, activo) {
@@ -73,22 +73,25 @@ export default function BarraLateral({ menu, usuario, abierto, onCerrar, onSalir
         })}
       </nav>
 
-      <div className="border-t border-popim-linea p-4">
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-popim-info text-sm font-bold text-popim-primary">
-            {iniciales(usuario.nombreCompleto)}
-          </span>
+            <div className="border-t border-popim-linea p-4">
+        <Link
+          href="/mi-perfil"
+          onClick={onCerrar}
+          aria-current={ruta.startsWith("/mi-perfil") ? "page" : undefined}
+          className={`flex items-center gap-3 rounded-xl p-2 transition ${
+            ruta.startsWith("/mi-perfil") ? "bg-popim-info" : "hover:bg-popim-page"
+          }`}
+        >
+          <Avatar nombre={usuario.nombreCompleto} fotoUrl={usuario.fotoPerfilUrl} tamano={40} />
           <div className="min-w-0 leading-tight">
             <p className="truncate text-sm font-semibold text-popim-ink">{usuario.nombreCompleto}</p>
-            <p className="text-xs text-popim-etiqueta">
-              {usuario.rol === "PROPIETARIO" ? "Propietario" : usuario.rol}
-            </p>
+            <p className="text-xs text-popim-etiqueta">Mi perfil</p>
           </div>
-        </div>
+        </Link>
         <button
           type="button"
           onClick={onSalir}
-          className="mt-3 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-popim-muted transition hover:bg-red-50 hover:text-red-700"
+          className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-popim-muted transition hover:bg-red-50 hover:text-red-700"
         >
           <IconBoxArrowRight size={18} />
           Cerrar sesión
