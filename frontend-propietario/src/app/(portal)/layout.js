@@ -57,7 +57,7 @@ export default function PortalLayout({ children }) {
   if (!sesion) {
     return (
       <div role="status" className="flex min-h-screen items-center justify-center text-sm text-popim-muted">
-        Cargando tu portal...
+        Cargando solicitud, favor espere...
       </div>
     );
   }

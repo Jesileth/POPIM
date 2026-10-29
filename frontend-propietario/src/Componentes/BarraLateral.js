@@ -13,16 +13,21 @@ import {
 import { iniciales } from "@/lib/formato";
 
 // La columna Menus.icono de la base de datos trae uno de estos nombres
-function iconoDeMenu(nombre) {
+function iconoDeMenu(nombre, activo) {
+const claseColor = activo ? "text-popim-primary" : "text-popim-etiqueta";
+
   switch (nombre) {
     case "paw":
-      return <PawIcon className="h-4.5 w-4.5" />;
+      return <PawIcon className={`h-4.5 w-4.5 ${claseColor}`} />;
+
     case "calendar-plus":
-      return <IconCalendarPlus size={18} />;
+      return <IconCalendarPlus size={18} className = {claseColor} />;
+
     case "calendar-check":
-      return <IconCalendarCheck size={18} />;
+      return <IconCalendarCheck size={18} className = {claseColor}  />;
+
     default:
-      return <IconList size={18} />;
+      return <IconList size={18} className = {claseColor} />;
   }
 }
 
@@ -44,7 +49,11 @@ export default function BarraLateral({ menu, usuario, abierto, onCerrar, onSalir
       </p>
       <nav aria-label="Principal" className="flex-1 space-y-1 px-3">
         {menu.map((item) => {
-          const activo = ruta === item.ruta || ruta.startsWith(`${item.ruta}/`);
+
+          const urlDestino = item.ruta.startsWith("/") ? item.ruta : `/${item.ruta}`;
+
+          const activo = ruta === urlDestino || ruta.startsWith(`${urlDestino}/`);
+
           return (
             <Link
               key={item.id}
@@ -57,7 +66,7 @@ export default function BarraLateral({ menu, usuario, abierto, onCerrar, onSalir
                   : "text-popim-texto hover:bg-popim-page hover:text-popim-ink"
               }`}
             >
-              {iconoDeMenu(item.icono)}
+              {iconoDeMenu(item.icono, activo)}
               {item.etiqueta}
             </Link>
           );
