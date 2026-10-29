@@ -60,3 +60,9 @@
 .font-baloo {
   font-family: 'Baloo 2', cursive, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 }
+
+/*Para evitar que la página branquee al cambiar entre pestañas*/
+
+html {
+  scrollbar-gutter: stable;
+}

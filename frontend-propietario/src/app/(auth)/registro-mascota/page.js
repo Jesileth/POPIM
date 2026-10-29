@@ -15,7 +15,10 @@ import {
   validarObligatorio,
 } from "@/lib/validaciones";
 
-const SEXOS = ["Macho", "Hembra"];
+const SEXOS = [
+  { valor: "MACHO", texto: "Macho" },
+  { valor: "HEMBRA", texto: "Hembra" },
+];
 
 export default function RegistroMascotaPage() {
   const router = useRouter();
