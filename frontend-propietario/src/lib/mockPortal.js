@@ -272,11 +272,12 @@ const CITAS = [
 // ---------------------------------------------------------------------
 const CARTILLAS = {
   m1: [
-    { id: "dp1", producto: { id: 1, tipo: "VACUNA", nombre: "Antirrábica" }, fechaProgramada: enDias(-200), fechaAplicada: enDias(-200), estado: DOSIS.APLICADA, lote: "RB-2231", observaciones: null, aplicadaPor: "Dra. Mariana Rojas" },
-    { id: "dp2", producto: { id: 2, tipo: "VACUNA", nombre: "Parvovirus" }, fechaProgramada: enDias(-200), fechaAplicada: enDias(-200), estado: DOSIS.APLICADA, lote: "PV-1180", observaciones: null, aplicadaPor: "Dra. Mariana Rojas" },
+    { id: "dp1", producto: { id: 1, tipo: "VACUNA", nombre: "Antirrábica" }, fechaProgramada: enDias(-200), fechaAplicada: enDias(-200), estado: DOSIS.APLICADA, lote: "RB-2231", observaciones: null, aplicadaPor: "Dra. Mariana Rojas", clinicaId: "c1"  },
+    { id: "dp2", producto: { id: 2, tipo: "VACUNA", nombre: "Parvovirus" }, fechaProgramada: enDias(-200), fechaAplicada: enDias(-200), estado: DOSIS.APLICADA, lote: "PV-1180", observaciones: null, aplicadaPor: "Dra. Mariana Rojas", clinicaId: "c1" },
     { id: "dp3", producto: { id: 1, tipo: "VACUNA", nombre: "Antirrábica" }, fechaProgramada: enDias(165), fechaAplicada: null, estado: DOSIS.PENDIENTE, lote: null, observaciones: "Refuerzo anual", aplicadaPor: null },
     { id: "dp4", producto: { id: 4, tipo: "DESPARASITANTE", nombre: "Desparasitante interno" }, fechaProgramada: enDias(-15), fechaAplicada: null, estado: DOSIS.VENCIDA, lote: null, observaciones: null, aplicadaPor: null },
     { id: "dp5", producto: { id: 5, tipo: "DESPARASITANTE", nombre: "Desparasitante externo" }, fechaProgramada: enDias(10), fechaAplicada: null, estado: DOSIS.PENDIENTE, lote: null, observaciones: null, aplicadaPor: null },
+    { id: "dp6", producto: { id: 6, tipo: "DESPARASITANTE", nombre: "Desparasitante interno" }, fechaProgramada: enDias(0), fechaAplicada: enDias(0), estado: DOSIS.APLICADA, lote: "DI-0455-89", observaciones: null, aplicadaPor: "Dr. Julián López", clinicaId: "c2" },
   ],
   m2: [
     { id: "dp11", producto: { id: 3, tipo: "VACUNA", nombre: "Triple felina" }, fechaProgramada: enDias(-100), fechaAplicada: enDias(-100), estado: DOSIS.APLICADA, lote: "TF-0902", observaciones: null, aplicadaPor: "Dra. Mariana Rojas" },

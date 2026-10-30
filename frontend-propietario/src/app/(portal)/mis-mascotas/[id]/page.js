@@ -7,7 +7,7 @@ import FilaExamen from "@/Componentes/FilaExamen";
 import InsigniaCita from "@/Componentes/InsigniaCita";
 import Mensaje from "@/Componentes/Mensaje";
 import TarjetaSeccion from "@/Componentes/TarjetaSeccion";
-import { IconArrowLeft, IconCapsule, IconChevronRight, IconShieldPlus } from "@/Componentes/Iconos";
+import { IconArrowLeft, IconCapsule, IconChevronRight, IconShieldPlus,IconFilePdf } from "@/Componentes/Iconos";
 import { listarCitas } from "@/servicios/citas";
 import { listarConsultasMascota, listarExamenesMascota, obtenerCartilla, obtenerMascota,subirFotoMascota, quitarFotoMascota
 } from "@/servicios/mascotas";
@@ -17,6 +17,7 @@ import { CLINICAS } from "@/lib/mockPortal";
 import BotonDescarga from "@/Componentes/BotonDescarga";
 import SelectorFoto from "@/Componentes/SelectorFoto";
 import { descargarReporteSalud } from "@/lib/pdf";
+
 
 
 const PESTANAS = [
@@ -116,6 +117,7 @@ function Resumen({ mascota }) {
 // ---------- Pestaña: Cartilla de vacunación y desparasitación ----------
 function Cartilla({ mascota }) {
   const { datos, error } = useCarga(obtenerCartilla, mascota.id);
+  
   if (error) return <Mensaje tipo="error">{error}</Mensaje>;
   if (!datos) return <Cargando />;
 
@@ -366,7 +368,7 @@ const [fotoLocal, setFotoLocal] = useState(undefined);
 
       <div role="tabpanel" id={`panel-${pestana}`} aria-labelledby={`tab-${pestana}`} className="mt-6">
         {pestana === "resumen" && <Resumen mascota={mascota} />}
-        {pestana === "cartilla" && <Cartilla mascotaId={mascota.id} />}
+        {pestana === "cartilla" && <Cartilla mascota={mascota} />}
         {pestana === "historial" && <Historial mascotaId={mascota.id} />}
         {pestana === "examenes" && <Examenes mascotaId={mascota.id} />}
       </div>
