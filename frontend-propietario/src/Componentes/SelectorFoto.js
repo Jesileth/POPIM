@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Avatar from "@/Componentes/Avatar";
-import { IconCamera, IconX } from "@/Componentes/Iconos";
+import { IconCamera, IconX, IconTrash } from "@/Componentes/Iconos";
 import { MAX_IMAGEN_MB, TIPOS_IMAGEN, validarImagen } from "@/lib/validaciones";
 
 export default function SelectorFoto({
@@ -60,6 +60,7 @@ export default function SelectorFoto({
             className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-popim-primary text-white shadow transition hover:bg-popim-primary-dark disabled:opacity-60"
           >
             <IconCamera size={14} />
+
           </button>
           {!mostrarAcciones && fotoUrl && onQuitar && (
             <button
@@ -81,8 +82,10 @@ export default function SelectorFoto({
                 type="button"
                 onClick={() => entrada.current?.click()}
                 disabled={cargando}
-                className="h-9 rounded-xl border border-popim-primary/40 bg-white px-3.5 text-xs font-semibold text-popim-primary transition hover:bg-popim-info disabled:opacity-60"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-popim-primary/40 bg-white px-3.5 text-xs font-semibold text-popim-primary transition shadow-sm hover:bg-popim-page"
+
               >
+                <IconCamera size={14} />
                 {fotoUrl ? "Cambiar foto" : "Subir foto"}
               </button>
               {fotoUrl && onQuitar && (
@@ -90,8 +93,9 @@ export default function SelectorFoto({
                   type="button"
                   onClick={quitar}
                   disabled={cargando}
-                  className="h-9 rounded-xl px-3 text-xs font-semibold text-popim-muted transition hover:bg-red-50 hover:text-red-700 disabled:opacity-60"
+                      className="inline-flex h-9 items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 text-xs font-semibold text-red-600 transition hover:bg-red-100"
                 >
+                  <IconTrash size={14} />
                   Quitar
                 </button>
               )}
