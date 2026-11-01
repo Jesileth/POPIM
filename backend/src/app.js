@@ -1,0 +1,14 @@
+
+// !! Express revisa de arriba hacia abajo, el orden importa 
+
+import express from "express";
+import routes from "./routes/index.js";
+import { noEncontrado, manejarErrores } from "./middlewares/errores.js";
+
+export const app = express();
+
+app.use(express.json());
+app.use("/api", routes);   // todas las rutas empiezan con /api
+
+app.use(noEncontrado);     // si nada coincidió
+app.use(manejarErrores);   // siempre al final
