@@ -4,6 +4,7 @@
 import { Router } from "express";
 import { pool } from "../config/db.js";
 import authRoutes from "./auth.routes.js";
+import catalogosRoutes from "./catalogos.routes.js";
 
 const router = Router();
 
@@ -17,5 +18,6 @@ router.get("/salud", async (req, res) => {
 });
 
 router.use("/auth", authRoutes);
+router.use("/catalogos", catalogosRoutes);
 
 export default router;
