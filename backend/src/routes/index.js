@@ -3,6 +3,7 @@
 
 import { Router } from "express";
 import { pool } from "../config/db.js";
+import authRoutes from "./auth.routes.js";
 
 const router = Router();
 
@@ -14,5 +15,7 @@ router.get("/salud", async (req, res) => {
     res.status(503).json({ servidor: "ok", baseDeDatos: "ERROR", detalle: error.code });
   }
 });
+
+router.use("/auth", authRoutes);
 
 export default router;
