@@ -25,7 +25,7 @@ export const RAZAS_MOCK = {
   ],
   3: [
     "Mestizo", "Perico Australiano", "Ninfa / Ninfa Carolina", "Agapornis / Inseparable",
-    "Canario", "Cacatúa", "Loro Amazonas", "Guacamayo",
+    "Canario", "Cacatúa", "Cacatúa Ninfa","Loro Amazonas", "Guacamayo",
   ],
   4: [
     "Mestizo", "Hámster Sirio", "Hámster Enano Ruso", "Cobaya / Cuyo (Peruviana)",
