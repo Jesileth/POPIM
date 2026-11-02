@@ -88,3 +88,15 @@ export async function registrarAccesoExitoso(usuarioId) {
     [usuarioId]
   );
 }
+
+
+///
+
+export async function buscarPorId(id) {
+  const [filas] = await pool.query(
+    `SELECT id, nombre_completo, correo, telefono, foto_perfil_url, estado_id
+       FROM usuarios WHERE id = ?`,
+    [id]
+  );
+  return filas[0] || null;
+}

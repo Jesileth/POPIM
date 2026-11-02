@@ -4,10 +4,12 @@
 import express from "express";
 import routes from "./routes/index.js";
 import { noEncontrado, manejarErrores } from "./middlewares/errores.js";
+import cookieParser from "cookie-parser";
 
 export const app = express();
 
 app.use(express.json());
+app.use(cookieParser()); // permite leer las cookies
 app.use("/api", routes);   // todas las rutas empiezan con /api
 
 app.use(noEncontrado);     // si nada coincidió

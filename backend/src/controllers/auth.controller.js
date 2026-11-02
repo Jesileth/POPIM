@@ -62,3 +62,19 @@ export async function login(req, res) {
 
   res.json({ usuario: r.usuario });
 }
+
+
+//Para borrar una cookie 
+export async function sesion(req, res) {
+  res.json(await authService.obtenerSesion(req.usuarioId));
+}
+
+export function logout(req, res) {
+  res.clearCookie("popim_token", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
+  res.json({ mensaje: "Sesión cerrada" });
+}

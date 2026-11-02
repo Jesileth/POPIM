@@ -79,3 +79,19 @@ export async function iniciarSesion({ identificador, contrasena, portal, recorda
     },
   };
 }
+
+// verificación del token en cada inicio de sesión en caso de inactivación del usuario 
+export async function obtenerSesion(usuarioId) {
+  const usuario = await usuariosRepo.buscarPorId(usuarioId);
+  if (!usuario || usuario.estado_id !== 102) throw new ErrorHttp(401, "Sesión no válida");
+
+  return {
+    usuario: {
+      id: usuario.id,
+      nombre: usuario.nombre_completo,
+      correo: usuario.correo,
+      telefono: usuario.telefono,
+      fotoUrl: usuario.foto_perfil_url,
+    },
+  };
+}
