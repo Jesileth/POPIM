@@ -47,3 +47,44 @@ export async function crearPropietario({ nombreCompleto, correo, telefono, cedul
     conexion.release();
   }
 }
+
+
+export async function buscarParaLogin(identificador) {
+  const [filas] = await pool.query(
+    `SELECT id, nombre_completo, correo, telefono, contrasena, foto_perfil_url,
+            estado_id, intentos_fallidos
+       FROM usuarios
+      WHERE correo = ? OR telefono = ?
+      LIMIT 1`,
+    [identificador.toLowerCase(), identificador]
+  );
+  return filas[0] || null;
+}
+
+export async function obtenerPortales(usuarioId) {
+  const [filas] = await pool.query(
+    `SELECT DISTINCT r.portal
+       FROM usuario_roles ur
+       JOIN roles r ON r.id = ur.rol_id
+      WHERE ur.usuario_id = ?`,
+    [usuarioId]
+  );
+  return filas.map((f) => f.portal);
+}
+
+export async function registrarIntentoFallido(usuarioId, bloquear) {
+  await pool.query(
+    `UPDATE usuarios
+        SET intentos_fallidos = intentos_fallidos + 1,
+            estado_id = IF(?, 103, estado_id)
+      WHERE id = ?`,
+    [bloquear ? 1 : 0, usuarioId]
+  );
+}
+
+export async function registrarAccesoExitoso(usuarioId) {
+  await pool.query(
+    "UPDATE usuarios SET intentos_fallidos = 0, ultimo_acceso = NOW() WHERE id = ?",
+    [usuarioId]
+  );
+}

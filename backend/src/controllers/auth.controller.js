@@ -32,3 +32,33 @@ export async function registro(req, res) {
   const creado = await authService.registrarPropietario({ nombreCompleto, correo, telefono, cedula, direccion, contrasena });
   res.status(201).json(creado);
 }
+
+
+// portales
+export async function login(req, res) {
+  const b = req.body ?? {};
+  const identificador = texto(b.identificador);
+  const contrasena = b.contrasena;
+  const portal = texto(b.portal);
+
+  if (!identificador) throw new ErrorHttp(400, "Escribe tu correo o teléfono", "identificador");
+  if (typeof contrasena !== "string" || !contrasena)
+    throw new ErrorHttp(400, "Escribe tu contraseña", "contrasena");
+
+  const r = await authService.iniciarSesion({
+    identificador,
+    contrasena,
+    portal,
+    recordarme: Boolean(b.recordarme),
+  });
+
+  res.cookie("popim_token", r.token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: (b.recordarme ? 30 * 24 : 12) * 3600 * 1000,
+  });
+
+  res.json({ usuario: r.usuario });
+}
