@@ -60,14 +60,14 @@ export async function login(req, res) {
     maxAge: (b.recordarme ? 30 * 24 : 12) * 3600 * 1000,
   });
 
-  res.json({ usuario: r.usuario });
+    res.json(r.sesion);
 }
 
 
 //Para borrar una cookie 
-export async function sesion(req, res) {
-  res.json(await authService.obtenerSesion(req.usuarioId));
-}
+  export async function sesion(req, res) {
+    res.json(await authService.obtenerSesion(req.usuarioId, req.portal));
+  }
 
 export function logout(req, res) {
   res.clearCookie("popim_token", {

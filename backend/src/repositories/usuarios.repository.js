@@ -100,3 +100,22 @@ export async function buscarPorId(id) {
   );
   return filas[0] || null;
 }
+
+export async function obtenerPermisos(usuarioId) {
+  const [filas] = await pool.query(
+    "SELECT permiso FROM v_permisos_usuario WHERE usuario_id = ?",
+    [usuarioId]
+  );
+  return filas.map((f) => f.permiso);
+}
+
+export async function obtenerMenu(usuarioId, portal) {
+  const [filas] = await pool.query(
+    `SELECT id, padre_id AS padreId, etiqueta, ruta, icono, orden
+       FROM v_menu_usuario
+      WHERE usuario_id = ? AND portal = ?
+      ORDER BY orden`,
+    [usuarioId, portal]
+  );
+  return filas;
+}

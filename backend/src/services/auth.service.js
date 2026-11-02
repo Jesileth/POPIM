@@ -35,6 +35,27 @@ export async function registrarPropietario(datos) {
   }
 }
 
+async function armarSesion(usuario, portal) {
+  const [permisos, menu] = await Promise.all([
+    usuariosRepo.obtenerPermisos(usuario.id),
+    usuariosRepo.obtenerMenu(usuario.id, portal),
+  ]);
+  return {
+    usuario: {
+      id: usuario.id,
+      nombreCompleto: usuario.nombre_completo,
+      correo: usuario.correo,
+      telefono: usuario.telefono,
+      fotoPerfilUrl: usuario.foto_perfil_url,
+      rol: portal,
+    },
+    menu,
+    permisos,
+  };
+}
+
+
+
 // PORTALES 
 const PORTALES = ["PROPIETARIO", "CLINICA"];
 const MAX_INTENTOS = 5;
@@ -68,30 +89,12 @@ export async function iniciarSesion({ identificador, contrasena, portal, recorda
     expiresIn: recordarme ? "30d" : "12h",
   });
 
-  return {
-    token,
-    usuario: {
-      id: usuario.id,
-      nombre: usuario.nombre_completo,
-      correo: usuario.correo,
-      telefono: usuario.telefono,
-      fotoUrl: usuario.foto_perfil_url,
-    },
-  };
+    return { token, sesion: await armarSesion(usuario, portal) };
 }
 
 // verificación del token en cada inicio de sesión en caso de inactivación del usuario 
-export async function obtenerSesion(usuarioId) {
-  const usuario = await usuariosRepo.buscarPorId(usuarioId);
-  if (!usuario || usuario.estado_id !== 102) throw new ErrorHttp(401, "Sesión no válida");
-
-  return {
-    usuario: {
-      id: usuario.id,
-      nombre: usuario.nombre_completo,
-      correo: usuario.correo,
-      telefono: usuario.telefono,
-      fotoUrl: usuario.foto_perfil_url,
-    },
-  };
-}
+  export async function obtenerSesion(usuarioId, portal) {
+    const usuario = await usuariosRepo.buscarPorId(usuarioId);
+    if (!usuario || usuario.estado_id !== 102) throw new ErrorHttp(401, "Sesión no válida");
+    return armarSesion(usuario, portal);
+  }
