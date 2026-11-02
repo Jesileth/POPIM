@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { ErrorHttp } from "../utils/errores.js";
 import * as mascotasRepo from "../repositories/mascotas.repository.js";
 import * as catalogosRepo from "../repositories/catalogos.repository.js";
+import { guardarImagen, borrarImagen } from "../config/archivos.js";
 
 const LETRAS = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 
@@ -65,4 +66,32 @@ export async function registrar(usuarioId, datos) {
     }
   }
   throw new ErrorHttp(500, "No pudimos generar el código único. Intenta de nuevo.");
+}
+
+
+// servicio de subir foto
+export async function subirFoto(usuarioId, mascotaId, archivo) {
+  if (!archivo) throw new ErrorHttp(400, "Elige una imagen", "foto");
+
+  const propietarioId = await propietarioDe(usuarioId);
+  const actual = await mascotasRepo.buscarDePropietario(mascotaId, propietarioId);
+  if (!actual) throw new ErrorHttp(404, "No encontramos esa mascota");
+
+  const nombre = await guardarImagen(archivo.buffer, "mascotas");
+  if (!nombre) throw new ErrorHttp(400, "La imagen debe ser JPG, PNG o WebP", "foto");
+
+  const url = `/api/archivos/mascotas/${nombre}`;
+  await mascotasRepo.actualizarFoto(mascotaId, url);
+  await borrarImagen("mascotas", actual.foto_url); // borra la foto anterior para no acumular basura
+  return { url };
+}
+
+export async function quitarFoto(usuarioId, mascotaId) {
+  const propietarioId = await propietarioDe(usuarioId);
+  const actual = await mascotasRepo.buscarDePropietario(mascotaId, propietarioId);
+  if (!actual) throw new ErrorHttp(404, "No encontramos esa mascota");
+
+  await mascotasRepo.actualizarFoto(mascotaId, null);
+  await borrarImagen("mascotas", actual.foto_url);
+  return {};
 }

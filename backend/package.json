@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-    "scripts": {
+  "scripts": {
     "dev": "node --watch --env-file=.env src/index.js",
     "probar-conexion": "node --env-file=.env scripts/probar-conexion.js"
   },
@@ -24,6 +24,7 @@
     "cookie-parser": "^1.4.7",
     "express": "^5.3.0",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.5.0",
     "mysql2": "^3.24.6"
   }
 }

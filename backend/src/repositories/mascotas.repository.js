@@ -71,3 +71,16 @@ export async function crearMascota(d) {
     conexion.release();
   }
 }
+
+// Para la subida de archivos
+export async function buscarDePropietario(mascotaId, propietarioId) {
+  const [filas] = await pool.query(
+    "SELECT id, foto_url FROM mascotas WHERE id = ? AND propietario_id = ?",
+    [mascotaId, propietarioId]
+  );
+  return filas[0] ?? null;
+}
+
+export async function actualizarFoto(mascotaId, url) {
+  await pool.query("UPDATE mascotas SET foto_url = ? WHERE id = ?", [url, mascotaId]);
+}

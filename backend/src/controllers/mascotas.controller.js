@@ -48,3 +48,13 @@ export async function registrar(req, res) {
   });
   res.status(201).json(creada);
 }
+
+
+// subir fotito
+export async function subirFoto(req, res) {
+  res.json(await mascotasService.subirFoto(req.usuarioId, req.params.id, req.file));
+}
+
+export async function quitarFoto(req, res) {
+  res.json(await mascotasService.quitarFoto(req.usuarioId, req.params.id));
+}

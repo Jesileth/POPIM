@@ -6,6 +6,7 @@ import { pool } from "../config/db.js";
 import authRoutes from "./auth.routes.js";
 import catalogosRoutes from "./catalogos.routes.js";
 import mascotasRoutes from "./mascotas.routes.js";
+import archivosRoutes from "./archivos.routes.js";
 
 
 const router = Router();
@@ -22,5 +23,6 @@ router.get("/salud", async (req, res) => {
 router.use("/auth", authRoutes);
 router.use("/catalogos", catalogosRoutes);
 router.use("/mascotas", mascotasRoutes);
+router.use("/archivos", archivosRoutes);
 
 export default router;
