@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "node --watch --env-file=.env src/index.js",
-    "probar-conexion": "node --env-file=.env scripts/probar-conexion.js"
+    "probar-conexion": "node --env-file=.env scripts/probar-conexion.js",
+    "medir-latencia": "node --env-file=.env scripts/medir-latencia.js"
   },
   "keywords": [],
   "author": "",

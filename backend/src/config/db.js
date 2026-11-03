@@ -14,4 +14,14 @@ export const pool = mysql.createPool({
   connectionLimit: 10,
   dateStrings: true,
   decimalNumbers: true,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000,
+  maxIdle: 5,
+  idleTimeout: 10 * 60 * 1000, // mantiene las conexiones abiertas 10 minutos sin uso
 });
+
+
+// Lo que hace es abrir varias conexiones al arrancar, para que la primera petición real no pague los 1.6 s
+export async function calentarPool(cantidad = 5) {
+  await Promise.all(Array.from({ length: cantidad }, () => pool.query("SELECT 1")));
+}
