@@ -10,3 +10,20 @@ export function hoyLocal() {
   const dia = String(d.getDate()).padStart(2, "0");
   return `${d.getFullYear()}-${mes}-${dia}`;
 }
+
+export const DIAS_SEMANA = ["DOMINGO", "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO"];
+
+// "08:30" -> 510 (minutos desde la medianoche), para poder sumar y comparar horas
+export const aMinutos = (hora) => {
+  const [h, m] = hora.split(":").map(Number);
+  return h * 60 + m;
+};
+
+// 510 -> "08:30"
+export const deMinutos = (min) =>
+  `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+
+export const ahoraEnMinutos = () => {
+  const d = new Date();
+  return d.getHours() * 60 + d.getMinutes();
+};
