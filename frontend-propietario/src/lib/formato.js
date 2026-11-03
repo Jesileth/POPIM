@@ -114,3 +114,12 @@ export function formatearFechaHora(fechaHora) {
     minute: "2-digit",
   }).format(new Date(fechaHora));
 }
+
+export function formatearMomento(valor) {
+  return new Intl.DateTimeFormat("es", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(valor));
+}

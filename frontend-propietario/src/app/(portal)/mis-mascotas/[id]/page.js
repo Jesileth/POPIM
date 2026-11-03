@@ -12,7 +12,7 @@ import { listarCitas } from "@/servicios/citas";
 import { listarConsultasMascota, listarExamenesMascota, obtenerCartilla, obtenerMascota,subirFotoMascota, quitarFotoMascota
 } from "@/servicios/mascotas";
 import { useCarga } from "@/lib/useCarga";
-import { formatearEdad, formatearFecha, formatearHora } from "@/lib/formato";
+import { formatearEdad, formatearFecha, formatearHora, formatearMomento } from "@/lib/formato";
 import { CLINICAS } from "@/lib/mockPortal";
 import BotonDescarga from "@/Componentes/BotonDescarga";
 import SelectorFoto from "@/Componentes/SelectorFoto";
@@ -63,7 +63,7 @@ function Resumen({ mascota }) {
     ["Sexo", mascota.sexo === "MACHO" ? "Macho" : "Hembra"],
     ["Edad", formatearEdad(mascota.edadActualMeses)],
     ["Fecha de nacimiento", mascota.fechaNacimiento ? formatearFecha(mascota.fechaNacimiento) : "No registrada"],
-    ["Registrada el", formatearFecha(mascota.fechaRegistro.slice(0, 10))],
+    ["Registrada el", formatearMomento (mascota.fechaRegistro.slice(0, 10))],
   ];
 
   return (
