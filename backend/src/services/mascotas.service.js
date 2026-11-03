@@ -25,6 +25,8 @@ function formatear(f) {
     sexo: f.sexo,
     edadActualMeses: f.edadActualMeses,
     fotoUrl: f.fotoUrl,
+    fechaNacimiento: f.fechaNacimiento,
+    fechaRegistro: f.fechaRegistro ? `${f.fechaRegistro.replace(" ", "T")}Z` : null,
   };
 }
 
@@ -94,4 +96,13 @@ export async function quitarFoto(usuarioId, mascotaId) {
   await mascotasRepo.actualizarFoto(mascotaId, null);
   await borrarImagen("mascotas", actual.foto_url);
   return {};
+}
+
+
+// función nueva para ver los datos de la mascota
+export async function obtener(usuarioId, mascotaId) {
+  const propietarioId = await propietarioDe(usuarioId);
+  const fila = await mascotasRepo.buscarCompletaDePropietario(mascotaId, propietarioId);
+  if (!fila) throw new ErrorHttp(404, "No encontramos esa mascota");
+  return { mascota: formatear(fila) };
 }

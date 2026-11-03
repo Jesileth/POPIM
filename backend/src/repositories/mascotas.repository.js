@@ -6,6 +6,7 @@ import { pool } from "../config/db.js";
 const SELECT_MASCOTA = `
   SELECT m.id, m.codigo_unico AS codigoUnico, m.nombre, m.sexo,
          m.edad_actual_meses AS edadActualMeses, m.foto_url AS fotoUrl,
+         m.fecha_nacimiento AS fechaNacimiento, m.fecha_registro AS fechaRegistro,
          e.id AS especieId, e.nombre AS especieNombre,
          r.id AS razaId, r.nombre AS razaNombre
     FROM v_mascotas m
@@ -83,4 +84,14 @@ export async function buscarDePropietario(mascotaId, propietarioId) {
 
 export async function actualizarFoto(mascotaId, url) {
   await pool.query("UPDATE mascotas SET foto_url = ? WHERE id = ?", [url, mascotaId]);
+}
+
+
+// Busqueda completa de la mascota
+export async function buscarCompletaDePropietario(mascotaId, propietarioId) {
+  const [filas] = await pool.query(
+    `${SELECT_MASCOTA} WHERE m.id = ? AND m.propietario_id = ?`,
+    [mascotaId, propietarioId]
+  );
+  return filas[0] ?? null;
 }

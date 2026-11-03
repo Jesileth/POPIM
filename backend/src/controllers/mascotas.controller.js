@@ -58,3 +58,8 @@ export async function subirFoto(req, res) {
 export async function quitarFoto(req, res) {
   res.json(await mascotasService.quitarFoto(req.usuarioId, req.params.id));
 }
+
+//
+export async function obtener(req, res) {
+  res.json(await mascotasService.obtener(req.usuarioId, req.params.id));
+}

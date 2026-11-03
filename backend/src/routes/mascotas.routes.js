@@ -14,5 +14,6 @@ router.get("/", requierePermiso("MASCOTAS_VER"), mascotasController.listar);
 router.post("/", requierePermiso("MASCOTAS_REGISTRAR"), mascotasController.registrar);
 router.post("/:id/foto", requierePermiso("MASCOTAS_EDITAR_FOTO"), recibirFoto, mascotasController.subirFoto);
 router.delete("/:id/foto", requierePermiso("MASCOTAS_EDITAR_FOTO"), mascotasController.quitarFoto);
+router.get("/:id", requierePermiso("MASCOTAS_VER"), mascotasController.obtener);
 
 export default router;

@@ -10,4 +10,8 @@ export const pool = mysql.createPool({
   ssl: { ca: fs.readFileSync(process.env.DB_CA_PATH) },
   waitForConnections: true,
   connectionLimit: 10,
+  waitForConnections: true,
+  connectionLimit: 10,
+  dateStrings: true,
+  decimalNumbers: true,
 });
