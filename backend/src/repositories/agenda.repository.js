@@ -15,18 +15,29 @@ export async function listarClinicas() {
 }
 
 export async function listarVeterinarios(clinicaId) {
-  const [filas] = await pool.query(
-    `SELECT pc.id, pc.clinica_id AS clinicaId, u.nombre_completo AS nombreCompleto,
-            esp.nombre AS especialidad, pv.presentacion
-       FROM personal_clinica pc
-       JOIN usuarios u ON u.id = pc.usuario_id
-       JOIN perfil_veterinario pv ON pv.usuario_id = pc.usuario_id
-       LEFT JOIN especialidades esp ON esp.id = pv.especialidad_id
-      WHERE pc.clinica_id = ? AND pc.estado_id = 301 AND u.estado_id NOT IN (103, 104)
-      ORDER BY u.nombre_completo`,
-    [clinicaId]
-  );
-  return filas;
+  const [[filas], [horarios]] = await Promise.all([
+    pool.query(
+      `SELECT pc.id, pc.clinica_id AS clinicaId, u.nombre_completo AS nombreCompleto,
+              esp.nombre AS especialidad, pv.presentacion
+         FROM personal_clinica pc
+         JOIN usuarios u ON u.id = pc.usuario_id
+         JOIN perfil_veterinario pv ON pv.usuario_id = pc.usuario_id
+         LEFT JOIN especialidades esp ON esp.id = pv.especialidad_id
+        WHERE pc.clinica_id = ? AND pc.estado_id = 301 AND u.estado_id NOT IN (103, 104)
+        ORDER BY u.nombre_completo`,
+      [clinicaId]
+    ),
+    pool.query(
+      `SELECT hp.personal_id AS personalId, hp.dia_semana AS diaSemana,
+              hp.hora_inicio AS horaInicio, hp.hora_fin AS horaFin
+         FROM horarios_personal hp
+         JOIN personal_clinica pc ON pc.id = hp.personal_id
+        WHERE pc.clinica_id = ? AND pc.estado_id = 301
+        ORDER BY hp.dia_semana, hp.hora_inicio`,
+      [clinicaId]
+    ),
+  ]);
+  return { filas, horarios };
 }
 
 // Trae todo lo necesario para calcular los bloques, en paralelo (un solo viaje de espera)

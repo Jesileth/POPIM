@@ -10,9 +10,21 @@ export async function clinicas() {
 }
 
 export async function veterinarios(clinicaId) {
-  return { veterinarios: await agendaRepo.listarVeterinarios(clinicaId) };
-}
+  const { filas, horarios } = await agendaRepo.listarVeterinarios(clinicaId);
 
+  return {
+    veterinarios: filas.map((v) => ({
+      ...v,
+      horarios: horarios
+        .filter((h) => h.personalId === v.id)
+        .map((h) => ({
+          diaSemana: h.diaSemana,
+          horaInicio: h.horaInicio.slice(0, 5),
+          horaFin: h.horaFin.slice(0, 5),
+        })),
+    })),
+  };
+}
 // Convierte un "2026-11-05 08:00:00" en minutos dentro del día pedido
 function minutosEnElDia(fechaHora, fecha) {
   const dia = fechaHora.slice(0, 10);
