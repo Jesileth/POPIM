@@ -9,6 +9,7 @@ import mascotasRoutes from "./mascotas.routes.js";
 import archivosRoutes from "./archivos.routes.js";
 import agendaRoutes from "./agenda.routes.js";
 import citasRoutes from "./citas.routes.js";
+import perfilRoutes from "./perfil.routes.js";
 
 
 const router = Router();
@@ -28,5 +29,6 @@ router.use("/mascotas", mascotasRoutes);
 router.use("/archivos", archivosRoutes);
 router.use(agendaRoutes);
 router.use("/citas", citasRoutes);
+router.use("/perfil", perfilRoutes)
 
 export default router;

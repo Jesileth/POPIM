@@ -1,0 +1,94 @@
+
+//
+
+import bcrypt from "bcryptjs";
+import { ErrorHttp } from "../utils/errores.js";
+import { aMomentoUtc } from "../utils/fechas.js";
+import { guardarImagen, borrarImagen } from "../config/archivos.js";
+import * as perfilRepo from "../repositories/perfil.repository.js";
+import * as usuariosRepo from "../repositories/usuarios.repository.js";
+
+function formatear(f) {
+  return {
+    usuario: {
+      id: f.id,
+      nombreCompleto: f.nombreCompleto,
+      correo: f.correo,
+      telefono: f.telefono,
+      fotoPerfilUrl: f.fotoPerfilUrl,
+      fechaRegistro: aMomentoUtc(f.fechaRegistro),
+      ultimoAcceso: aMomentoUtc(f.ultimoAcceso),
+      estado: { codigo: f.estadoCodigo, nombre: f.estadoNombre },
+    },
+    propietario: { cedula: f.cedula, direccion: f.direccion },
+  };
+}
+
+export async function obtener(usuarioId)
+{
+  const fila = await perfilRepo.obtenerPerfil(usuarioId);
+  if (!fila) throw new ErrorHttp(404, "No encontramos tu perfil");
+  return formatear(fila);     
+}
+
+export async function guardar(usuarioId, datos) 
+{
+  try 
+  {
+    await perfilRepo.actualizarPerfil({ usuarioId, ...datos });
+  } 
+  
+  catch (error) 
+  {
+    if (error.code === "ER_DUP_ENTRY" && (error.sqlMessage || "").includes("uq_usuarios_telefono"))
+      throw new ErrorHttp(409, "Este teléfono ya está registrado", "telefono");
+    throw error;
+  }
+
+  return obtener(usuarioId);
+}
+
+export async function subirFoto(usuarioId, archivo) 
+{
+  if (!archivo) throw new ErrorHttp(400, "Elige una imagen", "foto");
+
+  const [nombre, anterior] = await Promise.all
+  ([
+    guardarImagen(archivo.buffer, "perfiles"),
+    perfilRepo.obtenerFoto(usuarioId),
+  ]);
+
+  if (!nombre) throw new ErrorHttp(400, "La imagen debe ser JPG, PNG o WebP", "foto");
+
+  const url = `/api/archivos/perfiles/${nombre}`;
+  await perfilRepo.actualizarFoto(usuarioId, url);
+  await borrarImagen("perfiles", anterior);
+  return { url };
+}
+
+export async function quitarFoto(usuarioId) 
+{
+  const anterior = await perfilRepo.obtenerFoto(usuarioId);
+  await perfilRepo.actualizarFoto(usuarioId, null);
+  await borrarImagen("perfiles", anterior);
+  return {};
+}
+
+export async function cambiarPassword(usuarioId, passwordActual, passwordNueva) 
+{
+  const cred = await perfilRepo.obtenerCredenciales(usuarioId);
+  if (!cred || cred.estadoId !== 102) throw new ErrorHttp(401, "Sesión no válida");
+
+  const coincide = passwordActual.length <= 72 && (await bcrypt.compare(passwordActual, cred.contrasena));
+  if (!coincide) {
+    // Cuenta como intento fallido: si no, alguien con tu sesión podría adivinar tu contraseña sin límite
+    await usuariosRepo.registrarIntentoFallido(usuarioId, cred.intentos + 1 >= 5);
+    throw new ErrorHttp(400, "La contraseña actual no es correcta", "passwordActual");
+  }
+
+  if (await bcrypt.compare(passwordNueva, cred.contrasena))
+    throw new ErrorHttp(400, "La nueva contraseña debe ser distinta de la actual", "passwordNueva");
+
+  await perfilRepo.actualizarContrasena(usuarioId, await bcrypt.hash(passwordNueva, 12));
+  return {};
+}

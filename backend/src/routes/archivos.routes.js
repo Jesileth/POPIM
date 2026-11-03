@@ -10,6 +10,8 @@ const router = Router();
 
 router.use(autenticar); // solo quien inició sesión ve las fotos
 
+//#region guardado de mascotas
+/*
 router.get("/mascotas/:nombre", (req, res) => {
   if (!esNombreValido(req.params.nombre)) throw new ErrorHttp(404, "Archivo no encontrado");
 
@@ -18,6 +20,27 @@ router.get("/mascotas/:nombre", (req, res) => {
   res.sendFile(
     req.params.nombre,
     { root: path.join(RAIZ_UPLOADS, "mascotas"), cacheControl: false },
+    (error) => {
+      if (error && !res.headersSent) res.status(404).json({ mensaje: "Archivo no encontrado" });
+    }
+  );
+});
+
+*/
+//#endregion
+
+const CARPETAS = ["mascotas", "perfiles"];
+
+router.get("/:carpeta/:nombre", (req, res) => {
+  const { carpeta, nombre } = req.params;
+  if (!CARPETAS.includes(carpeta) || !esNombreValido(nombre))
+    throw new ErrorHttp(404, "Archivo no encontrado");
+
+  res.set("X-Content-Type-Options", "nosniff");
+  res.set("Cache-Control", "private, max-age=3600");
+  res.sendFile(
+    nombre,
+    { root: path.join(RAIZ_UPLOADS, carpeta), cacheControl: false },
     (error) => {
       if (error && !res.headersSent) res.status(404).json({ mensaje: "Archivo no encontrado" });
     }
