@@ -27,3 +27,7 @@ export const ahoraEnMinutos = () => {
   const d = new Date();
   return d.getHours() * 60 + d.getMinutes();
 };
+
+
+export const esFechaValida = (f) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(f) && !Number.isNaN(new Date(`${f}T00:00:00`).getTime());
