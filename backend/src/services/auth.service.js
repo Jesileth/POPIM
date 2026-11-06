@@ -9,6 +9,8 @@ import jwt from "jsonwebtoken";
 import * as verificacion from "./verificacion.service.js";
 import { enviarCorreo } from "./correo.service.js";
 import { plantillaRecuperacion } from "../plantillas/recuperacion.js";
+import { plantillaPasswordCambiada } from "../plantillas/passwordCambiada.js";
+import { fechaHoraManagua } from "../utils/fechas.js";
 
 export async function registrarPropietario(datos) {
     // encriptamos la contraseña antes de guardarla en la bd
@@ -148,4 +150,16 @@ export async function restablecerContrasena(correo, codigo, contrasenaNueva) {
 
   const hecho = await usuariosRepo.cambiarContrasenaConCodigo({ usuarioId: usuario.id, tokenId: token.id, hash });
   if (!hecho) throw new ErrorHttp(400, "Este código ya fue utilizado", "codigo");
+
+  try {
+  enviarCorreo({
+    para: correo,
+    ...plantillaPasswordCambiada({
+      nombre: usuario.nombreCompleto.split(" ")[0],
+      fechaHora: fechaHoraManagua(),
+    }),
+  }).catch((error) => console.error("No se pudo enviar el aviso de contraseña cambiada:", error.message));
+} catch (error) {
+  console.error("No se pudo preparar el aviso de contraseña cambiada:", error.message);
+}
 }

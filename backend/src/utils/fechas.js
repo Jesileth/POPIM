@@ -31,3 +31,11 @@ export const ahoraEnMinutos = () => {
 
 export const esFechaValida = (f) =>
   /^\d{4}-\d{2}-\d{2}$/.test(f) && !Number.isNaN(new Date(`${f}T00:00:00`).getTime());
+
+export function fechaHoraManagua(fecha = new Date()) {
+  return new Intl.DateTimeFormat("es-NI", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "America/Managua",
+  }).format(fecha);
+}
