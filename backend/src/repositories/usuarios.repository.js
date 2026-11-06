@@ -14,7 +14,7 @@ export async function crearPropietario({ nombreCompleto, correo, telefono, cedul
 
     await conexion.query(
       `INSERT INTO usuarios (id, nombre_completo, correo, telefono, contrasena, estado_id)
-       VALUES (?, ?, ?, ?, ?, 102)`,
+       VALUES (?, ?, ?, ?, ?, 101)`,
       [usuarioId, nombreCompleto, correo, telefono, contrasenaHash]
     );
 

@@ -26,7 +26,7 @@ export async function registrarPropietario(datos) {
       direccion: datos.direccion,
       contrasenaHash,
     });
-    return { id };
+    // return { id };
   } 
   
   catch (error) {
@@ -39,6 +39,8 @@ export async function registrarPropietario(datos) {
     }
     throw error;
   }
+   // La cuenta nace en 101 (pendiente): se envía el código y se devuelven los tokens
+  return buscarPerfilPendiente(datos.correo);
 }
 
 async function armarSesion(usuario, portal) {
@@ -197,8 +199,22 @@ export async function buscarPerfilPendiente(identificador) {
   };
 }
 
-export async function activarCuenta({ tokenActivacion, codigo, contrasena }) {
+export async function verificarActivacion({ tokenActivacion, codigo }) {
   const { usuarioId } = verificacion.leerTokenActivacion(tokenActivacion);
+
+  const perfil = await usuariosRepo.buscarContactoPorId(usuarioId);
+  if (!perfil || perfil.estadoId !== 101) throw ERROR_CODIGO();
+
+  const token = await verificacion.validarCodigo(usuarioId, "ACTIVACION", codigo);
+  return {
+    tokenConfirmacion: verificacion.crearTokenConfirmacion(usuarioId, token.id),
+    requiereContrasena: Boolean(perfil.sinContrasena),
+  };
+}
+
+
+export async function activarCuenta({ tokenConfirmacion, contrasena }) {
+  const { usuarioId, tokenId } = verificacion.leerTokenConfirmacion(tokenConfirmacion);
 
   const perfil = await usuariosRepo.buscarContactoPorId(usuarioId);
   if (!perfil || perfil.estadoId !== 101) throw ERROR_CODIGO();
@@ -206,11 +222,9 @@ export async function activarCuenta({ tokenActivacion, codigo, contrasena }) {
   if (perfil.sinContrasena && !contrasena)
     throw new ErrorHttp(400, "Elige una contraseña para tu cuenta", "contrasena");
 
-  const token = await verificacion.validarCodigo(usuarioId, "ACTIVACION", codigo);
-
   // Solo se fija contraseña si el perfil no tenía: nunca se pisa la de una cuenta que ya la tiene
   const hash = perfil.sinContrasena ? await bcrypt.hash(contrasena, 12) : null;
 
-  const hecho = await usuariosRepo.activarCuentaConCodigo({ usuarioId, tokenId: token.id, hash });
+  const hecho = await usuariosRepo.activarCuentaConCodigo({ usuarioId, tokenId, hash });
   if (!hecho) throw new ErrorHttp(400, "El código venció o ya fue utilizado", "codigo");
 }

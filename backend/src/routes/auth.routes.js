@@ -7,7 +7,7 @@ import { validar } from "../middlewares/validar.js";
 import {
   esquemaSolicitarRecuperacion,
   esquemaVerificarRecuperacion,
-  esquemaRestablecerContrasena,esquemaBuscarActivacion, esquemaConfirmarActivacion
+  esquemaRestablecerContrasena,esquemaBuscarActivacion, esquemaConfirmarActivacion, esquemaVerificarActivacion
 } from "../schemas/auth.schemas.js";
 
 const router = Router();
@@ -23,4 +23,6 @@ router.post("/recuperacion/restablecer", validar(esquemaRestablecerContrasena), 
 
 router.post("/activacion/buscar", validar(esquemaBuscarActivacion), authController.buscarPerfilPendiente);
 router.post("/activacion/confirmar", validar(esquemaConfirmarActivacion), authController.activarCuenta);
+router.post("/activacion/verificar", validar(esquemaVerificarActivacion), authController.verificarActivacion);
+
 export default router;

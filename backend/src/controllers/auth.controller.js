@@ -101,3 +101,7 @@ export async function activarCuenta(req, res) {
   await authService.activarCuenta(req.body);
   res.json({ mensaje: "Tu cuenta fue activada. Ya puedes iniciar sesión." });
 }
+
+export async function verificarActivacion(req, res) {
+  res.json(await authService.verificarActivacion(req.body));
+}

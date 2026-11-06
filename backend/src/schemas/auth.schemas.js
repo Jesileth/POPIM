@@ -30,8 +30,12 @@ export const esquemaBuscarActivacion = z.object({
     .max(150, "El dato es demasiado largo"),
 });
 
-export const esquemaConfirmarActivacion = z.object({
+export const esquemaVerificarActivacion = z.object({
   tokenActivacion: z.string("Falta la verificación").min(1, "Falta la verificación"),
   codigo,
+});
+
+export const esquemaConfirmarActivacion = z.object({
+  tokenConfirmacion: z.string("Falta la verificación").min(1, "Falta la verificación"),
   contrasena: contrasena.optional(),
 });

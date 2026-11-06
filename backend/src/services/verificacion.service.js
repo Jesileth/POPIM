@@ -79,8 +79,8 @@ function leerPaso(token, uso) {
   }
 }
 
-export const crearTokenRestablecimiento = (usuarioId, tokenId) => firmarPaso(usuarioId, tokenId, "RESTABLECER", 10);
-export const leerTokenRestablecimiento = (token) => leerPaso(token, "RESTABLECER");
+export const crearTokenConfirmacion = (usuarioId, tokenId) => firmarPaso(usuarioId, tokenId, "CONFIRMAR_ACTIVACION", 10);
+export const leerTokenConfirmacion = (token) => leerPaso(token, "CONFIRMAR_ACTIVACION");
 
 export const crearTokenActivacion = (usuarioId) => firmarPaso(usuarioId, null, "ACTIVAR", 15);
 export const leerTokenActivacion = (token) => leerPaso(token, "ACTIVAR");
