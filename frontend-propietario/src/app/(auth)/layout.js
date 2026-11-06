@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import HeaderPopim from "@/Componentes/HeaderPopim";
 import PanelPopim from "@/Componentes/PanelPopim";
 import { PanelContexto } from "@/lib/panelContexto";
+import AvisoFlotante from "@/Componentes/AvisoFlotante";
 
 // En qué lado va el panel azul y qué lema muestra en cada pantalla.
 // Para cambiar un lado, cambia "izquierda" por "derecha" (o al revés).
@@ -79,6 +80,7 @@ export default function AuthLayout({ children }) {
   return (
     <PanelContexto.Provider value={{ fijarLema: setLemaExtra }}>
       <main className="px-4 py-6 sm:px-8 sm:py-10">
+        <AvisoFlotante key={ruta} />
         <HeaderPopim />
         
         {/* <div className="relative mx-auto mt-10 lg:min-h-150 max-w-245 overflow-hidden rounded-[40px] bg-white shadow-sm">*/}

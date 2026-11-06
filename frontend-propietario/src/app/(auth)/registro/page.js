@@ -22,6 +22,7 @@ import {
 } from "@/lib/validaciones";
 import PanelCodigo from "@/Componentes/PanelCodigo";
 import { activarCuenta, buscarPerfilPendiente, registrarPropietario, verificarActivacion } from "@/servicios/auth";
+import { guardarAviso } from "@/lib/aviso";
 
 // El backend llama "correo" a lo que este formulario llama "email"
 const NOMBRES_CAMPOS = { correo: "email" };
@@ -83,14 +84,17 @@ export default function RegistroPage() {
   }
 
   async function verificar(codigo) {
-    const verificada = await verificarActivacion({ tokenActivacion, codigo });
-    if (!verificada.ok) return verificada;
+  const verificada = await verificarActivacion({ tokenActivacion, codigo });
+  if (!verificada.ok) return verificada;
 
-    // Ya trae contraseña (la escribió al registrarse): solo se confirma
-    const activada = await activarCuenta({ tokenConfirmacion: verificada.datos.tokenConfirmacion });
-    if (activada.ok) router.push("/login");
-    return activada;
+  // Ya trae contraseña (la escribió al registrarse): solo se confirma
+  const activada = await activarCuenta({ tokenConfirmacion: verificada.datos.tokenConfirmacion });
+   if (activada.ok) {
+    guardarAviso("¡Cuenta creada con éxito!");
+    router.push(activada.datos.sesionIniciada ? "/registro-mascota" : "/login");
   }
+  return activada;
+}
 
   if (paso === "codigo") {
     return (

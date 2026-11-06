@@ -13,6 +13,8 @@ import {
   validarObligatorio,
   validarPassword,
 } from "@/lib/validaciones";
+import { guardarAviso } from "@/lib/aviso";
+
 
 export default function ActivarCuentaPage() {
   const router = useRouter();
@@ -71,8 +73,11 @@ export default function ActivarCuentaPage() {
 
   async function confirmar(token, password) {
     const respuesta = await activarCuenta({ tokenConfirmacion: token, password });
-    if (respuesta.ok) router.push("/login");
-    return respuesta;
+    if (respuesta.ok) {
+    guardarAviso("¡Cuenta activada con éxito!");
+    router.push(respuesta.datos.sesionIniciada ? "/mis-mascotas" : "/login");
+  }
+  return respuesta;
   }
 
   // PASO 3: crear la contraseña
