@@ -8,7 +8,8 @@
     "probar-conexion": "node --env-file=.env scripts/probar-conexion.js",
     "medir-latencia": "node --env-file=.env scripts/medir-latencia.js",
     "probar-correo": "node --env-file=.env scripts/probar-correo.js",
-    "probar-plantilla": "node scripts/probar-plantilla.js"
+    "probar-plantilla": "node scripts/probar-plantilla.js",
+    "probar-codigos": "node --env-file=.env scripts/probar-codigos.js"
   },
   "keywords": [],
   "author": "",
