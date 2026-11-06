@@ -7,6 +7,16 @@ import * as authService from "../services/auth.service.js";
 
 const texto = (v) => (typeof v === "string" ? v.trim() : "");
 
+function ponerCookieSesion(res, token, recordarme = false) {
+  res.cookie("popim_token", token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: (recordarme ? 30 * 24 : 12) * 3600 * 1000,
+  });
+}
+
 export async function registro(req, res) {
   const nombreCompleto = texto(req.body.nombreCompleto);
   const correo = texto(req.body.correo).toLowerCase();
@@ -52,13 +62,8 @@ export async function login(req, res) {
     recordarme: Boolean(b.recordarme),
   });
 
-  res.cookie("popim_token", r.token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: (b.recordarme ? 30 * 24 : 12) * 3600 * 1000,
-  });
+  ponerCookieSesion(res, r.token, Boolean(b.recordarme));
+  res.json(r.sesion);
 
     res.json(r.sesion);
 }
@@ -98,8 +103,21 @@ export async function buscarPerfilPendiente(req, res) {
 }
 
 export async function activarCuenta(req, res) {
-  await authService.activarCuenta(req.body);
-  res.json({ mensaje: "Tu cuenta fue activada. Ya puedes iniciar sesión." });
+  const r = await authService.activarCuenta(req.body);
+
+  if (!r.token) {
+    return res.json({
+      mensaje: "Tu cuenta fue activada. Ya puedes iniciar sesión.",
+      sesionIniciada: false,
+    });
+  }
+
+  ponerCookieSesion(res, r.token);
+  res.json({
+    mensaje: "Tu cuenta fue activada.",
+    sesionIniciada: true,
+    sesion: r.sesion,
+  });
 }
 
 export async function verificarActivacion(req, res) {

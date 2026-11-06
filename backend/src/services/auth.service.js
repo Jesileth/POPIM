@@ -18,7 +18,7 @@ export async function registrarPropietario(datos) {
   const contrasenaHash = await bcrypt.hash(datos.contrasena, 12);
 
   try {
-    const id = await usuariosRepo.crearPropietario({
+     await usuariosRepo.crearPropietario({
       nombreCompleto: datos.nombreCompleto,
       correo: datos.correo,
       telefono: datos.telefono,
@@ -227,4 +227,19 @@ export async function activarCuenta({ tokenConfirmacion, contrasena }) {
 
   const hecho = await usuariosRepo.activarCuentaConCodigo({ usuarioId, tokenId, hash });
   if (!hecho) throw new ErrorHttp(400, "El código venció o ya fue utilizado", "codigo");
+
+  // --- CÓDIGO AGREGADO A PARTIR DE AQUÍ ---
+  // La cuenta ya está activa (102). Si es de propietario, abrimos sesión:
+  // demostró que controla el correo con el código, así que no repetimos el login.
+  const portales = await usuariosRepo.obtenerPortales(usuarioId);
+  if (!portales.includes("PROPIETARIO")) return { token: null, sesion: null };
+
+  const usuario = await usuariosRepo.buscarPorId(usuarioId);
+  await usuariosRepo.registrarAccesoExitoso(usuarioId);
+
+  const token = jwt.sign({ sub: usuarioId, portal: "PROPIETARIO" }, process.env.JWT_SECRET, {
+    expiresIn: "12h",
+  });
+
+  return { token, sesion: await armarSesion(usuario, "PROPIETARIO") };
 }
