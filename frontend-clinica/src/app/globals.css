@@ -48,6 +48,29 @@
   --color-popim-pendiente: #fff1d6;
   --color-popim-pendiente-texto: #8a5300;
  
+    /*Estados de las citas (fondo, borde y texto)*/
+  --color-estado-solicitada: #fff1d6;
+  --color-estado-solicitada-borde: #d08a12;
+  --color-estado-solicitada-texto: #6e4300;
+
+  --color-estado-confirmada: #e3edf9;
+  --color-estado-confirmada-borde: #3f75b3;
+  --color-estado-confirmada-texto: #24415f;
+
+  --color-estado-curso: #dff3ef;
+  --color-estado-curso-borde: #14897a;
+  --color-estado-curso-texto: #0b4f45;
+
+  --color-estado-finalizada: #e7f1e8;
+  --color-estado-finalizada-borde: #3f8a4c;
+  --color-estado-finalizada-texto: #24502c;
+
+  --color-estado-cancelada: #fbe7e7;
+  --color-estado-cancelada-borde: #c0392b;
+  --color-estado-cancelada-texto: #9b2c2c;
+
+  --color-estado-emergencia: #b03224;
+
 
   --animate-aparecer: aparecer 0.5s ease-out;
 

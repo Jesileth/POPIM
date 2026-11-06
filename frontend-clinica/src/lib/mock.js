@@ -64,6 +64,65 @@ function guardarSesion(activa) {
   }
 }
 
+// Agenda de prueba: los mismos datos para cualquier fecha
+function agendaDePrueba(fecha) {
+  const cita = (id, horaInicio, horaFin, estadoId, mascota, propietario, motivo, esEmergencia = false) => ({
+    id, horaInicio, horaFin, estadoId, mascota, propietario, motivo, esEmergencia,
+  });
+
+  return {
+    fecha,
+    duracionBloqueMin: 60,
+    veterinarios: [
+      {
+        personalId: "pc-1",
+        nombre: "Dra. Ana Morales",
+        especialidad: "Medicina general",
+        horario: [{ inicio: "08:00:00", fin: "12:00:00" }, { inicio: "13:00:00", fin: "16:00:00" }],
+        bloqueos: [],
+        citas: [
+          cita("c-1", "08:00:00", "09:00:00", 504, "Max", "Carlos Méndez", "Vacunación anual"),
+          cita("c-2", "09:00:00", "10:00:00", 503, "Rocky", "Pedro Gómez", "Cojera en pata trasera"),
+          cita("c-3", "10:00:00", "11:00:00", 502, "Kiara", "Sofía Ruiz", "Desparasitación"),
+        ],
+      },
+      {
+        personalId: "pc-2",
+        nombre: "Dr. José Rivera",
+        especialidad: "Dermatología",
+        horario: [{ inicio: "09:00:00", fin: "12:00:00" }, { inicio: "13:00:00", fin: "17:00:00" }],
+        bloqueos: [],
+        citas: [
+          cita("c-4", "09:00:00", "10:00:00", 503, "Luna", "María López", "Control de peso"),
+          cita("c-5", "11:00:00", "12:00:00", 502, "Toby", "Andrés Torres", "Revisión de piel"),
+        ],
+      },
+      {
+        personalId: "pc-3",
+        nombre: "Dra. Karla Díaz",
+        especialidad: "Cirugía general",
+        horario: [{ inicio: "08:00:00", fin: "12:00:00" }, { inicio: "13:00:00", fin: "16:00:00" }],
+        bloqueos: [{ horaInicio: "11:00:00", horaFin: "12:00:00", motivo: "Cirugía programada" }],
+        citas: [
+          cita("c-6", "10:00:00", "11:00:00", 503, "Canela", "Ricardo Silva", "Golpe en la calle", true),
+          cita("c-7", "13:00:00", "14:00:00", 501, "Coco", "Daniela Pérez", "Primera consulta"),
+        ],
+      },
+      {
+        personalId: "pc-4",
+        nombre: "Dr. Luis Herrera",
+        especialidad: "Medicina general",
+        horario: [{ inicio: "08:00:00", fin: "12:00:00" }, { inicio: "13:00:00", fin: "17:00:00" }],
+        bloqueos: [{ horaInicio: "16:00:00", horaFin: "17:00:00", motivo: "Permiso personal" }],
+        citas: [
+          cita("c-8", "10:00:00", "11:00:00", 501, "Michi", "Laura Castillo", "Vómitos frecuentes"),
+          cita("c-9", "14:00:00", "15:00:00", 502, "Bruno", "Jorge Medina", "Seguimiento de tratamiento"),
+        ],
+      },
+    ],
+  };
+}
+
 export async function simular(ruta, metodo = "GET", cuerpo = {}) {
   await esperar(400);
 
@@ -91,6 +150,14 @@ export async function simular(ruta, metodo = "GET", cuerpo = {}) {
   if (ruta === "/auth/logout" && metodo === "POST") {
     guardarSesion(false);
     return { ok: true, estado: 200, datos: {} };
+  }
+
+      // ---------- Agenda de la clínica ----------
+  if (ruta.startsWith("/clinica/agenda") && metodo === "GET") {
+    if (!haySesion()) return { ok: false, estado: 401, error: "No has iniciado sesión." };
+    // "/clinica/agenda?fecha=2026-11-06" → toma lo que va después del "?"
+    const fecha = new URLSearchParams(ruta.split("?")[1]).get("fecha");
+    return { ok: true, estado: 200, datos: agendaDePrueba(fecha) };
   }
 
   // Cualquier ruta que todavía no simulamos
