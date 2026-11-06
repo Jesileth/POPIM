@@ -150,7 +150,7 @@ export default function RecuperarPasswordPage() {
       setErrorGeneral(respuesta.error);
       return;
     }
-    router.push("/login"); // el lema especial se descarta solo al cambiar de pantalla
+    router.push("/mis-mascotas"); // el lema especial se descarta solo al cambiar de pantalla
   }
 
   return (
