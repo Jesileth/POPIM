@@ -61,20 +61,26 @@ export async function consumirCodigo(tokenId, conexion) {
 
 //
 
-const MINUTOS_TOKEN_RESTABLECIMIENTO = 15;
+// const MINUTOS_TOKEN_RESTABLECIMIENTO = 15;
 
-export function crearTokenRestablecimiento(usuarioId, tokenId) {
-  return jwt.sign({ uid: usuarioId, tid: tokenId, uso: "RESTABLECER" }, process.env.CODIGOS_SECRET, {
-    expiresIn: `${MINUTOS_TOKEN_RESTABLECIMIENTO}m`,
+function firmarPaso(usuarioId, tokenId, uso, minutos) {
+  return jwt.sign({ uid: usuarioId, tid: tokenId, uso }, process.env.CODIGOS_SECRET, {
+    expiresIn: `${minutos}m`,
   });
 }
 
-export function leerTokenRestablecimiento(token) {
+function leerPaso(token, uso) {
   try {
     const datos = jwt.verify(token, process.env.CODIGOS_SECRET, { algorithms: ["HS256"] });
-    if (datos.uso !== "RESTABLECER") throw new Error("uso incorrecto");
+    if (datos.uso !== uso) throw new Error("uso incorrecto");
     return { usuarioId: datos.uid, tokenId: datos.tid };
   } catch {
     throw new ErrorHttp(400, "La verificación venció. Pide un código nuevo.", "codigo");
   }
 }
+
+export const crearTokenRestablecimiento = (usuarioId, tokenId) => firmarPaso(usuarioId, tokenId, "RESTABLECER", 10);
+export const leerTokenRestablecimiento = (token) => leerPaso(token, "RESTABLECER");
+
+export const crearTokenActivacion = (usuarioId) => firmarPaso(usuarioId, null, "ACTIVAR", 15);
+export const leerTokenActivacion = (token) => leerPaso(token, "ACTIVAR");

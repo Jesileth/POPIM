@@ -21,3 +21,17 @@ export const esquemaRestablecerContrasena = z.object({
     .min(1, "Falta la verificación del código"),
   contrasenaNueva: contrasena,
 });
+
+export const esquemaBuscarActivacion = z.object({
+  identificador: z
+    .string("Escribe tu correo, teléfono o cédula")
+    .trim()
+    .min(3, "Escribe tu correo, teléfono o cédula")
+    .max(150, "El dato es demasiado largo"),
+});
+
+export const esquemaConfirmarActivacion = z.object({
+  tokenActivacion: z.string("Falta la verificación").min(1, "Falta la verificación"),
+  codigo,
+  contrasena: contrasena.optional(),
+});

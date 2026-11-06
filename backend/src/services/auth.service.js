@@ -11,6 +11,7 @@ import { enviarCorreo } from "./correo.service.js";
 import { plantillaRecuperacion } from "../plantillas/recuperacion.js";
 import { plantillaPasswordCambiada } from "../plantillas/passwordCambiada.js";
 import { fechaHoraManagua } from "../utils/fechas.js";
+import { plantillaActivacion } from "../plantillas/activacion.js";
 
 export async function registrarPropietario(datos) {
     // encriptamos la contraseña antes de guardarla en la bd
@@ -134,14 +135,6 @@ export async function solicitarRecuperacion(correo) {
   }
 }
 
-export async function verificarRecuperacion(correo, codigo) {
-  const usuario = await usuarioRecuperable(correo);
-  if (!usuario) throw ERROR_CODIGO();
-
-  const token = await verificacion.validarCodigo(usuario.id, "RECUPERACION", codigo);
-  return { tokenRestablecimiento: verificacion.crearTokenRestablecimiento(usuario.id, token.id) };
-}
-
 
 export async function verificarRecuperacion(correo, codigo) {
   const usuario = await usuarioRecuperable(correo);
@@ -158,13 +151,13 @@ export async function restablecerContrasena(tokenRestablecimiento, contrasenaNue
   if (!usuario || !ESTADOS_RECUPERABLES.includes(usuario.estadoId)) throw ERROR_CODIGO();
 
   const hash = await bcrypt.hash(contrasenaNueva, 12);
-  
+
   const hecho = await usuariosRepo.cambiarContrasenaConCodigo({ usuarioId, tokenId, hash });
   if (!hecho) throw new ErrorHttp(400, "El código venció o ya fue utilizado", "codigo");
 
   try {
   enviarCorreo({
-    para: correo,
+    para: usuario.correo,
     ...plantillaPasswordCambiada({
       nombre: usuario.nombreCompleto.split(" ")[0],
       fechaHora: fechaHoraManagua(),
@@ -173,4 +166,51 @@ export async function restablecerContrasena(tokenRestablecimiento, contrasenaNue
 } catch (error) {
   console.error("No se pudo preparar el aviso de contraseña cambiada:", error.message);
 }
+}
+
+function enmascararCorreo(correo) {
+  const [usuario, dominio] = correo.split("@");
+  return `${usuario.slice(0, 2)}${"*".repeat(Math.max(usuario.length - 2, 3))}@${dominio}`;
+}
+
+export async function buscarPerfilPendiente(identificador) {
+  const perfil = await usuariosRepo.buscarPendientePorIdentificador(identificador);
+  if (!perfil)
+    throw new ErrorHttp(404, "No encontramos un perfil pendiente de activación con esos datos.", "identificador");
+  if (!perfil.correo)
+    throw new ErrorHttp(422, "Este perfil no tiene un correo registrado. Pídele a tu clínica que lo agregue.", "identificador");
+
+  const { codigo, minutos } = await verificacion.emitirCodigo(perfil.id, "ACTIVACION");
+  const mensaje = plantillaActivacion({
+    nombre: perfil.nombreCompleto.split(" ")[0],
+    codigo,
+    minutos,
+  });
+  enviarCorreo({ para: perfil.correo, ...mensaje }).catch((error) =>
+    console.error("No se pudo enviar el correo de activación:", error.message)
+  );
+
+  return {
+    tokenActivacion: verificacion.crearTokenActivacion(perfil.id),
+    correoEnmascarado: enmascararCorreo(perfil.correo),
+    requiereContrasena: Boolean(perfil.sinContrasena),
+  };
+}
+
+export async function activarCuenta({ tokenActivacion, codigo, contrasena }) {
+  const { usuarioId } = verificacion.leerTokenActivacion(tokenActivacion);
+
+  const perfil = await usuariosRepo.buscarContactoPorId(usuarioId);
+  if (!perfil || perfil.estadoId !== 101) throw ERROR_CODIGO();
+
+  if (perfil.sinContrasena && !contrasena)
+    throw new ErrorHttp(400, "Elige una contraseña para tu cuenta", "contrasena");
+
+  const token = await verificacion.validarCodigo(usuarioId, "ACTIVACION", codigo);
+
+  // Solo se fija contraseña si el perfil no tenía: nunca se pisa la de una cuenta que ya la tiene
+  const hash = perfil.sinContrasena ? await bcrypt.hash(contrasena, 12) : null;
+
+  const hecho = await usuariosRepo.activarCuentaConCodigo({ usuarioId, tokenId: token.id, hash });
+  if (!hecho) throw new ErrorHttp(400, "El código venció o ya fue utilizado", "codigo");
 }

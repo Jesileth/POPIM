@@ -92,3 +92,12 @@ export async function restablecerContrasena(req, res) {
   await authService.restablecerContrasena(req.body.tokenRestablecimiento, req.body.contrasenaNueva);
   res.json({ mensaje: "Tu contraseña fue actualizada. Ya puedes iniciar sesión." });
 }
+
+export async function buscarPerfilPendiente(req, res) {
+  res.json(await authService.buscarPerfilPendiente(req.body.identificador));
+}
+
+export async function activarCuenta(req, res) {
+  await authService.activarCuenta(req.body);
+  res.json({ mensaje: "Tu cuenta fue activada. Ya puedes iniciar sesión." });
+}

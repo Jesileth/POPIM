@@ -162,8 +162,53 @@ export async function cambiarContrasenaConCodigo({ usuarioId, tokenId, hash }) {
 
 export async function buscarContactoPorId(usuarioId) {
   const [filas] = await pool.query(
-    "SELECT correo, nombre_completo AS nombreCompleto, estado_id AS estadoId FROM usuarios WHERE id = ?",
-    [usuarioId]
+    "SELECT correo, nombre_completo AS nombreCompleto, estado_id AS estadoId, (contrasena IS NULL) AS sinContrasena FROM usuarios WHERE id = ?",  
+     [usuarioId]
   );
   return filas[0] ?? null;
+}
+
+export async function buscarPendientePorIdentificador(identificador) {
+  const [filas] = await pool.query(
+    `SELECT u.id, u.nombre_completo AS nombreCompleto, u.correo, (u.contrasena IS NULL) AS sinContrasena
+       FROM usuarios u
+       LEFT JOIN propietarios p ON p.usuario_id = u.id
+      WHERE u.estado_id = 101 AND (u.correo = ? OR u.telefono = ? OR p.cedula = ?)
+      LIMIT 1`,
+    [identificador, identificador, identificador]
+  );
+  return filas[0] ?? null;
+}
+
+// Gasta el código y activa la cuenta en una sola transacción.
+// Si hash viene null, la cuenta conserva la contraseña que ya tenía.
+export async function activarCuentaConCodigo({ usuarioId, tokenId, hash }) {
+  const conexion = await pool.getConnection();
+  try {
+    await conexion.beginTransaction();
+
+    if (!(await marcarUsado(tokenId, conexion))) {
+      await conexion.rollback();
+      return false;
+    }
+
+    const [resultado] = await conexion.query(
+      `UPDATE usuarios
+          SET estado_id = 102, contrasena = COALESCE(?, contrasena), intentos_fallidos = 0
+        WHERE id = ? AND estado_id = 101`,
+      [hash, usuarioId]
+    );
+    if (resultado.affectedRows !== 1) {
+      await conexion.rollback();
+      return false;
+    }
+
+    await conexion.commit();
+    return true;
+  } catch (error) {
+    await conexion.rollback();
+    throw error;
+  } finally {
+    conexion.release();
+  }
 }
