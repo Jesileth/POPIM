@@ -24,3 +24,25 @@ export const ESTADOS_CITA = {
     clases: "bg-estado-cancelada border-estado-cancelada-borde text-estado-cancelada-texto",
   },
 };
+
+
+// Estados de la cuenta del usuario (catalogo_estados, entidad USUARIO).
+// Reusa los colores de los estados de cita para no crear más variables.
+export const ESTADOS_USUARIO = {
+  101: {
+    nombre: "Pendiente de activar",
+    clases: "bg-estado-confirmada text-estado-confirmada-texto",
+  },
+  102: {
+    nombre: "Cuenta activa",
+    clases: "bg-estado-finalizada text-estado-finalizada-texto",
+  },
+  103: {
+    nombre: "Bloqueada",
+    clases: "bg-estado-cancelada text-estado-cancelada-texto",
+  },
+  105: {
+    nombre: "Provisional",
+    clases: "bg-estado-solicitada text-estado-solicitada-texto",
+  },
+};  

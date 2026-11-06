@@ -123,6 +123,51 @@ function agendaDePrueba(fecha) {
   };
 }
 
+
+// Respuestas rápidas para no repetir siempre { ok, estado, ... }
+const respuestaOk = (datos, estado = 200) => ({ ok: true, estado, datos });
+const respuestaError = (estado, error, campo) => ({ ok: false, estado, error, campo });
+
+const VETERINARIOS_PRUEBA = [
+  { personalId: "pc-1", nombre: "Dra. Ana Morales", especialidad: "Medicina general" },
+  { personalId: "pc-2", nombre: "Dr. José Rivera", especialidad: "Dermatología" },
+  { personalId: "pc-3", nombre: "Dra. Karla Díaz", especialidad: "Cirugía general" },
+  { personalId: "pc-4", nombre: "Dr. Luis Herrera", especialidad: "Medicina general" },
+];
+
+const PROPIETARIOS_PRUEBA = [
+  {
+    id: "p-1", nombreCompleto: "Carlos Méndez", cedula: "001-120390-0012A",
+    telefono: "8888-1234", correo: "carlos@correo.com", estadoId: 102,
+    mascotas: [
+      { id: "m-1", nombre: "Max", especie: "Perro", raza: "Labrador", edad: "5 años", codigoUnico: "PET-4482-KX" },
+      { id: "m-2", nombre: "Pelusa", especie: "Gato", raza: "Mestizo", edad: "8 meses", codigoUnico: "PET-5120-CM" },
+    ],
+  },
+  {
+    id: "p-2", nombreCompleto: "Laura Castillo", cedula: "001-221187-0044C",
+    telefono: "8777-4521", correo: "laura.castillo@correo.com", estadoId: 102,
+    mascotas: [
+      { id: "m-3", nombre: "Michi", especie: "Gato", raza: "Siamés", edad: "3 años", codigoUnico: "PET-2291-MC" },
+    ],
+  },
+  {
+    id: "p-3", nombreCompleto: "Ricardo Silva", cedula: null,
+    telefono: "8654-2201", correo: null, estadoId: 105,
+    mascotas: [
+      { id: "m-4", nombre: "Canela", especie: "Perro", raza: "Mestizo", edad: "2 años", codigoUnico: "PET-7310-RS" },
+    ],
+  },
+  {
+    id: "p-4", nombreCompleto: "Daniela Pérez", cedula: "001-050598-0031B",
+    telefono: "8421-9087", correo: "daniela.p@correo.com", estadoId: 101,
+    mascotas: [],
+  },
+];
+
+// "8888-1234" y "88881234" deben encontrarse igual: quitamos espacios y guiones
+const paraBuscar = (texto) => (texto ?? "").toLowerCase().replace(/[\s-]/g, "");
+
 export async function simular(ruta, metodo = "GET", cuerpo = {}) {
   await esperar(400);
 
@@ -158,6 +203,65 @@ export async function simular(ruta, metodo = "GET", cuerpo = {}) {
     // "/clinica/agenda?fecha=2026-11-06" → toma lo que va después del "?"
     const fecha = new URLSearchParams(ruta.split("?")[1]).get("fecha");
     return { ok: true, estado: 200, datos: agendaDePrueba(fecha) };
+  }
+
+    // Todo lo que empieza con /clinica/ necesita sesión
+  if (ruta.startsWith("/clinica/") && !haySesion()) {
+    return respuestaError(401, "No has iniciado sesión.");
+  }
+
+  // ---------- Veterinarios ----------
+  if (ruta === "/clinica/veterinarios" && metodo === "GET") {
+    return respuestaOk(VETERINARIOS_PRUEBA);
+  }
+
+  if (ruta === "/clinica/veterinarios/disponibles-ahora" && metodo === "GET") {
+    const ocupados = { "pc-1": "11:00", "pc-3": "12:00" }; // de mentira
+    return respuestaOk(
+      VETERINARIOS_PRUEBA.map((v) => ({ ...v, ocupadoHasta: ocupados[v.personalId] ?? null })),
+    );
+  }
+
+  // ---------- Buscar propietarios ----------
+  if (ruta.startsWith("/clinica/propietarios/buscar") && metodo === "GET") {
+    const q = paraBuscar(new URLSearchParams(ruta.split("?")[1]).get("q"));
+    const encontrados = PROPIETARIOS_PRUEBA.filter((p) =>
+      [p.nombreCompleto, p.cedula, p.telefono, p.correo].some((campo) => paraBuscar(campo).includes(q)),
+    );
+    // Quitamos la lista de mascotas: esta ruta solo devuelve datos del propietario
+    return respuestaOk(encontrados.map(({ mascotas, ...propietario }) => propietario));
+  }
+
+  // ---------- Mascotas de un propietario ----------
+  // match con una expresión regular: saca el id que va en medio de la ruta
+  const rutaMascotas = ruta.match(/^\/clinica\/propietarios\/([^/]+)\/mascotas$/);
+  if (rutaMascotas && metodo === "GET") {
+    const propietario = PROPIETARIOS_PRUEBA.find((p) => p.id === rutaMascotas[1]);
+    if (!propietario) return respuestaError(404, "No encontramos a ese propietario.");
+    return respuestaOk(propietario.mascotas);
+  }
+
+  // ---------- Crear cita normal ----------
+  if (ruta === "/clinica/citas" && metodo === "POST") {
+    const { veterinarioId, fecha, horaInicio, motivo } = cuerpo;
+    if (!motivo || motivo.trim().length < 3) {
+      return respuestaError(400, "Escribe el motivo de la consulta.", "motivo");
+    }
+    // Simulamos el 409: si en la agenda de prueba ya hay una cita en ese bloque
+    const vet = agendaDePrueba(fecha).veterinarios.find((v) => v.personalId === veterinarioId);
+    const ocupado = vet?.citas.some((c) => c.horaInicio.startsWith(horaInicio));
+    if (ocupado) {
+      return respuestaError(409, "Ese bloque se acaba de ocupar. Vuelve a la agenda y elige otro.");
+    }
+    return respuestaOk({ id: `c-${Date.now()}` }, 201);
+  }
+
+  // ---------- Crear emergencia ----------
+  if (ruta === "/clinica/citas/emergencia" && metodo === "POST") {
+    if (!cuerpo.veterinarioId) {
+      return respuestaError(400, "Elige quién atenderá la emergencia.", "veterinarioId");
+    }
+    return respuestaOk({ id: `c-${Date.now()}` }, 201);
   }
 
   // Cualquier ruta que todavía no simulamos
