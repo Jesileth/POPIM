@@ -15,4 +15,9 @@ const contrasena = z
 
 export const esquemaSolicitarRecuperacion = z.object({ correo });
 export const esquemaVerificarRecuperacion = z.object({ correo, codigo });
-export const esquemaRestablecerContrasena = z.object({ correo, codigo, contrasenaNueva: contrasena });
+export const esquemaRestablecerContrasena = z.object({
+  tokenRestablecimiento: z
+    .string("Falta la verificación del código")
+    .min(1, "Falta la verificación del código"),
+  contrasenaNueva: contrasena,
+});

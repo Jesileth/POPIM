@@ -48,7 +48,7 @@ export async function sumarIntento(id) {
 // Devuelve true solo si ESTA llamada fue la que lo marcó como usado
 export async function marcarUsado(id, conexion = pool) {
   const [resultado] = await conexion.query(
-    "UPDATE tokens_verificacion SET usado_en = NOW() WHERE id = ? AND usado_en IS NULL",
+    "UPDATE tokens_verificacion SET usado_en = NOW() WHERE id = ? AND usado_en IS NULL AND expira_en > NOW()",
     [id]
   );
   return resultado.affectedRows === 1;

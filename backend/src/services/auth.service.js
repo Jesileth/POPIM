@@ -137,19 +137,30 @@ export async function solicitarRecuperacion(correo) {
 export async function verificarRecuperacion(correo, codigo) {
   const usuario = await usuarioRecuperable(correo);
   if (!usuario) throw ERROR_CODIGO();
-  await verificacion.validarCodigo(usuario.id, "RECUPERACION", codigo);
+
+  const token = await verificacion.validarCodigo(usuario.id, "RECUPERACION", codigo);
+  return { tokenRestablecimiento: verificacion.crearTokenRestablecimiento(usuario.id, token.id) };
 }
 
-export async function restablecerContrasena(correo, codigo, contrasenaNueva) {
+
+export async function verificarRecuperacion(correo, codigo) {
   const usuario = await usuarioRecuperable(correo);
   if (!usuario) throw ERROR_CODIGO();
 
-  // Fuera de la transacción: así un intento fallido sí queda contado
   const token = await verificacion.validarCodigo(usuario.id, "RECUPERACION", codigo);
-  const hash = await bcrypt.hash(contrasenaNueva, 12);
+  return { tokenRestablecimiento: verificacion.crearTokenRestablecimiento(usuario.id, token.id) };
+}
 
-  const hecho = await usuariosRepo.cambiarContrasenaConCodigo({ usuarioId: usuario.id, tokenId: token.id, hash });
-  if (!hecho) throw new ErrorHttp(400, "Este código ya fue utilizado", "codigo");
+export async function restablecerContrasena(tokenRestablecimiento, contrasenaNueva) {
+  const { usuarioId, tokenId } = verificacion.leerTokenRestablecimiento(tokenRestablecimiento);
+
+  const usuario = await usuariosRepo.buscarContactoPorId(usuarioId);
+  if (!usuario || !ESTADOS_RECUPERABLES.includes(usuario.estadoId)) throw ERROR_CODIGO();
+
+  const hash = await bcrypt.hash(contrasenaNueva, 12);
+  
+  const hecho = await usuariosRepo.cambiarContrasenaConCodigo({ usuarioId, tokenId, hash });
+  if (!hecho) throw new ErrorHttp(400, "El código venció o ya fue utilizado", "codigo");
 
   try {
   enviarCorreo({

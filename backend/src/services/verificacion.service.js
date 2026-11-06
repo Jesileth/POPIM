@@ -3,6 +3,7 @@
 import { randomInt, createHmac, timingSafeEqual } from "node:crypto";
 import { ErrorHttp } from "../utils/errores.js";
 import * as tokensRepo from "../repositories/tokens.repository.js";
+import jwt from "jsonwebtoken";
 
 const MINUTOS_VIGENCIA = 15;
 const MAX_INTENTOS = 5;
@@ -56,4 +57,24 @@ export async function validarCodigo(usuarioId, proposito, codigoIngresado) {
 export async function consumirCodigo(tokenId, conexion) {
   const fueElPrimero = await tokensRepo.marcarUsado(tokenId, conexion);
   if (!fueElPrimero) throw new ErrorHttp(400, "Este código ya fue utilizado", "codigo");
+}
+
+//
+
+const MINUTOS_TOKEN_RESTABLECIMIENTO = 15;
+
+export function crearTokenRestablecimiento(usuarioId, tokenId) {
+  return jwt.sign({ uid: usuarioId, tid: tokenId, uso: "RESTABLECER" }, process.env.CODIGOS_SECRET, {
+    expiresIn: `${MINUTOS_TOKEN_RESTABLECIMIENTO}m`,
+  });
+}
+
+export function leerTokenRestablecimiento(token) {
+  try {
+    const datos = jwt.verify(token, process.env.CODIGOS_SECRET, { algorithms: ["HS256"] });
+    if (datos.uso !== "RESTABLECER") throw new Error("uso incorrecto");
+    return { usuarioId: datos.uid, tokenId: datos.tid };
+  } catch {
+    throw new ErrorHttp(400, "La verificación venció. Pide un código nuevo.", "codigo");
+  }
 }

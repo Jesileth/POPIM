@@ -159,3 +159,11 @@ export async function cambiarContrasenaConCodigo({ usuarioId, tokenId, hash }) {
     conexion.release();
   }
 }
+
+export async function buscarContactoPorId(usuarioId) {
+  const [filas] = await pool.query(
+    "SELECT correo, nombre_completo AS nombreCompleto, estado_id AS estadoId FROM usuarios WHERE id = ?",
+    [usuarioId]
+  );
+  return filas[0] ?? null;
+}

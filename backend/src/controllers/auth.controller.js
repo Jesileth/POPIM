@@ -85,11 +85,10 @@ export async function solicitarRecuperacion(req, res) {
 }
 
 export async function verificarRecuperacion(req, res) {
-  await authService.verificarRecuperacion(req.body.correo, req.body.codigo);
-  res.json({ mensaje: "Código correcto" });
+  res.json(await authService.verificarRecuperacion(req.body.correo, req.body.codigo));
 }
 
 export async function restablecerContrasena(req, res) {
-  await authService.restablecerContrasena(req.body.correo, req.body.codigo, req.body.contrasenaNueva);
+  await authService.restablecerContrasena(req.body.tokenRestablecimiento, req.body.contrasenaNueva);
   res.json({ mensaje: "Tu contraseña fue actualizada. Ya puedes iniciar sesión." });
 }
