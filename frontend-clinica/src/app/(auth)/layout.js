@@ -1,24 +1,18 @@
-
 "use client";
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import PanelPopim from "@/Componentes/Paneles/PanelPopim";
+import PawIcon from "@/Componentes/Paneles/PawIcon";
 import { PanelContexto } from "@/lib/panelContexto";
 
-// En qué lado va el panel azul y qué lema muestra en cada pantalla.
+// Qué lema muestra el panel en cada pantalla y de qué lado va.
 // Para cambiar un lado, cambia "izquierda" por "derecha" (o al revés).
 const CONFIG_PANEL = {
-  "/login": { lado: "izquierda", lema: ["Gestión veterinaria,", "en tus manos."] },
-  "/registro": { lado: "derecha", lema: ["Tu mascota,", "en buenas manos."] },
-  "/registro-mascota": { lado: "derecha", lema: ["Un último", "paso."] },
-  "/activar-cuenta": { lado: "derecha", lema: ["Ya tienes un perfil", "con nosotros."] },
-  "/recuperar-password": { lado: "izquierda", lema: "¿Olvidaste tu contraseña?" },
+  "/login": { lado: "izquierda", lema: ["Tu clínica,", "al día."] },
+  "/activar-cuenta": { lado: "izquierda", lema: ["Bienvenido", "al equipo."] },
+  "/recuperar-password": { lado: "izquierda", lema: ["Recupera", "tu acceso."] },
 };
-
-
-// Altura mínima de la tarjeta: se ajusta al alto de la ventana (entre 520 y 640 px)
-const ALTURA_TARJETA = "lg:min-h-[clamp(520px,calc(100dvh_-_140px),640px)]";
 
 export default function AuthLayout({ children }) {
   const ruta = usePathname();
@@ -36,36 +30,37 @@ export default function AuthLayout({ children }) {
 
   return (
     <PanelContexto.Provider value={{ fijarLema: setLemaExtra }}>
-      <main className="px-4 py-6 sm:px-8 sm:py-10">
-       
-        {/* <div className="relative mx-auto mt-10 lg:min-h-150 max-w-245 overflow-hidden rounded-[40px] bg-white shadow-sm">*/}
-        <div className="relative mx-auto mt-10 lg:min-h-150 max-w-245 overflow-hidden rounded-[40px] bg-white shadow-sm border border-[#f4f3f3]">
-          {/* Panel azul: se desliza de un lado al otro (solo en pantallas grandes) */}
-          <div
-            aria-hidden="true"
-            className={`absolute inset-y-0 left-0 z-10 hidden w-1/2 transition-transform duration-700 ease-in-out motion-reduce:transition-none lg:block ${
-              panelDerecha ? "translate-x-full" : "translate-x-0"
-            }`}
-          >
-            <PanelPopim lema={lemaExtra ?? lema} />
-          </div>
-
-           {/* Formulario: ocupa la mitad que el panel deja libre */}
-          <div
-            className={`flex lg:w-1/2 ${ALTURA_TARJETA} ${
-              panelDerecha ? "lg:ml-0" : "lg:ml-[50%]"
-            }`}
-          >
-            <div
-              key={ruta}
-              className="flex w-full animate-aparecer flex-col justify-center px-8 py-7 motion-reduce:animate-none sm:px-12"
-            >
-              {children}
-            </div>
-          </div>
+      <div
+        className={`flex min-h-dvh bg-white ${
+          panelDerecha ? "lg:flex-row-reverse" : "lg:flex-row"
+        }`}
+      >
+        {/* Panel institucional: solo en pantallas grandes */}
+        <div className="hidden lg:flex lg:w-[52%]">
+          <PanelPopim lema={lemaExtra ?? lema} />
         </div>
-      </main>
+
+        {/* Formulario */}
+        <main className="flex flex-1 items-center justify-center px-6 py-12 sm:px-10">
+          <div
+            key={ruta}
+            className="w-full max-w-100 animate-aparecer motion-reduce:animate-none"
+          >
+            {/* Logo pequeño: solo en celular, porque ahí el panel se oculta */}
+            <div className="mb-8 flex items-center gap-3 lg:hidden">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-popim-primary">
+                <PawIcon className="h-6 w-6 text-white" />
+              </span>
+              <div>
+                <p className="text-lg font-extrabold text-popim-ink">POPIM</p>
+                <p className="text-xs text-popim-texto">Portal de clínicas</p>
+              </div>
+            </div>
+
+            {children}
+          </div>
+        </main>
+      </div>
     </PanelContexto.Provider>
   );
 }
-
