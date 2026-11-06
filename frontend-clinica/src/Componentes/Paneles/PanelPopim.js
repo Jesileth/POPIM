@@ -1,51 +1,12 @@
 import PawIcon from "@/Componentes/Paneles/PawIcon";
+import { IconCalendarCheck, IconHeartPulse, IconPersonBadge } from "@/Componentes/Iconos";
 
 // Los tres tipos de personal que usan el portal (solo informativo)
 const ROLES = [
-  { titulo: "Recepción", texto: "Agenda, confirma y reprograma citas", icono: "agenda" },
-  { titulo: "Veterinarios", texto: "Atiende y registra cada consulta", icono: "estetoscopio" },
-  { titulo: "Administración", texto: "Gestiona personal y horarios", icono: "personas" },
+  { titulo: "Recepción", texto: "Agenda, confirma y reprograma citas", Icono: IconCalendarCheck },
+  { titulo: "Veterinarios", texto: "Atiende y registra cada consulta", Icono: IconHeartPulse },
+  { titulo: "Administración", texto: "Gestiona personal y horarios", Icono: IconPersonBadge },
 ];
-
-// Íconos de línea para cada rol
-function IconoRol({ tipo }) {
-  const trazos = {
-    agenda: (
-      <>
-        <rect x="3" y="5" width="18" height="16" rx="2" />
-        <path d="M16 3v4M8 3v4M3 10h18" />
-      </>
-    ),
-    estetoscopio: (
-      <>
-        <path d="M6 3v6a4 4 0 0 0 8 0V3M10 13v3a5 5 0 0 0 10 0v-2" />
-        <circle cx="20" cy="12" r="2" />
-      </>
-    ),
-    personas: (
-      <>
-        <circle cx="9" cy="8" r="3.5" />
-        <path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 20a6.5 6.5 0 0 0-2.5-5.1" />
-      </>
-    ),
-  };
-
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {trazos[tipo]}
-    </svg>
-  );
-}
 
 export default function PanelPopim({ lema }) {
   // El titular llega como lista de dos líneas (blanca + celeste) o como un texto simple
@@ -95,17 +56,17 @@ export default function PanelPopim({ lema }) {
         </div>
 
         <ul className="flex flex-col gap-3">
-          {ROLES.map((rol) => (
+          {ROLES.map(({ titulo, texto, Icono }) => (
             <li
-              key={rol.titulo}
+              key={titulo}
               className="flex items-center gap-3.5 rounded-2xl border border-white/12 bg-white/7 px-4 py-3.5"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/12">
-                <IconoRol tipo={rol.icono} />
+                <Icono size={18} />
               </span>
               <span>
-                <span className="block font-bold">{rol.titulo}</span>
-                <span className="text-sm text-popim-panel-texto">{rol.texto}</span>
+                <span className="block font-bold">{titulo}</span>
+                <span className="text-sm text-popim-panel-texto">{texto}</span>
               </span>
             </li>
           ))}

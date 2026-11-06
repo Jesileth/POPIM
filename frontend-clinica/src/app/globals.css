@@ -43,6 +43,10 @@
   --color-popim-panel-texto: #d0dcea;
   --color-popim-panel-suave: #9fb3c9;
   --color-popim-panel-acento: #9cc0ea;
+
+    /*Avisos de "pendiente" o "por confirmar" (amarillo suave)*/
+  --color-popim-pendiente: #fff1d6;
+  --color-popim-pendiente-texto: #8a5300;
  
 
   --animate-aparecer: aparecer 0.5s ease-out;
