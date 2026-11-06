@@ -6,6 +6,9 @@ import bcrypt from "bcryptjs";
 import { ErrorHttp } from "../utils/errores.js";
 import * as usuariosRepo from "../repositories/usuarios.repository.js";
 import jwt from "jsonwebtoken";
+import * as verificacion from "./verificacion.service.js";
+import { enviarCorreo } from "./correo.service.js";
+import { plantillaRecuperacion } from "../plantillas/recuperacion.js";
 
 export async function registrarPropietario(datos) {
     // encriptamos la contraseña antes de guardarla en la bd
@@ -98,3 +101,51 @@ export async function iniciarSesion({ identificador, contrasena, portal, recorda
     if (!usuario || usuario.estado_id !== 102) throw new ErrorHttp(401, "Sesión no válida");
     return armarSesion(usuario, portal);
   }
+
+const ESTADOS_RECUPERABLES = [102]; // solo cuentas activas
+
+const ERROR_CODIGO = () => new ErrorHttp(400, "El código venció o no es válido. Pide uno nuevo.", "codigo");
+
+async function usuarioRecuperable(correo) {
+  const usuario = await usuariosRepo.buscarPorCorreo(correo);
+  if (!usuario || !ESTADOS_RECUPERABLES.includes(usuario.estadoId)) return null;
+  return usuario;
+}
+
+export async function solicitarRecuperacion(correo) {
+  const usuario = await usuarioRecuperable(correo);
+  if (!usuario) return; // no decimos si el correo existe o no
+
+  try {
+    const { codigo, minutos } = await verificacion.emitirCodigo(usuario.id, "RECUPERACION");
+    const mensaje = plantillaRecuperacion({
+      nombre: usuario.nombreCompleto.split(" ")[0],
+      codigo,
+      minutos,
+    });
+    // Sin await: la respuesta no espera al correo, así tarda lo mismo exista o no el usuario
+    enviarCorreo({ para: correo, ...mensaje }).catch((error) =>
+      console.error("No se pudo enviar el correo de recuperación:", error.message)
+    );
+  } catch (error) {
+    if (error.estado !== 429) throw error; // 429 = pidió otro hace menos de 60 s: se calla igual
+  }
+}
+
+export async function verificarRecuperacion(correo, codigo) {
+  const usuario = await usuarioRecuperable(correo);
+  if (!usuario) throw ERROR_CODIGO();
+  await verificacion.validarCodigo(usuario.id, "RECUPERACION", codigo);
+}
+
+export async function restablecerContrasena(correo, codigo, contrasenaNueva) {
+  const usuario = await usuarioRecuperable(correo);
+  if (!usuario) throw ERROR_CODIGO();
+
+  // Fuera de la transacción: así un intento fallido sí queda contado
+  const token = await verificacion.validarCodigo(usuario.id, "RECUPERACION", codigo);
+  const hash = await bcrypt.hash(contrasenaNueva, 12);
+
+  const hecho = await usuariosRepo.cambiarContrasenaConCodigo({ usuarioId: usuario.id, tokenId: token.id, hash });
+  if (!hecho) throw new ErrorHttp(400, "Este código ya fue utilizado", "codigo");
+}

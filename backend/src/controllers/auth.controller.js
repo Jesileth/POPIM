@@ -78,3 +78,18 @@ export function logout(req, res) {
   });
   res.json({ mensaje: "Sesión cerrada" });
 }
+
+export async function solicitarRecuperacion(req, res) {
+  await authService.solicitarRecuperacion(req.body.correo);
+  res.json({ mensaje: "Si el correo está registrado, te enviamos un código." });
+}
+
+export async function verificarRecuperacion(req, res) {
+  await authService.verificarRecuperacion(req.body.correo, req.body.codigo);
+  res.json({ mensaje: "Código correcto" });
+}
+
+export async function restablecerContrasena(req, res) {
+  await authService.restablecerContrasena(req.body.correo, req.body.codigo, req.body.contrasenaNueva);
+  res.json({ mensaje: "Tu contraseña fue actualizada. Ya puedes iniciar sesión." });
+}

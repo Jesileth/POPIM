@@ -1,6 +1,7 @@
 
 import crypto from "node:crypto";
 import { pool } from "../config/db.js";
+import { marcarUsado } from "./tokens.repository.js";
 
 export async function crearPropietario({ nombreCompleto, correo, telefono, cedula, direccion, contrasenaHash }) {
   const conexion = await pool.getConnection();
@@ -118,4 +119,43 @@ export async function obtenerMenu(usuarioId, portal) {
     [usuarioId, portal]
   );
   return filas;
+}
+
+
+// CORREO
+
+export async function buscarPorCorreo(correo) {
+  const [filas] = await pool.query(
+    "SELECT id, nombre_completo AS nombreCompleto, estado_id AS estadoId FROM usuarios WHERE correo = ?",
+    [correo]
+  );
+  return filas[0] ?? null;
+}
+
+// Gasta el código y cambia la contraseña en una sola transacción: o pasan las dos cosas o ninguna.
+// Si la cuenta estaba bloqueada (103), la reactiva (102). Devuelve false si el código ya estaba gastado.
+export async function cambiarContrasenaConCodigo({ usuarioId, tokenId, hash }) {
+  const conexion = await pool.getConnection();
+  try {
+    await conexion.beginTransaction();
+
+    if (!(await marcarUsado(tokenId, conexion))) {
+      await conexion.rollback();
+      return false;
+    }
+
+    await conexion.query
+    (
+      "UPDATE usuarios SET contrasena = ?, intentos_fallidos = 0 WHERE id = ?",
+      [hash, usuarioId]
+    );
+
+    await conexion.commit();
+    return true;
+  } catch (error) {
+    await conexion.rollback();
+    throw error;
+  } finally {
+    conexion.release();
+  }
 }
