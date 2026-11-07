@@ -45,7 +45,8 @@ const BASE = "flex min-h-11 w-full items-center gap-3 rounded-xl px-3.5 text-[15
 const NORMAL = "font-medium text-white/80 hover:bg-white/8 hover:text-white";
 const ACTIVA = "bg-popim-primary font-semibold text-white";
 
-export default function BarraLateral({ menu, alCerrarSesion }) {
+// insignias = { "/atencion": 1 } → numerito rojo al lado de esa opción (0 o nada = no se muestra)
+export default function BarraLateral({ menu, alCerrarSesion, insignias = {} }) {
   const pathname = usePathname();
   const [manual, setManual] = useState({}); // grupos que el usuario abrió o cerró a mano
   const [abiertoMovil, setAbiertoMovil] = useState(false);
@@ -101,7 +102,12 @@ export default function BarraLateral({ menu, alCerrarSesion }) {
                   className={`${BASE} ${esActiva ? ACTIVA : NORMAL}`}
                 >
                   <IconoMenu nombre={item.icono} />
-                  {item.etiqueta}
+                  <span className="flex-1">{item.etiqueta}</span>
+                  {insignias[item.ruta] > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-estado-emergencia px-1.5 text-[11px] font-bold text-white">
+                      {insignias[item.ruta]}
+                    </span>
+                  )}
                 </Link>
               );
             }
