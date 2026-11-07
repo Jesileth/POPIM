@@ -16,9 +16,22 @@ function Contenido({ children }) {
   const pathname = usePathname();
 
   // Sin sesión no se entra al panel
+   // Sin sesión no se entra al panel
   useEffect(() => {
-    if (!cargando && !sesion) router.replace("/login");
-  }, [cargando, sesion, router]);
+    if (!cargando && !sesion) {
+      router.replace("/login");
+      return;
+    }
+    if (!cargando && sesion) {
+      const rol = sesion.usuario?.rol;
+      const esAdmin = rol === "ADMINISTRADOR";
+      const rutasAdmin = ["/admin-inicio", "/admin-personal", "/admin-horarios", "/admin-mi-clinica", "/admin-perfil"];
+      const rutasRecepcion = ["/agenda", "/recepcion", "/propietarios", "/mascotas", "/citas", "/perfil"];
+      const permitidas = esAdmin ? rutasAdmin : rutasRecepcion;
+      const autorizada = permitidas.some((ruta) => pathname === ruta || pathname.startsWith(`${ruta}/`));
+      if (!autorizada) router.replace(esAdmin ? "/admin-inicio" : "/agenda");
+    }
+  }, [cargando, sesion, router, pathname]);
 
   // Veterinario: cuántas emergencias esperan (numerito rojo en "Atención de hoy").
   // Se vuelve a contar cada vez que cambia de pantalla.

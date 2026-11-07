@@ -49,7 +49,7 @@ export default function LoginPage() {
       return;
     }
     // replace: así el botón "atrás" no regresa al login
-    router.replace("/agenda");
+    router.replace(respuesta.datos?.usuario?.rol === "ADMINISTRADOR" ? "/admin-inicio" : "/agenda");
   }
 
   return (

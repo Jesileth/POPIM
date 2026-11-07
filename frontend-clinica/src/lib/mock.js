@@ -65,11 +65,33 @@ const SESION_VETERINARIO = {
   ],
 };
 
+const SESION_ADMIN = {
+  usuario: {
+    id: "u-admin-1", nombreCompleto: "Andrea Díaz", rol: "ADMINISTRADOR", fotoUrl: null,
+    clinica: { id: "c-1", nombreComercial: "POPIM Central - Managua", logoUrl: null },
+  },
+  permisos: ["ADMIN_PERSONAL_VER", "ADMIN_PERSONAL_GESTIONAR", "ADMIN_HORARIOS_GESTIONAR", "ADMIN_CLINICA_GESTIONAR", "PERFIL_VER", "PERFIL_EDITAR"],
+  menu: [
+    { id: 101, padreId: null, etiqueta: "Inicio", ruta: "/admin-inicio", icono: "tablero", orden: 1 },
+    { id: 102, padreId: null, etiqueta: "Personal", ruta: null, icono: "personal", orden: 2 },
+    { id: 103, padreId: 102, etiqueta: "Consulta de personal", ruta: "/admin-personal", orden: 1 },
+    { id: 104, padreId: 102, etiqueta: "Vincular personal", ruta: "/admin-personal/vincular", orden: 2 },
+    { id: 105, padreId: null, etiqueta: "Horarios y bloqueos", ruta: "/admin-horarios", icono: "tablero", orden: 3 },
+    { id: 106, padreId: null, etiqueta: "Mi clínica", ruta: "/admin-mi-clinica", icono: "huella", orden: 4 },
+  ],
+};
+
 // Usuarios de prueba para iniciar sesión (los dos con la contraseña Prueba123)
 const USUARIOS_PRUEBA = [
   { correo: "recepcion@prueba.popim", telefono: "88880000", password: "Prueba123", sesion: SESION_RECEPCION },
   { correo: "luis.herrera@prueba.popim", telefono: "86112233", password: "Prueba123", sesion: SESION_VETERINARIO },
+  { correo: "admin@prueba.popim", telefono: "88880001", password: "Prueba123", sesion: SESION_ADMIN},
+  
 ];
+
+const ADMIN_PRUEBA = {
+  correo: "admin@prueba.popim", telefono: "88880001", password: "Prueba123",
+};
 
 const CLAVE_SESION = "popim_clinica_mock_sesion";
 
@@ -259,6 +281,19 @@ export async function simular(ruta, metodo = "GET", cuerpo = {}) {
   if (ruta === "/perfil/password" && metodo === "POST") {
     if (!usuarioId) return respuestaError(401, "No has iniciado sesión.");
     return intentar(() => respuestaOk(m.cambiarPassword(cuerpo)));
+  }
+
+   if (ruta === "/auth/login" && metodo === "POST") {
+    const identificador = cuerpo.identificador ?? "";
+    const password = cuerpo.contrasena ?? cuerpo.password ?? "";
+    const esAdmin = identificador === ADMIN_PRUEBA.correo || identificador === ADMIN_PRUEBA.telefono;
+    const esRecepcion = identificador === USUARIO_PRUEBA.correo || identificador === USUARIO_PRUEBA.telefono;
+    if ((!esAdmin || password !== ADMIN_PRUEBA.password) && (!esRecepcion || password !== USUARIO_PRUEBA.password)) {
+      return { ok: false, estado: 401, error: "Correo, teléfono o contraseña incorrectos." };
+    }
+    const sesion = esAdmin ? SESION_ADMIN : SESION_PRUEBA;
+    guardarSesion(esAdmin ? "ADMINISTRADOR" : "RECEPCIONISTA");
+    return { ok: true, estado: 200, datos: sesion };
   }
 
   // ---------- Veterinario ----------
