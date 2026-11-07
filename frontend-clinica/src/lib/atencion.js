@@ -38,3 +38,33 @@ export function accionDeCita(cita) {
   if (cita.estadoId === 501) return { tipo: "nota", texto: "Recepción aún no confirma esta cita." };
   return null;
 }
+
+
+
+// "3 dic" (fecha corta, sin año) para notas y avisos
+const diaMes = (fechaISO) =>
+  new Intl.DateTimeFormat("es", { day: "numeric", month: "short" })
+    .format(new Date(`${fechaISO}T00:00:00`))
+    .replace(".", "");
+
+const PRIORIDAD_TEXTO = { CRITICA: "crítica", URGENTE: "urgente" };
+
+// Nota gris debajo del estado en "Mis consultas"
+export function notaConsulta(c) {
+  if (c.abierta) {
+    if (c.esEmergencia) return `Emergencia · ${PRIORIDAD_TEXTO[c.prioridad] ?? "urgente"}`;
+    if (c.examenesPendientes > 0) return "Esperando resultados";
+    return "";
+  }
+  if (c.control) return `Control el ${diaMes(c.control.fecha)}`;
+  if (c.referidoA) return `Referido a ${c.referidoA}`;
+  return c.tratamiento.replace(/\.$/, "");
+}
+
+// Texto del aviso de un paciente (la cajita amarilla o roja de la lista)
+export function textoAlerta(alerta) {
+  if (alerta.codigo === "DOSIS_VENCIDA") return { texto: "Vacuna vencida", grave: true };
+  if (alerta.codigo === "DOSIS_PROXIMA") return { texto: `${alerta.nombre} vence ${diaMes(alerta.fecha)}`, grave: false };
+  if (alerta.codigo === "CONTROL_SIN_AGENDAR") return { texto: "Control sin agendar", grave: false };
+  return { texto: "Revisar", grave: false };
+}

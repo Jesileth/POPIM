@@ -278,6 +278,24 @@ export async function simular(ruta, metodo = "GET", cuerpo = {}) {
     return soloVeterinario(() => respuestaOk(m.atencionHoy(personalId)));
   }
 
+  // Mis consultas (todas las que atendió)
+  if (ruta === "/clinica/consultas" && metodo === "GET") {
+    return soloVeterinario(() => respuestaOk(m.misConsultas(personalId)));
+  }
+
+  // Mis pacientes (lista de la izquierda)
+  if (ruta === "/clinica/pacientes" && metodo === "GET") {
+    return soloVeterinario(() => respuestaOk(m.misPacientes(personalId)));
+  }
+
+  // Expediente de una mascota: "/clinica/pacientes/m12"
+  const rutaExpediente = ruta.match(/^\/clinica\/pacientes\/([^/]+)$/);
+  if (rutaExpediente && metodo === "GET") {
+    return soloVeterinario(() => respuestaOk(m.expediente(rutaExpediente[1])));
+  }
+
+
+
   // Abrir la consulta de una cita (Iniciar consulta / Atender ahora)
   if (ruta === "/clinica/consultas" && metodo === "POST") {
     if (!cuerpo.citaId) return respuestaError(400, "Falta la cita.", "citaId");

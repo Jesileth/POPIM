@@ -99,6 +99,7 @@ export default function AtencionHoyPage() {
 
       <div className="grid items-start gap-5 lg:grid-cols-[1fr_320px]">
         <div className="flex flex-col gap-5">
+          
           {/* 3. EN CONSULTA */}
           <Tarjeta titulo="En consulta">
             {enConsulta.length === 0 && <p className="text-sm text-popim-muted">No tienes consultas abiertas.</p>}

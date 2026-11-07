@@ -19,3 +19,19 @@ export function obtenerAtencionHoy() {
 export function iniciarConsulta(citaId) {
   return peticion("/clinica/consultas", { metodo: "POST", cuerpo: { citaId } });
 }
+
+
+// GET /clinica/consultas → { consultas: [...] } todas las que atendió el veterinario
+export function obtenerMisConsultas() {
+  return peticion("/clinica/consultas");
+}
+
+// GET /clinica/pacientes → { pacientes: [...] } mascotas que tienen o tuvieron cita con él
+export function obtenerMisPacientes() {
+  return peticion("/clinica/pacientes");
+}
+
+// GET /clinica/pacientes/:mascotaId → expediente (el backend lo anota en auditoria_expediente)
+export function obtenerExpediente(mascotaId) {
+  return peticion(`/clinica/pacientes/${mascotaId}`);
+}
