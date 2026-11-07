@@ -8,7 +8,7 @@ import { guardarImagen, borrarImagen } from "../config/archivos.js";
 
 const LETRAS = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 
-function generarCodigo() {
+export function generarCodigo() {
   const numero = crypto.randomInt(1000, 10000);
   const letra = () => LETRAS[crypto.randomInt(LETRAS.length)];
   return `PET-${numero}-${letra()}${letra()}`;

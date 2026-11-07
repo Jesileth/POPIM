@@ -39,3 +39,22 @@ export function fechaHoraManagua(fecha = new Date()) {
     timeZone: "America/Managua",
   }).format(fecha);
 }
+
+
+
+// La base guarda los momentos en UTC ("2026-11-07 08:56:00").
+// Esto lo pasa a la hora de Nicaragua con el formato que usa el portal de la clínica: "2026-11-07T02:56"
+export function aLocalManagua(texto) {
+  if (!texto) return null;
+  const momento = new Date(`${texto.replace(" ", "T")}Z`);
+  const partes = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Managua",
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+    })
+      .formatToParts(momento)
+      .map((p) => [p.type, p.value])
+  );
+  return `${partes.year}-${partes.month}-${partes.day}T${partes.hour}:${partes.minute}`;
+}
