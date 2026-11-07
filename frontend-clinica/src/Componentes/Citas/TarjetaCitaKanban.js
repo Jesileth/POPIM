@@ -35,11 +35,18 @@ export default function TarjetaCitaKanban({ cita, onConfirmar, onCancelar }) {
           <Boton tamano="sm" onClick={() => onConfirmar(cita)}>Confirmar</Boton>
         </div>
       )}
-      {estado === "CONFIRMADA" && (
+      {/* Confirmada normal: se puede cancelar o reprogramar */}
+      {estado === "CONFIRMADA" && !e && (
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Boton variante="neutro" tamano="sm" onClick={() => onCancelar(cita)}>Cancelar</Boton>
           <Boton variante="secundario" tamano="sm" href={`/citas/reprogramacion?cita=${cita.id}`}>Reprogramar</Boton>
         </div>
+      )}
+      {/* Emergencia: recepción no la toca, solo espera al veterinario */}
+      {estado === "CONFIRMADA" && e && (
+        <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-[13px] font-semibold text-red-800">
+          Esperando a {cita.veterinario.nombreCompleto}
+        </p>
       )}
       {estado === "ATENCION" && (
         <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-[13px] font-semibold text-emerald-800">
