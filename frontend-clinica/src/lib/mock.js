@@ -6,15 +6,8 @@ import { ID_ESTADO_CITA, ID_ESTADO_USUARIO } from "@/lib/estados";
 import { formatearEdad, sig } from "@/lib/formato";
 import { hoyISO } from "@/lib/fechas";
 
-// Usuario de prueba para iniciar sesión
-const USUARIO_PRUEBA = {
-  correo: "recepcion@prueba.popim",
-  telefono: "88880000",
-  password: "Prueba123",
-};
-
 // Lo que devolvería GET /auth/sesion para una recepcionista
-const SESION_PRUEBA = {
+const SESION_RECEPCION = {
   usuario: {
     id: "u-recep-1",
     nombreCompleto: "Rosa Calero" /* igual que en mockClinica para que Mi perfil coincida */,
@@ -45,22 +38,58 @@ const SESION_PRUEBA = {
   ],
 };
 
+// Lo que devolvería GET /auth/sesion para un veterinario.
+// personalId = su fila en personal_clinica (en mockClinica es "v4", el Dr. Luis Herrera).
+// Los permisos son los del BLOQUE 9 de migracion-portal-clinica.sql: NO tiene AGENDA_VER_TODOS.
+const SESION_VETERINARIO = {
+  usuario: {
+    id: "u-vet-4",
+    personalId: "v4",
+    nombreCompleto: "Luis Herrera",
+    rol: "VETERINARIO",
+    especialidad: "Medicina general", // sale de perfil_veterinario; el encabezado la muestra
+    fotoUrl: null,
+    clinica: { id: "c-1", nombreComercial: "POPIM Central - Managua", logoUrl: null },
+  },
+  permisos: [
+    "AGENDA_VER", "ATENCION_VER", "CONSULTA_ATENDER", "RECETA_EMITIR", "EXAMENES_GESTIONAR",
+    "DOSIS_APLICAR", "CITAS_AGENDAR_CONTROL", "PACIENTES_VER", "EXPEDIENTE_CLINICO_VER",
+    "PERFIL_VER", "PERFIL_EDITAR",
+  ],
+  // Mismas filas del BLOQUE 10: el permiso decide qué opciones ve cada rol
+  menu: [
+    { id: 1, padreId: null, etiqueta: "Agenda", ruta: "/agenda", icono: "agenda", orden: 1 },
+    { id: 12, padreId: null, etiqueta: "Atención de hoy", ruta: "/atencion", icono: "atencion", orden: 3 },
+    { id: 13, padreId: null, etiqueta: "Consultas", ruta: "/consultas", icono: "consultas", orden: 4 },
+    { id: 14, padreId: null, etiqueta: "Pacientes", ruta: "/pacientes", icono: "pacientes", orden: 5 },
+  ],
+};
+
+// Usuarios de prueba para iniciar sesión (los dos con la contraseña Prueba123)
+const USUARIOS_PRUEBA = [
+  { correo: "recepcion@prueba.popim", telefono: "88880000", password: "Prueba123", sesion: SESION_RECEPCION },
+  { correo: "luis.herrera@prueba.popim", telefono: "86112233", password: "Prueba123", sesion: SESION_VETERINARIO },
+];
+
 const CLAVE_SESION = "popim_clinica_mock_sesion";
 
 // Pausa corta para que se note el estado "cargando", como con un servidor real
 const esperar = (ms) => new Promise((resolver) => setTimeout(resolver, ms));
 
-// sessionStorage puede fallar (modo incógnito, etc.), por eso va con try/catch
-function haySesion() {
+// En sessionStorage guardamos el CORREO de quien inició sesión (así sabemos si es
+// la recepcionista o el veterinario). Puede fallar (modo incógnito, etc.): va con try/catch.
+// Devuelve la sesión completa, o null si nadie ha iniciado sesión.
+function sesionActual() {
   try {
-    return sessionStorage.getItem(CLAVE_SESION) === "1";
+    const correo = sessionStorage.getItem(CLAVE_SESION);
+    return USUARIOS_PRUEBA.find((u) => u.correo === correo)?.sesion ?? null;
   } catch {
-    return false;
+    return null;
   }
 }
-function guardarSesion(activa) {
+function guardarSesion(correo) {
   try {
-    if (activa) sessionStorage.setItem(CLAVE_SESION, "1");
+    if (correo) sessionStorage.setItem(CLAVE_SESION, correo);
     else sessionStorage.removeItem(CLAVE_SESION);
   } catch {
     // si no se puede guardar, la sesión solo dura hasta recargar
@@ -163,25 +192,27 @@ export async function simular(ruta, metodo = "GET", cuerpo = {}) {
   if (ruta === "/auth/login" && metodo === "POST") {
     const identificador = cuerpo.identificador ?? "";
     const password = cuerpo.contrasena ?? cuerpo.password ?? "";
-    const coincide =
-      identificador === USUARIO_PRUEBA.correo || identificador === USUARIO_PRUEBA.telefono;
+    const usuario = USUARIOS_PRUEBA.find(
+      (u) => identificador === u.correo || identificador === u.telefono,
+    );
 
-    if (!coincide || password !== USUARIO_PRUEBA.password) {
+    if (!usuario || password !== usuario.password) {
       return { ok: false, estado: 401, error: "Correo, teléfono o contraseña incorrectos." };
     }
-    guardarSesion(true);
-    return { ok: true, estado: 200, datos: SESION_PRUEBA };
+    guardarSesion(usuario.correo);
+    return { ok: true, estado: 200, datos: usuario.sesion };
   }
 
   // ---------- Sesión actual ----------
   if (ruta === "/auth/sesion" && metodo === "GET") {
-    if (!haySesion()) return { ok: false, estado: 401, error: "No has iniciado sesión." };
-    return { ok: true, estado: 200, datos: SESION_PRUEBA };
+    const sesion = sesionActual();
+    if (!sesion) return { ok: false, estado: 401, error: "No has iniciado sesión." };
+    return { ok: true, estado: 200, datos: sesion };
   }
 
   // ---------- Cerrar sesión ----------
   if (ruta === "/auth/logout" && metodo === "POST") {
-    guardarSesion(false);
+    guardarSesion(null);
     return { ok: true, estado: 200, datos: {} };
   }
 
@@ -209,8 +240,32 @@ export async function simular(ruta, metodo = "GET", cuerpo = {}) {
   }
 
   // Todo lo que empieza con /clinica/ necesita sesión
-  if (ruta.startsWith("/clinica/") && !haySesion()) {
+  const sesion = sesionActual();
+  if (ruta.startsWith("/clinica/") && !sesion) {
     return respuestaError(401, "No has iniciado sesión.");
+  }
+
+  // ---------- Veterinario ----------
+  // El backend sabrá quién es el veterinario por la cookie; aquí lo sacamos de la sesión de prueba.
+  const personalId = sesion?.usuario?.personalId;
+  const soloVeterinario = (fn) =>
+    personalId ? intentar(fn) : respuestaError(403, "Esta opción es solo para veterinarios.");
+
+  // Su agenda: "/clinica/mi-agenda?desde=2026-11-02&hasta=2026-11-08"
+  if (ruta.startsWith("/clinica/mi-agenda") && metodo === "GET") {
+    const q = new URLSearchParams(ruta.split("?")[1]);
+    return soloVeterinario(() => respuestaOk(m.miAgenda(personalId, q.get("desde"), q.get("hasta"))));
+  }
+
+  // Sus citas de hoy (Atención de hoy y el numerito rojo del menú)
+  if (ruta === "/clinica/atencion/hoy" && metodo === "GET") {
+    return soloVeterinario(() => respuestaOk(m.atencionHoy(personalId)));
+  }
+
+  // Abrir la consulta de una cita (Iniciar consulta / Atender ahora)
+  if (ruta === "/clinica/consultas" && metodo === "POST") {
+    if (!cuerpo.citaId) return respuestaError(400, "Falta la cita.", "citaId");
+    return soloVeterinario(() => respuestaOk(m.iniciarConsulta(personalId, cuerpo.citaId), 201));
   }
 
   // ---------- Agenda de la clínica ----------

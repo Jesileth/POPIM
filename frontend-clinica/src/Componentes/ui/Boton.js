@@ -6,6 +6,9 @@ const VARIANTES = {
   neutro: "border border-popim-linea bg-white text-popim-ink hover:bg-popim-page",
   peligro: "border border-popim-linea bg-white text-red-700 hover:border-red-200 hover:bg-red-50",
   emergencia: "border border-red-600 bg-white text-red-700 hover:bg-red-50",
+  // Botones rellenos del veterinario: "Continuar" (consulta en curso) y "Atender ahora" (emergencia)
+  curso: "border border-transparent bg-estado-curso-borde text-white hover:brightness-90",
+  urgente: "border border-transparent bg-estado-emergencia text-white hover:brightness-90",
   enlace: "text-popim-primary hover:underline",
 };
 const TAMANOS = { md: "h-11 px-5 text-sm", sm: "h-9 px-3.5 text-[13px]" };

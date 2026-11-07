@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import CuadriculaAgenda from "@/Componentes/agenda/CuadriculaAgenda";
+import MiAgenda from "@/Componentes/agenda/MiAgenda";
 import Mensaje from "@/Componentes/Mensaje";
 import { IconChevronRight } from "@/Componentes/Iconos";
 import { useSesion } from "@/contexto/SesionContext";
@@ -18,7 +19,17 @@ import { obtenerAgenda } from "@/servicios/agenda";
 const BOTON_ICONO =
   "flex h-10 w-10 items-center justify-center rounded-xl border border-popim-linea bg-white text-popim-ink transition hover:border-popim-primary";
 
+// Una sola ruta /agenda para los dos roles (así está en la tabla menus):
+// - Recepción tiene AGENDA_VER_TODOS → ve la agenda de TODOS los veterinarios (AgendaClinica, abajo).
+// - El veterinario NO lo tiene → ve solo la suya, por semana (Componentes/agenda/MiAgenda.js).
 export default function AgendaPage() {
+  const { sesion } = useSesion();
+  if (!tienePermiso(sesion, "AGENDA_VER_TODOS")) return <MiAgenda />;
+  return <AgendaClinica />;
+}
+
+// Agenda de la clínica (la de recepción). Es la misma de antes; solo cambió su nombre.
+function AgendaClinica() {
   const { sesion } = useSesion();
   const [fecha, setFecha] = useState(hoyISO);
   const [datos, setDatos] = useState({ cargando: true, error: "", agenda: null });
