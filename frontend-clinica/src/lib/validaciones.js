@@ -3,14 +3,17 @@
 export const MIN_PASSWORD = 8; // minimo de digitos de la contraseña
 
 export const normalizarEmail = (valor) => valor.trim().toLowerCase();
-export const normalizarCedula = (valor) => valor.replace(/[\s-]/g, "").toUpperCase();
+// (valor ?? "") evita que truene si la cédula viene vacía (null), por ejemplo en propietarios provisionales
+export const normalizarCedula = (valor) => (valor ?? "").replace(/[\s-]/g, "").toUpperCase();
 
 export function validarObligatorio(valor, mensaje = "Este campo es obligatorio.") {
   return valor && valor.trim() ? "" : mensaje;
 }
 
-export function validarEmail(valor) {
-  if (!valor || !valor.trim()) return "Escribe tu correo electrónico.";
+// obligatorio = true  -> vacío da error (login, activar cuenta)
+// obligatorio = false -> vacío está bien, solo se revisa si escribieron algo (correo opcional en Registrar propietario)
+export function validarEmail(valor, obligatorio = true) {
+  if (!valor || !valor.trim()) return obligatorio ? "Escribe el correo electrónico." : "";
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor.trim())
     ? ""
     : "Escribe un correo válido, por ejemplo Prueba@popim.com.";
@@ -63,10 +66,10 @@ export function enmascararEmail(email) {
 
 
 // Edad en años o en meses, siempre un número entero mayor que 0
-export function validarEdad(valor, unidad = "anios") {
+export function validarEdad(valor, unidad = "ANIOS") {
   if (valor === undefined || valor === "") return "Escribe la edad de tu mascota.";
   const edad = Number(valor);
-   const esMeses = unidad === "MESES";
+  const esMeses = unidad === "MESES";
   const maximo = esMeses ? 480 : 40;
   if (!Number.isInteger(edad) || edad < 1 || edad > maximo) {
     return `Escribe un número entero entre 1 y ${maximo} ${esMeses ? "meses" : "años"}.`;
