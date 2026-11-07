@@ -5,8 +5,12 @@ import { aHora, aMinutos, hoyISO, minutosAhora } from "@/lib/fechas";
 
 // Decide qué hay en el cuadrito de UN veterinario a UNA hora (en minutos)
 function tipoDeCelda(vet, minuto, duracion, yaPaso) {
-  // 1. ¿Hay una cita que empieza justo a esta hora?
-  const cita = vet.citas.find((c) => aMinutos(c.horaInicio) === minuto);
+
+    // 1. ¿Hay una cita que empieza DENTRO de este bloque? (una emergencia puede empezar a las 10:52)
+  //    Si hay dos (la cita de las 10:00 y una emergencia), se muestra la emergencia.
+  const cita = vet.citas
+    .filter((c) => aMinutos(c.horaInicio) >= minuto && aMinutos(c.horaInicio) < minuto + duracion)
+    .sort((a, b) => Number(b.esEmergencia) - Number(a.esEmergencia))[0];
   if (cita) return { tipo: "cita", cita };
 
   // 2. ¿Algún bloqueo toca este bloque? (se cruzan si uno empieza antes de que el otro termine)
@@ -31,13 +35,24 @@ function tipoDeCelda(vet, minuto, duracion, yaPaso) {
 export function armarCuadricula(agenda) {
   const duracion = agenda.duracionBloqueMin;
   const horarios = agenda.veterinarios.flatMap((v) => v.horario);
+  const citas = agenda.veterinarios.flatMap((v) => v.citas);
 
-  // Si nadie trabaja ese día (ej. domingo) no hay filas
-  if (horarios.length === 0) return [];
+  // Si nadie trabaja ese día (ej. domingo) y no hay citas, no hay filas
+  if (horarios.length === 0 && citas.length === 0) return [];
 
-  // La agenda va desde el que entra más temprano hasta el que sale más tarde
-  const inicio = Math.min(...horarios.map((h) => aMinutos(h.inicio)));
-  const fin = Math.max(...horarios.map((h) => aMinutos(h.fin)));
+  // Una cita fuera de horario (ej. emergencia a las 02:56) se "redondea" a su bloque (02:00),
+  // así las filas siguen alineadas a las horas en punto.
+  const alBloque = (minutos) => Math.floor(minutos / duracion) * duracion;
+
+  // La agenda va desde lo más temprano hasta lo más tarde: horarios Y citas
+  const inicio = Math.min(
+    ...horarios.map((h) => aMinutos(h.inicio)),
+    ...citas.map((c) => alBloque(aMinutos(c.horaInicio))),
+  );
+  const fin = Math.max(
+    ...horarios.map((h) => aMinutos(h.fin)),
+    ...citas.map((c) => alBloque(aMinutos(c.horaInicio)) + duracion),
+  );
 
   // ¿Ya pasó esta hora? Solo aplica si la fecha es hoy o anterior
   const hoy = hoyISO();
@@ -65,10 +80,13 @@ export function armarCuadricula(agenda) {
 export function armarSemana(duracion, dias) {
   // Desde la hora más temprana hasta la más tarde de todos los días (horarios y citas,
   // por si una emergencia cae fuera de horario)
+  // Igual que en recepción: una cita a las 02:56 abre la fila de las 02:00
+  const alBloque = (m) => Math.floor(m / duracion) * duracion;
   const minutos = dias.flatMap((dia) => [
     ...dia.horario.flatMap((h) => [aMinutos(h.inicio), aMinutos(h.fin)]),
-    ...dia.citas.flatMap((c) => [aMinutos(c.horaInicio), aMinutos(c.horaFin)]),
+    ...dia.citas.flatMap((c) => [alBloque(aMinutos(c.horaInicio)), alBloque(aMinutos(c.horaInicio)) + duracion]),
   ]);
+
   if (minutos.length === 0) return [];
 
   const inicio = Math.min(...minutos);
