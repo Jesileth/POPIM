@@ -56,3 +56,32 @@ export function armarCuadricula(agenda) {
   }
   return filas;
 }
+
+// ---------------------------------------------------------------------------
+// "Mi agenda" del veterinario: aquí las COLUMNAS son días, no veterinarios.
+// Cada día trae { fecha, horario, bloqueos, citas }, la misma forma que un veterinario
+// de la agenda de recepción; por eso tipoDeCelda sirve igual para los dos.
+// ---------------------------------------------------------------------------
+export function armarSemana(duracion, dias) {
+  // Desde la hora más temprana hasta la más tarde de todos los días (horarios y citas,
+  // por si una emergencia cae fuera de horario)
+  const minutos = dias.flatMap((dia) => [
+    ...dia.horario.flatMap((h) => [aMinutos(h.inicio), aMinutos(h.fin)]),
+    ...dia.citas.flatMap((c) => [aMinutos(c.horaInicio), aMinutos(c.horaFin)]),
+  ]);
+  if (minutos.length === 0) return [];
+
+  const inicio = Math.min(...minutos);
+  const fin = Math.max(...minutos);
+  // El veterinario no agenda desde aquí: un bloque libre siempre se muestra "Libre", aunque ya haya pasado
+  const nuncaPasa = () => false;
+
+  const filas = [];
+  for (let minuto = inicio; minuto + duracion <= fin; minuto += duracion) {
+    filas.push({
+      hora: aHora(minuto),
+      celdas: dias.map((dia) => ({ fecha: dia.fecha, ...tipoDeCelda(dia, minuto, duracion, nuncaPasa) })),
+    });
+  }
+  return filas;
+}

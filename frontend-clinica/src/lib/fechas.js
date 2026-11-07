@@ -47,3 +47,35 @@ export function minutosAhora() {
   const d = new Date();
   return d.getHours() * 60 + d.getMinutes();
 }
+
+// ---------- Para "Mi agenda" del veterinario (vista por semana) ----------
+
+// Lunes de la semana de esa fecha. getDay() da 0 = domingo … 6 = sábado,
+// por eso (dia + 6) % 7 dice cuántos días hay que retroceder hasta el lunes.
+export function lunesDe(fechaISO) {
+  const [anio, mes, dia] = fechaISO.split("-").map(Number);
+  const diaSemana = new Date(anio, mes - 1, dia).getDay();
+  return sumarDias(fechaISO, -((diaSemana + 6) % 7));
+}
+
+// "2026-11-03" → { corto: "MAR", numero: 3 } (para el encabezado de cada columna)
+export function partesDia(fechaISO) {
+  const [anio, mes, dia] = fechaISO.split("-").map(Number);
+  const corto = new Date(anio, mes - 1, dia)
+    .toLocaleDateString("es-NI", { weekday: "short" })
+    .replace(".", "")
+    .toUpperCase();
+  return { corto, numero: dia };
+}
+
+// ("2026-11-02", "2026-11-07") → "2 al 7 de noviembre"
+// ("2026-11-30", "2026-12-05") → "30 de noviembre al 5 de diciembre"
+export function textoRango(desde, hasta) {
+  const diaMes = (iso) => {
+    const [anio, mes, dia] = iso.split("-").map(Number);
+    return new Date(anio, mes - 1, dia).toLocaleDateString("es-NI", { day: "numeric", month: "long" });
+  };
+  const mismoMes = desde.slice(0, 7) === hasta.slice(0, 7);
+  const inicio = mismoMes ? String(Number(desde.slice(8, 10))) : diaMes(desde);
+  return `${inicio} al ${diaMes(hasta)}`;
+}
