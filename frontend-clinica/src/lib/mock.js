@@ -245,6 +245,22 @@ export async function simular(ruta, metodo = "GET", cuerpo = {}) {
     return respuestaError(401, "No has iniciado sesión.");
   }
 
+  // ---------- Mi perfil (los dos roles) ----------
+  // Mismas rutas que ya usa el portal del propietario: el backend sabe quién eres por la cookie
+  const usuarioId = sesion?.usuario?.id;
+  if (ruta === "/perfil" && metodo === "GET") {
+    if (!usuarioId) return respuestaError(401, "No has iniciado sesión.");
+    return intentar(() => respuestaOk(m.obtenerPerfil(usuarioId)));
+  }
+  if (ruta === "/perfil" && metodo === "PUT") {
+    if (!usuarioId) return respuestaError(401, "No has iniciado sesión.");
+    return intentar(() => respuestaOk(m.actualizarPerfil(usuarioId, cuerpo)));
+  }
+  if (ruta === "/perfil/password" && metodo === "POST") {
+    if (!usuarioId) return respuestaError(401, "No has iniciado sesión.");
+    return intentar(() => respuestaOk(m.cambiarPassword(cuerpo)));
+  }
+
   // ---------- Veterinario ----------
   // El backend sabrá quién es el veterinario por la cookie; aquí lo sacamos de la sesión de prueba.
   const personalId = sesion?.usuario?.personalId;

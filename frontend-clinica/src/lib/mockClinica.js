@@ -1,6 +1,5 @@
 /* Datos simulados con la forma de la BD de POPIM (Usuarios, Propietarios, Mascotas,
    Personal_clinica, Citas...). Todo vive en memoria: al recargar la página se reinicia. */
-   
 import { ErrorApi } from "@/lib/simulador";
 import { ahoraISO, formatearEdad, horaAhora, hoyISO, iniciales, sumarDias } from "@/lib/formato";
 import { ESTADOS, ID_ESTADO_CITA } from "@/lib/estados";
@@ -29,13 +28,38 @@ const RECEPCIONISTA = {
   fechaIngreso: "2025-03-10", estado: "Activo", ultimoAcceso: "Hoy, 07:52",
 };
 
-export const obtenerSesion = () => ({ usuario: RECEPCIONISTA, clinica: CLINICA });
-export function actualizarPerfil({ nombreCompleto, telefono }) {
-  Object.assign(RECEPCIONISTA, { nombreCompleto, telefono });
-  return { usuario: RECEPCIONISTA };
+// Veterinario de prueba (usuarios + perfil_veterinario). personalId "v4" = su fila en personal_clinica
+const VETERINARIO = {
+  id: "u-vet-4", personalId: "v4", nombreCompleto: "Luis Herrera", rol: "Veterinario",
+  telefono: "8611-2233", correo: "luis.herrera@prueba.popim",
+  fechaIngreso: "2024-02-15", estado: "Activo", ultimoAcceso: "Hoy, 07:45",
+  licencia: "MV-0457", especialidad: "Medicina general",
+  presentacion: "Médico veterinario con 8 años de experiencia en perros y gatos. Me gusta explicar cada tratamiento con calma.",
+};
+// usuarios.id → su perfil (así cada quien ve el SUYO)
+const PERFILES = { "u-rec": RECEPCIONISTA, "u-vet-4": VETERINARIO };
+// El mock de la sesión (lib/mock.js) usa otro id para la recepcionista
+const ALIAS_ID = { "u-recep-1": "u-rec" };
+function perfilPorId(usuarioId) {
+  const u = PERFILES[ALIAS_ID[usuarioId] ?? usuarioId];
+  if (!u) throw new ErrorApi("No encontramos tu perfil.", 404);
+  return u;
 }
-export function cambiarPassword({ actual }) {
-  if (actual === "error") throw new ErrorApi("La contraseña actual es incorrecta.", 400);
+
+// GET /perfil → { usuario, clinica, horario }   (horario solo para veterinarios)
+export function obtenerPerfil(usuarioId) {
+  const usuario = perfilPorId(usuarioId);
+  return { usuario, clinica: CLINICA, horario: usuario.personalId ? horarioSemanal(usuario.personalId) : null };
+}
+// PUT /perfil → el correo, el rol, la licencia y la especialidad NO se cambian aquí
+export function actualizarPerfil(usuarioId, { nombreCompleto, telefono, presentacion }) {
+  const usuario = perfilPorId(usuarioId);
+  Object.assign(usuario, { nombreCompleto, telefono });
+  if (usuario.personalId && presentacion !== undefined) usuario.presentacion = presentacion;
+  return { usuario };
+}
+export function cambiarPassword({ passwordActual }) {
+  if (passwordActual === "error") throw new ErrorApi("La contraseña actual es incorrecta.", 400);
   return {};
 }
 
@@ -511,4 +535,15 @@ export function iniciarConsulta(personalId, citaId) {
   c.enConsultaDesde = c.enConsultaDesde ?? horaAhora();
   anotar(c, "En curso", `${v.nombreCompleto} inició la consulta`);
   return { consultaId: nueva.id };
+}
+
+// "Mi horario" del perfil del veterinario (en la BD sale de horarios_personal)
+// → [{ dias: "Lunes a viernes", tramos: [{inicio, fin}, ...] }, ...]  (tramos vacío = no atiende)
+function horarioSemanal(personalId) {
+  const v = vetPorId(personalId);
+  return [
+    { dias: "Lunes a viernes", tramos: [{ inicio: v.horaInicio, fin: v.almuerzo }, { inicio: sig(v.almuerzo), fin: v.horaFin }] },
+    { dias: "Sábado", tramos: [{ inicio: v.horaInicio, fin: v.sabadoHasta ?? v.horaFin }] },
+    { dias: "Domingo", tramos: [] },
+  ];
 }

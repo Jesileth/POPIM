@@ -11,10 +11,14 @@ import { IconLock } from "@/Componentes/Iconos";
 import { fechaDia, iniciales } from "@/lib/formato";
 import { useCarga } from "@/lib/useCarga";
 import { formatearTelefono, validarObligatorio, validarPassword, validarTelefono } from "@/lib/validaciones";
-import { actualizarPerfil, cambiarPassword, obtenerSesion } from "@/servicios/sesion";
+import { actualizarPerfil, cambiarPassword, obtenerPerfil } from "@/servicios/sesion";
 
-function Perfil({ usuario, clinica }) {
-  const [d, setD] = useState({ nombre: usuario.nombreCompleto, telefono: usuario.telefono });
+const MAX_PRESENTACION = 500; // perfil_veterinario.presentacion
+
+function Perfil({ usuario, clinica, horario }) {
+  // Solo el veterinario tiene personalId + licencia/especialidad, presentación y horario
+  const esVeterinario = Boolean(usuario.personalId);
+  const [d, setD] = useState({ nombre: usuario.nombreCompleto, telefono: usuario.telefono, presentacion: usuario.presentacion ?? "" });
   const [clave, setClave] = useState({ actual: "", nueva: "", confirmar: "" });
   const [foto, setFoto] = useState(null);
   const [errD, setErrD] = useState({});
@@ -27,7 +31,12 @@ function Perfil({ usuario, clinica }) {
     const e = { nombre: validarObligatorio(d.nombre, "Escribe tu nombre."), telefono: validarTelefono(d.telefono) };
     setErrD(e);
     if (Object.values(e).some(Boolean)) return;
-    const r = await actualizarPerfil({ nombreCompleto: d.nombre.trim(), telefono: d.telefono });
+    const r = await actualizarPerfil({
+      nombreCompleto: d.nombre.trim(),
+      telefono: d.telefono,
+      // la presentación solo se manda si es veterinario
+      ...(esVeterinario && { presentacion: d.presentacion.trim() }),
+    });
     setAvisoD(r.ok ? { tipo: "ok", texto: "Datos actualizados." } : { tipo: "error", texto: r.error });
   }
   async function actualizar() {
@@ -60,6 +69,18 @@ function Perfil({ usuario, clinica }) {
             <Campo id="nombre" etiqueta="Nombre completo" value={d.nombre} onChange={(e) => setD({ ...d, nombre: e.target.value })} error={errD.nombre} />
             <Campo id="telefono" etiqueta="Teléfono" maxLength={9} value={d.telefono} onChange={(e) => setD({ ...d, telefono: formatearTelefono(e.target.value) })} error={errD.telefono} />
             <Campo id="correo" etiqueta="Correo (para iniciar sesión)" className="sm:col-span-2" value={usuario.correo} readOnly />
+            {esVeterinario && (
+              <div className="sm:col-span-2">
+                <Campo
+                  id="presentacion" etiqueta="Presentación" multilinea maxLength={MAX_PRESENTACION}
+                  value={d.presentacion} onChange={(e) => setD({ ...d, presentacion: e.target.value })}
+                />
+                <p className="mt-1 flex justify-between gap-3 text-xs text-popim-muted">
+                  <span>Los propietarios la ven al elegir veterinario para su cita. Máximo {MAX_PRESENTACION} caracteres.</span>
+                  <span>{d.presentacion.length}/{MAX_PRESENTACION}</span>
+                </p>
+              </div>
+            )}
           </div>
           {avisoD && <div className="mt-4"><Aviso tipo={avisoD.tipo}>{avisoD.texto}</Aviso></div>}
           <div className="mt-4 flex justify-end"><Boton onClick={guardar}>Guardar cambios</Boton></div>
@@ -76,6 +97,33 @@ function Perfil({ usuario, clinica }) {
         </Tarjeta>
       </div>
 
+      {esVeterinario ? (
+        <div className="space-y-5">
+          <Tarjeta titulo="Datos profesionales">
+            <dl className="divide-y divide-popim-linea">
+              {fila("Licencia", usuario.licencia)}
+              {fila("Especialidad", usuario.especialidad)}
+              {fila("Clínica", clinica.nombreComercial)}
+              {fila("Ingreso", fechaDia(usuario.fechaIngreso))}
+            </dl>
+            <p className="mt-4 flex items-start gap-2 rounded-xl border border-dashed border-popim-borde p-3 text-xs text-popim-muted"><IconLock size={13} className="mt-0.5 shrink-0" />La licencia y la especialidad solo las cambia el administrador de la clínica.</p>
+          </Tarjeta>
+
+          <Tarjeta titulo="Mi horario">
+            <dl className="divide-y divide-popim-linea">
+              {(horario ?? []).map((h) => (
+                <div key={h.dias} className="flex justify-between gap-3 py-2.5 text-sm">
+                  <dt className="font-semibold text-popim-ink">{h.dias}</dt>
+                  <dd className={`text-right ${h.tramos.length ? "text-popim-ink" : "text-popim-muted"}`}>
+                    {h.tramos.length ? h.tramos.map((t) => `${t.inicio} – ${t.fin}`).join(" · ") : "No atiende"}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-3 text-xs text-popim-muted">Para cambios de horario o vacaciones, habla con el administrador.</p>
+          </Tarjeta>
+        </div>
+      ) : (
       <Tarjeta titulo="Datos laborales">
         <div className="flex items-center gap-3 rounded-xl border border-popim-linea p-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-popim-info text-[9px] font-bold text-popim-primary">LOGO</span>
@@ -89,18 +137,19 @@ function Perfil({ usuario, clinica }) {
         </dl>
         <p className="mt-4 flex items-start gap-2 rounded-xl border border-dashed border-popim-borde p-3 text-xs text-popim-muted"><IconLock size={13} className="mt-0.5 shrink-0" />Solo el administrador de la clínica puede cambiar estos datos.</p>
       </Tarjeta>
+      )}
     </div>
   );
 }
 
 export default function MiPerfilPage() {
-  const { datos, error } = useCarga(obtenerSesion, []);
+  const { datos, error } = useCarga(obtenerPerfil, []);
   return (
     <>
       <EncabezadoVista titulo="Mi perfil" />
       {error && <div className="mt-4"><Aviso tipo="error">{error}</Aviso></div>}
       {!datos && !error && <div role="status" className="mt-5 h-72 animate-pulse rounded-2xl border border-popim-linea bg-white" />}
-      {datos && <Perfil usuario={datos.usuario} clinica={datos.clinica} />}
+      {datos && <Perfil usuario={datos.usuario} clinica={datos.clinica} horario={datos.horario} />}
     </>
   );
 }
