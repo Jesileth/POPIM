@@ -1,7 +1,7 @@
-// TEMPORAL (de tu compañero): lee del mock en memoria lib/mockClinica.js. Cuando exista el backend se cambia por peticion().
-import { simular } from "@/lib/simulador";
-import * as m from "@/lib/mockClinica";
+import { peticion } from "@/lib/api";
 
-export const listarMascotas = simular(m.listarMascotas);
-export const obtenerMascota = simular(m.obtenerMascota);
-export const registrarMascota = simular(m.registrarMascota, 500);
+export const listarMascotas = () => peticion("/clinica/mascotas");
+export const obtenerMascota = (id) => peticion(`/clinica/mascotas/${id}`);
+// La mascota se registra "dentro" de su propietario
+export const registrarMascota = (propietarioId, datos) =>
+  peticion(`/clinica/propietarios/${propietarioId}/mascotas`, { metodo: "POST", cuerpo: datos });

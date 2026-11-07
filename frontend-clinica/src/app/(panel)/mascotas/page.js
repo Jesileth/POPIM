@@ -41,7 +41,7 @@ function Ficha({ id }) {
         </div>
       </Tarjeta>
 
-      <div className="grid gap-5 2xl:grid-cols-[1fr_300px]">
+      <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_300px]">
         <Tarjeta titulo="Citas">
           {citas.length === 0 && <p className="text-sm text-popim-muted">Esta mascota aún no tiene citas.</p>}
           <ul className="divide-y divide-popim-linea">
@@ -87,7 +87,9 @@ function Contenido() {
         <Boton href="/mascotas/registrar"><IconPlus size={14} /> Registrar mascota</Boton>
       </EncabezadoVista>
       {error && <div className="mt-4"><Aviso tipo="error">{error}</Aviso></div>}
-      <div className="mt-5 grid items-start gap-5 xl:grid-cols-[340px_1fr]">
+
+      <div className="mt-5 grid items-start gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
+
         <Tarjeta className="space-y-3">
           <Buscador value={q} onChange={setQ} placeholder="Código PET, nombre o propietario" />
           <Selector id="especie" vacio="Todas las especies" opciones={especies} value={especie} onChange={(e) => setEspecie(e.target.value)} />

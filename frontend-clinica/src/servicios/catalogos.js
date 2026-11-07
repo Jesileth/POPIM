@@ -1,6 +1,4 @@
-// TEMPORAL (de tu compañero): lee del mock en memoria lib/mockClinica.js. Cuando exista el backend se cambia por peticion().
-import { simular } from "@/lib/simulador";
-import * as m from "@/lib/mockClinica";
+import { peticion } from "@/lib/api";
 
-export const obtenerEspecies = simular(m.obtenerEspecies, 150);
-export const obtenerRazas = simular(m.obtenerRazas, 150);
+export const obtenerEspecies = () => peticion("/catalogos/especies");
+export const obtenerRazas = (especieId) => peticion(`/catalogos/especies/${especieId}/razas`);

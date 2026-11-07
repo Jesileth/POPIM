@@ -73,6 +73,8 @@ export const CUENTAS = {
   ACTIVO: { nombre: "Cuenta activa", chip: "bg-emerald-50 text-emerald-700" },
   PENDIENTE: { nombre: "Pendiente de activar", chip: "bg-popim-info text-popim-primary" },
   PROVISIONAL: { nombre: "Registrado en clínica", chip: "bg-amber-50 text-amber-800" },
+  BLOQUEADO: { nombre: "Bloqueada", chip: "bg-red-50 text-red-700" },
+  INACTIVO: { nombre: "Inactiva", chip: "bg-slate-100 text-slate-600" },
 };
 
 // Traductores entre las dos formas (el backend manda números: estado_id)
