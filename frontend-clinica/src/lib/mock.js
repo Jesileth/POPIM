@@ -1,7 +1,10 @@
-
-
 // Datos falsos del portal de clínica: solo se usan mientras NEXT_PUBLIC_USAR_MOCK no sea "false".
 // Devuelve siempre la misma forma que api.js: { ok, estado, datos } o { ok: false, estado, error, campo }
+
+import * as m from "@/lib/mockClinica";
+import { ID_ESTADO_CITA, ID_ESTADO_USUARIO } from "@/lib/estados";
+import { formatearEdad, sig } from "@/lib/formato";
+import { hoyISO } from "@/lib/fechas";
 
 // Usuario de prueba para iniciar sesión
 const USUARIO_PRUEBA = {
@@ -14,10 +17,10 @@ const USUARIO_PRUEBA = {
 const SESION_PRUEBA = {
   usuario: {
     id: "u-recep-1",
-    nombreCompleto: "Recepcionista de prueba",
+    nombreCompleto: "Rosa Calero" /* igual que en mockClinica para que Mi perfil coincida */,
     rol: "RECEPCIONISTA",
     fotoUrl: null,
-    clinica: { id: "c-1", nombreComercial: "Clínica de prueba", logoUrl: null },
+    clinica: { id: "c-1", nombreComercial: "POPIM Central - Managua", logoUrl: null },
   },
   permisos: [
     "AGENDA_VER", "AGENDA_VER_TODOS", "CITAS_AGENDAR", "CITAS_EMERGENCIA_REGISTRAR",
@@ -64,106 +67,82 @@ function guardarSesion(activa) {
   }
 }
 
-// Agenda de prueba: los mismos datos para cualquier fecha
-function agendaDePrueba(fecha) {
-  const cita = (id, horaInicio, horaFin, estadoId, mascota, propietario, motivo, esEmergencia = false) => ({
-    id, horaInicio, horaFin, estadoId, mascota, propietario, motivo, esEmergencia,
-  });
 
-  return {
-    fecha,
-    duracionBloqueMin: 60,
-    veterinarios: [
-      {
-        personalId: "pc-1",
-        nombre: "Dra. Ana Morales",
-        especialidad: "Medicina general",
-        horario: [{ inicio: "08:00:00", fin: "12:00:00" }, { inicio: "13:00:00", fin: "16:00:00" }],
-        bloqueos: [],
-        citas: [
-          cita("c-1", "08:00:00", "09:00:00", 504, "Max", "Carlos Méndez", "Vacunación anual"),
-          cita("c-2", "09:00:00", "10:00:00", 503, "Rocky", "Pedro Gómez", "Cojera en pata trasera"),
-          cita("c-3", "10:00:00", "11:00:00", 502, "Kiara", "Sofía Ruiz", "Desparasitación"),
-        ],
-      },
-      {
-        personalId: "pc-2",
-        nombre: "Dr. José Rivera",
-        especialidad: "Dermatología",
-        horario: [{ inicio: "09:00:00", fin: "12:00:00" }, { inicio: "13:00:00", fin: "17:00:00" }],
-        bloqueos: [],
-        citas: [
-          cita("c-4", "09:00:00", "10:00:00", 503, "Luna", "María López", "Control de peso"),
-          cita("c-5", "11:00:00", "12:00:00", 502, "Toby", "Andrés Torres", "Revisión de piel"),
-        ],
-      },
-      {
-        personalId: "pc-3",
-        nombre: "Dra. Karla Díaz",
-        especialidad: "Cirugía general",
-        horario: [{ inicio: "08:00:00", fin: "12:00:00" }, { inicio: "13:00:00", fin: "16:00:00" }],
-        bloqueos: [{ horaInicio: "11:00:00", horaFin: "12:00:00", motivo: "Cirugía programada" }],
-        citas: [
-          cita("c-6", "10:00:00", "11:00:00", 503, "Canela", "Ricardo Silva", "Golpe en la calle", true),
-          cita("c-7", "13:00:00", "14:00:00", 501, "Coco", "Daniela Pérez", "Primera consulta"),
-        ],
-      },
-      {
-        personalId: "pc-4",
-        nombre: "Dr. Luis Herrera",
-        especialidad: "Medicina general",
-        horario: [{ inicio: "08:00:00", fin: "12:00:00" }, { inicio: "13:00:00", fin: "17:00:00" }],
-        bloqueos: [{ horaInicio: "16:00:00", horaFin: "17:00:00", motivo: "Permiso personal" }],
-        citas: [
-          cita("c-8", "10:00:00", "11:00:00", 501, "Michi", "Laura Castillo", "Vómitos frecuentes"),
-          cita("c-9", "14:00:00", "15:00:00", 502, "Bruno", "Jorge Medina", "Seguimiento de tratamiento"),
-        ],
-      },
-    ],
-  };
-}
-
+// ===========================================================================
+// UNA SOLA "BASE DE DATOS" DE PRUEBA
+// Antes este archivo tenía sus propios veterinarios, propietarios y citas, y el
+// proyecto de tu compañero tenía OTROS (lib/mockClinica.js). Eso hacía que una cita
+// creada en la Agenda no apareciera en Recepción de hoy, o que al tocar una cita de la
+// agenda el Detalle dijera "No encontramos esa cita" (los ids no coincidían).
+// Ahora TODO sale de lib/mockClinica.js; aquí solo traducimos su forma a la que
+// esperan tus pantallas (la misma forma que mandará el backend).
+// ===========================================================================
 
 // Respuestas rápidas para no repetir siempre { ok, estado, ... }
 const respuestaOk = (datos, estado = 200) => ({ ok: true, estado, datos });
 const respuestaError = (estado, error, campo) => ({ ok: false, estado, error, campo });
 
-const VETERINARIOS_PRUEBA = [
-  { personalId: "pc-1", nombre: "Dra. Ana Morales", especialidad: "Medicina general" },
-  { personalId: "pc-2", nombre: "Dr. José Rivera", especialidad: "Dermatología" },
-  { personalId: "pc-3", nombre: "Dra. Karla Díaz", especialidad: "Cirugía general" },
-  { personalId: "pc-4", nombre: "Dr. Luis Herrera", especialidad: "Medicina general" },
-];
+// mockClinica lanza ErrorApi cuando algo no se puede (ej.: bloque ocupado = 409).
+// Lo atrapamos y lo convertimos en { ok:false, estado, error } como el backend.
+function intentar(fn) {
+  try {
+    return fn();
+  } catch (e) {
+    return respuestaError(e.estado ?? 400, e.message || "Ocurrió un error. Intenta de nuevo.");
+  }
+}
 
-const PROPIETARIOS_PRUEBA = [
-  {
-    id: "p-1", nombreCompleto: "Carlos Méndez", cedula: "001-120390-0012A",
-    telefono: "8888-1234", correo: "carlos@correo.com", estadoId: 102,
-    mascotas: [
-      { id: "m-1", nombre: "Max", especie: "Perro", raza: "Labrador", edad: "5 años", codigoUnico: "PET-4482-KX" },
-      { id: "m-2", nombre: "Pelusa", especie: "Gato", raza: "Mestizo", edad: "8 meses", codigoUnico: "PET-5120-CM" },
-    ],
-  },
-  {
-    id: "p-2", nombreCompleto: "Laura Castillo", cedula: "001-221187-0044C",
-    telefono: "8777-4521", correo: "laura.castillo@correo.com", estadoId: 102,
-    mascotas: [
-      { id: "m-3", nombre: "Michi", especie: "Gato", raza: "Siamés", edad: "3 años", codigoUnico: "PET-2291-MC" },
-    ],
-  },
-  {
-    id: "p-3", nombreCompleto: "Ricardo Silva", cedula: null,
-    telefono: "8654-2201", correo: null, estadoId: 105,
-    mascotas: [
-      { id: "m-4", nombre: "Canela", especie: "Perro", raza: "Mestizo", edad: "2 años", codigoUnico: "PET-7310-RS" },
-    ],
-  },
-  {
-    id: "p-4", nombreCompleto: "Daniela Pérez", cedula: "001-050598-0031B",
-    telefono: "8421-9087", correo: "daniela.p@correo.com", estadoId: 101,
-    mascotas: [],
-  },
-];
+// "08:00" -> "08:00:00" (el backend manda TIME de MySQL con segundos)
+const conSegundos = (hora) => (hora.length === 5 ? `${hora}:00` : hora);
+
+// La agenda de tu compañero viene por "celdas" de una hora (LIBRE, CITA, BLOQUEO, FUERA).
+// Tus pantallas esperan por veterinario: horario, bloqueos y citas. Aquí se convierte.
+function agendaDesdeMock(fecha) {
+  const datos = m.obtenerAgenda(fecha);
+  return {
+    fecha,
+    duracionBloqueMin: 60,
+    veterinarios: datos.veterinarios.map((v) => {
+      const bloqueos = [];
+      const citas = [];
+      for (const [hora, celda] of Object.entries(v.celdas)) {
+        const fin = sig(hora);
+        if (celda.tipo === "BLOQUEO") {
+          bloqueos.push({ horaInicio: conSegundos(hora), horaFin: conSegundos(fin), motivo: celda.motivo });
+        }
+        if (celda.tipo === "CITA") {
+          const c = celda.cita;
+          citas.push({
+            id: c.id,
+            horaInicio: conSegundos(c.horaInicio),
+            horaFin: conSegundos(c.horaFin),
+            estadoId: ID_ESTADO_CITA[c.estado],
+            mascota: c.mascota.nombre,
+            propietario: c.propietario.nombreCompleto,
+            motivo: c.motivoConsulta,
+            esEmergencia: c.esEmergencia,
+          });
+        }
+      }
+      return {
+        personalId: v.id,
+        nombre: v.nombreCompleto,
+        especialidad: v.especialidad,
+        horario: [{ inicio: conSegundos(v.horaInicio), fin: conSegundos(v.horaFin) }],
+        bloqueos,
+        citas,
+      };
+    }),
+  };
+}
+
+// Lista corta de veterinarios con la forma que usa nueva-cita
+const veterinarios = () =>
+  m.listarVeterinarios().veterinarios.map((v) => ({
+    personalId: v.id,
+    nombre: v.nombreCompleto,
+    especialidad: v.especialidad,
+  }));
 
 // "8888-1234" y "88881234" deben encontrarse igual: quitamos espacios y guiones
 const paraBuscar = (texto) => (texto ?? "").toLowerCase().replace(/[\s-]/g, "");
@@ -197,63 +176,89 @@ export async function simular(ruta, metodo = "GET", cuerpo = {}) {
     return { ok: true, estado: 200, datos: {} };
   }
 
-      // ---------- Agenda de la clínica ----------
-  if (ruta.startsWith("/clinica/agenda") && metodo === "GET") {
-    if (!haySesion()) return { ok: false, estado: 401, error: "No has iniciado sesión." };
-    // "/clinica/agenda?fecha=2026-11-06" → toma lo que va después del "?"
-    const fecha = new URLSearchParams(ruta.split("?")[1]).get("fecha");
-    return { ok: true, estado: 200, datos: agendaDePrueba(fecha) };
-  }
-
-    // Todo lo que empieza con /clinica/ necesita sesión
+  // Todo lo que empieza con /clinica/ necesita sesión
   if (ruta.startsWith("/clinica/") && !haySesion()) {
     return respuestaError(401, "No has iniciado sesión.");
   }
 
-  // ---------- Veterinarios ----------
-  if (ruta === "/clinica/veterinarios" && metodo === "GET") {
-    return respuestaOk(VETERINARIOS_PRUEBA);
+  // ---------- Agenda de la clínica ----------
+  if (ruta.startsWith("/clinica/agenda") && metodo === "GET") {
+    // "/clinica/agenda?fecha=2026-11-06" → toma lo que va después del "?"
+    const fecha = new URLSearchParams(ruta.split("?")[1]).get("fecha");
+    return respuestaOk(agendaDesdeMock(fecha));
   }
 
+  // ---------- Veterinarios ----------
+  if (ruta === "/clinica/veterinarios" && metodo === "GET") {
+    return respuestaOk(veterinarios());
+  }
+
+  // Para emergencias: si un veterinario tiene una cita "En curso" hoy, está ocupado hasta que termine
   if (ruta === "/clinica/veterinarios/disponibles-ahora" && metodo === "GET") {
-    const ocupados = { "pc-1": "11:00", "pc-3": "12:00" }; // de mentira
+    const enCurso = m.citasDelDia(hoyISO()).citas.filter((c) => c.estado === "ATENCION");
     return respuestaOk(
-      VETERINARIOS_PRUEBA.map((v) => ({ ...v, ocupadoHasta: ocupados[v.personalId] ?? null })),
+      veterinarios().map((v) => {
+        const cita = enCurso.find((c) => c.veterinario.id === v.personalId);
+        return { ...v, ocupadoHasta: cita ? cita.horaFin : null };
+      }),
     );
   }
 
   // ---------- Buscar propietarios ----------
   if (ruta.startsWith("/clinica/propietarios/buscar") && metodo === "GET") {
     const q = paraBuscar(new URLSearchParams(ruta.split("?")[1]).get("q"));
-    const encontrados = PROPIETARIOS_PRUEBA.filter((p) =>
-      [p.nombreCompleto, p.cedula, p.telefono, p.correo].some((campo) => paraBuscar(campo).includes(q)),
+    const encontrados = m
+      .listarPropietarios()
+      .propietarios.filter((p) =>
+        [p.nombreCompleto, p.cedula, p.telefono, p.correo].some((campo) => paraBuscar(campo).includes(q)),
+      );
+    return respuestaOk(
+      encontrados.map((p) => ({
+        id: p.id,
+        nombreCompleto: p.nombreCompleto,
+        cedula: p.cedula,
+        telefono: p.telefono,
+        correo: p.correo,
+        estadoId: ID_ESTADO_USUARIO[p.estado],
+      })),
     );
-    // Quitamos la lista de mascotas: esta ruta solo devuelve datos del propietario
-    return respuestaOk(encontrados.map(({ mascotas, ...propietario }) => propietario));
   }
 
   // ---------- Mascotas de un propietario ----------
   // match con una expresión regular: saca el id que va en medio de la ruta
   const rutaMascotas = ruta.match(/^\/clinica\/propietarios\/([^/]+)\/mascotas$/);
   if (rutaMascotas && metodo === "GET") {
-    const propietario = PROPIETARIOS_PRUEBA.find((p) => p.id === rutaMascotas[1]);
-    if (!propietario) return respuestaError(404, "No encontramos a ese propietario.");
-    return respuestaOk(propietario.mascotas);
+    return intentar(() =>
+      respuestaOk(
+        m.obtenerPropietario(rutaMascotas[1]).mascotas.map((x) => ({
+          id: x.id,
+          nombre: x.nombre,
+          especie: x.especie,
+          raza: x.raza,
+          edad: formatearEdad(x.edadActualMeses),
+          codigoUnico: x.codigoUnico,
+        })),
+      ),
+    );
   }
 
   // ---------- Crear cita normal ----------
   if (ruta === "/clinica/citas" && metodo === "POST") {
-    const { veterinarioId, fecha, horaInicio, motivo } = cuerpo;
+    const { mascotaId, veterinarioId, fecha, horaInicio, motivo } = cuerpo;
     if (!motivo || motivo.trim().length < 3) {
       return respuestaError(400, "Escribe el motivo de la consulta.", "motivo");
     }
-    // Simulamos el 409: si en la agenda de prueba ya hay una cita en ese bloque
-    const vet = agendaDePrueba(fecha).veterinarios.find((v) => v.personalId === veterinarioId);
-    const ocupado = vet?.citas.some((c) => c.horaInicio.startsWith(horaInicio));
-    if (ocupado) {
-      return respuestaError(409, "Ese bloque se acaba de ocupar. Vuelve a la agenda y elige otro.");
-    }
-    return respuestaOk({ id: `c-${Date.now()}` }, 201);
+    // mockClinica devuelve 409 si el bloque ya está ocupado
+    return intentar(() => {
+      const { cita } = m.crearCita({
+        veterinarioId,
+        fecha,
+        horaInicio: horaInicio.slice(0, 5),
+        mascotaId,
+        motivoConsulta: motivo.trim(),
+      });
+      return respuestaOk({ id: cita.id }, 201);
+    });
   }
 
   // ---------- Crear emergencia ----------
@@ -261,7 +266,14 @@ export async function simular(ruta, metodo = "GET", cuerpo = {}) {
     if (!cuerpo.veterinarioId) {
       return respuestaError(400, "Elige quién atenderá la emergencia.", "veterinarioId");
     }
-    return respuestaOk({ id: `c-${Date.now()}` }, 201);
+    return intentar(() => {
+      const { cita } = m.crearEmergencia({
+        veterinarioId: cuerpo.veterinarioId,
+        mascotaId: cuerpo.mascotaId,
+        motivoConsulta: (cuerpo.motivo ?? "").trim(),
+      });
+      return respuestaOk({ id: cita.id }, 201);
+    });
   }
 
   // Cualquier ruta que todavía no simulamos

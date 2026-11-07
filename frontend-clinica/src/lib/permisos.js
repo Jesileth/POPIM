@@ -1,5 +1,3 @@
-
-
 // Ayudas para trabajar con la sesión que devuelve GET /auth/sesion
 
 // ¿El usuario tiene este permiso? (el backend igual lo valida siempre)
@@ -44,5 +42,11 @@ export function buscarTitulo(lista = [], pathname) {
   if (pathname === "/perfil" || pathname.startsWith("/perfil/")) return "Mi perfil";
   const rutas = lista.map((m) => m.ruta).filter(Boolean);
   const ruta = rutaActiva(rutas, pathname);
+  // Si ninguna ruta del menú coincide (ej.: /citas/c1), NO buscamos: los grupos como
+  // "Propietarios" tienen ruta null y find() los encontraba por error (null === null).
+  if (!ruta) {
+    if (pathname.startsWith("/citas/")) return "Detalle de cita";
+    return "";
+  }
   return lista.find((m) => m.ruta === ruta)?.etiqueta ?? "";
 }
