@@ -126,9 +126,10 @@ function Cartilla({ dosis }) {
           <div>
             <p className="font-bold text-popim-ink">{ds.nombre}</p>
             <p className="text-xs text-popim-muted">
-              {ds.tipo === "VACUNA" ? "Vacuna" : "Desparasitación"}
-              {ds.fechaAplicada && ` · aplicada ${fechaDia(ds.fechaAplicada)}`}
-              {` · próxima ${fechaDia(ds.proximaFecha)}`}
+              {ds.tipo === "VACUNA" ? "Vacuna" : "Desparasitante"}
+              {ds.fechaAplicada
+                ? ` · aplicada ${fechaDia(ds.fechaAplicada)}${ds.lote ? ` · lote ${ds.lote}` : ""}`
+                : ` · programada ${fechaDia(ds.fechaProgramada)}`}
             </p>
           </div>
           <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${ESTADO_DOSIS[ds.estado].clases}`}>

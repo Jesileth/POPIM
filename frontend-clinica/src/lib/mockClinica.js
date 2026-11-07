@@ -379,9 +379,11 @@ export function registrarMascota(propietarioId, datos) {
 
 
 // ===========================================================================
-// VETERINARIO (Agenda propia, Atención de hoy y consultas)
+// VETERINARIO (Agenda, Atención de hoy, Consultas, Pacientes y pantalla de Consulta)
 // Estas funciones ya devuelven la MISMA forma que mandará el backend,
 // así lib/mock.js solo las llama (no tiene que traducir nada).
+// Los datos siguen las tablas de Tablas Popim.sql (diagnosticos, tratamientos,
+// recetas/receta_items, resultados_examen, dosis_preventivas…).
 // ===========================================================================
 
 // "08:00" -> "08:00:00" (MySQL manda las horas TIME con segundos)
@@ -389,45 +391,194 @@ const s = (h) => (h.length === 5 ? `${h}:00` : h);
 // 0 = domingo, 1 = lunes ... 6 = sábado
 const diaSemana = (fecha) => new Date(`${fecha}T00:00:00`).getDay();
 
-// Tabla consultas (+ signos, hallazgos, diagnóstico, receta). Una consulta siempre sale de una cita.
+// ---------- Catálogos (Cátalogos.sql) ----------
+const CLASIFICACIONES = { 1: "Infeccioso", 2: "Parasitario", 3: "Dermatológico", 4: "Digestivo", 5: "Respiratorio", 6: "Traumatológico", 7: "Otro" };
+// padecimientos: id, codigo, nombre, clasificacion_id
+const PADECIMIENTOS = [
+  { id: 1, codigo: "DER-01", nombre: "Dermatitis atópica", clasificacionId: 3 },
+  { id: 2, codigo: "DER-02", nombre: "Dermatitis por contacto", clasificacionId: 3 },
+  { id: 3, codigo: "INF-01", nombre: "Otitis externa", clasificacionId: 1 },
+  { id: 4, codigo: "INF-02", nombre: "Parvovirosis", clasificacionId: 1 },
+  { id: 5, codigo: "INF-03", nombre: "Moquillo", clasificacionId: 1 },
+  { id: 6, codigo: "DIG-01", nombre: "Gastroenteritis", clasificacionId: 4 },
+  { id: 7, codigo: "OTR-01", nombre: "Sobrepeso", clasificacionId: 7 },
+  { id: 8, codigo: "TRA-01", nombre: "Artrosis de cadera", clasificacionId: 6 },
+  { id: 9, codigo: "TRA-02", nombre: "Fractura de extremidad", clasificacionId: 6 },
+  { id: 10, codigo: "TRA-03", nombre: "Inflamación leve de herida quirúrgica", clasificacionId: 6 },
+  { id: 11, codigo: "PAR-01", nombre: "Parasitosis intestinal", clasificacionId: 2 },
+  { id: 12, codigo: "PAR-02", nombre: "Infestación por pulgas y garrapatas", clasificacionId: 2 },
+  { id: 13, codigo: "RES-01", nombre: "Traqueobronquitis infecciosa", clasificacionId: 5 },
+  { id: 14, codigo: "OTR-02", nombre: "Sano", clasificacionId: 7 },
+  { id: 15, codigo: "OTR-03", nombre: "Ovariohisterectomía", clasificacionId: 7 },
+];
+// medicamentos: id, nombre, presentacion (solo los ACTIVOS, 801)
+const MEDICAMENTOS = [
+  { id: 1, nombre: "Meloxicam", presentacion: "gotas 0.5 mg/ml" },
+  { id: 2, nombre: "Clorhexidina", presentacion: "solución 2 %" },
+  { id: 3, nombre: "Amoxicilina + ácido clavulánico", presentacion: "tabletas 250 mg" },
+  { id: 4, nombre: "Carprofeno", presentacion: "tabletas 75 mg" },
+  { id: 5, nombre: "Otomax", presentacion: "gotas óticas" },
+  { id: 6, nombre: "Metronidazol", presentacion: "tabletas 250 mg" },
+  { id: 7, nombre: "Omeprazol", presentacion: "cápsulas 20 mg" },
+  { id: 8, nombre: "Prednisolona", presentacion: "tabletas 5 mg" },
+];
+const TIPOS_EXAMEN = [
+  { id: 1, nombre: "Hemograma" }, { id: 2, nombre: "Química sanguínea" }, { id: 3, nombre: "Radiografía" },
+  { id: 4, nombre: "Ecografía" }, { id: 5, nombre: "Coproparasitológico" }, { id: 6, nombre: "Otro" },
+];
+const PRODUCTOS = [
+  { id: 1, tipo: "VACUNA", nombre: "Antirrábica" }, { id: 2, tipo: "VACUNA", nombre: "Parvovirus" },
+  { id: 3, tipo: "VACUNA", nombre: "Triple felina" },
+  { id: 4, tipo: "DESPARASITANTE", nombre: "Desparasitante interno" }, { id: 5, tipo: "DESPARASITANTE", nombre: "Desparasitante externo" },
+];
+const padecimientoPorId = (id) => PADECIMIENTOS.find((p) => p.id === Number(id));
+const medicamentoPorId = (id) => MEDICAMENTOS.find((m) => m.id === Number(id));
+const tipoExamenPorId = (id) => TIPOS_EXAMEN.find((t) => t.id === Number(id));
+const productoPorId = (id) => PRODUCTOS.find((p) => p.id === Number(id));
+
+// GET /clinica/catalogos/consulta → todo lo que necesitan las pestañas, en UNA sola petición
+export function catalogosConsulta() {
+  return {
+    padecimientos: PADECIMIENTOS.map((p) => ({ ...p, clasificacion: CLASIFICACIONES[p.clasificacionId] })),
+    medicamentos: MEDICAMENTOS,
+    tiposExamen: TIPOS_EXAMEN,
+    productosPreventivos: PRODUCTOS,
+  };
+}
+
+// ---------- Consultas (tabla consultas + sus tablas hijas) ----------
+// diagnosticos: [{ padecimientoId, descripcion }]           → tabla diagnosticos (varios por consulta)
+// tratamiento:  { descripcion, fechaInicio, duracionDias }  → tabla tratamientos
+// receta:       { observaciones, items: [{ medicamentoId, dosis, frecuencia, duracionDias }] } → recetas + receta_items
+// examenes:     [{ id, tipoExamenId, nombreOriginal, mimeType, tamanoBytes, fechaCarga, archivoUrl }] → resultados_examen
 // fin: null = la consulta sigue abierta ("En curso")
 const consulta = (id, citaId, x = {}) => ({
   id, citaId, inicio: null, fin: null, signos: null, observaciones: "", hallazgos: [],
-  diagnostico: null, tratamiento: "", receta: [], examenes: [], control: null, ...x,
+  diagnosticos: [], tratamiento: null, receta: null, examenes: [], control: null, ...x,
 });
+const examen = (id, tipoExamenId, nombreOriginal, mimeType, tamanoBytes, fechaCarga) =>
+  ({ id, tipoExamenId, nombreOriginal, mimeType, tamanoBytes, fechaCarga, archivoUrl: null });
+
 const CONSULTAS = [
   consulta("co1", "c22", {
     inicio: `${habil(-1)}T08:10`, fin: `${habil(-1)}T08:35`,
     signos: { pesoKg: 14.2, temperatura: 38.4, frecuenciaCardiaca: 96 },
-    diagnostico: "Sano", tratamiento: "Antirrábica aplicada.",
+    diagnosticos: [{ padecimientoId: 14, descripcion: "" }],
+    tratamiento: { descripcion: "Antirrábica aplicada.", fechaInicio: habil(-1), duracionDias: null },
   }),
   consulta("co2", "c23", {
     inicio: `${habil(-1)}T10:05`, fin: `${habil(-1)}T10:40`,
     signos: { pesoKg: 4.1, temperatura: 38.9, frecuenciaCardiaca: 150 },
     hallazgos: ["Cerumen oscuro y enrojecimiento en el oído izquierdo."],
-    diagnostico: "Otitis externa",
-    receta: [{ medicamento: "Otomax gotas óticas", indicaciones: "5 gotas en el oído izquierdo c/12 h × 7 días" }],
+    diagnosticos: [{ padecimientoId: 3, descripcion: "Oído izquierdo." }],
+    receta: { observaciones: "Limpiar el oído antes de aplicar las gotas.", items: [{ medicamentoId: 5, dosis: "5 gotas", frecuencia: "Cada 12 h", duracionDias: 7 }] },
+    controlSinAgendar: true, // el veterinario pidió control en 10 días y nadie lo agendó
   }),
   consulta("co3", "c21", {
     inicio: `${HOY}T08:02`, fin: `${HOY}T08:40`,
     signos: { pesoKg: 38.5, temperatura: 38.5, frecuenciaCardiaca: 90 },
-    diagnostico: "Sano", control: { fecha: d(30), hora: "08:00" },
+    diagnosticos: [{ padecimientoId: 14, descripcion: "" }],
+    control: { fecha: d(30), hora: "08:00" },
   }),
   consulta("co4", "c20", {
     inicio: `${HOY}T09:04`,
     signos: { pesoKg: 6.4, temperatura: 38.6, frecuenciaCardiaca: 110 },
     observaciones: "Paciente alerta, buen apetito según la propietaria.",
     hallazgos: ["Herida quirúrgica cicatrizando bien, sin secreción.", "Leve enrojecimiento en el borde inferior de la sutura."],
+    examenes: [examen("ex1", 1, "Hemograma — Bella.pdf", "application/pdf", 245760, `${HOY}T09:20`)],
   }),
 ];
 const consultaDeCita = (citaId) => CONSULTAS.find((co) => co.citaId === citaId);
+
+// Consultas viejas que en el mock no tienen cita (otras clínicas, meses atrás).
+// En la BD real TODAS salen de una cita; esto solo es para tener historial que mostrar.
+const HISTORIAL = [
+  { id: "h1", mascotaId: "m12", inicio: `${d(-10)}T10:00`, fin: `${d(-10)}T11:30`, motivo: "Esterilización",
+    personalId: "v3", veterinario: "Dra. Karla Díaz", clinica: CLINICA.nombreComercial,
+    signos: { pesoKg: 6.1, temperatura: 38.4, frecuenciaCardiaca: 105 }, hallazgos: ["Cirugía sin complicaciones."],
+    diagnosticos: [{ padecimientoId: 15, descripcion: "" }], tratamiento: null,
+    receta: { observaciones: "", items: [
+      { medicamentoId: 1, dosis: "0.3 ml", frecuencia: "Cada 24 h", duracionDias: 5 },
+      { medicamentoId: 2, dosis: "Uso tópico", frecuencia: "Cada 12 h", duracionDias: 7 },
+    ] },
+    examenes: [] },
+  { id: "h2", mascotaId: "m12", inicio: `${d(-86)}T09:00`, fin: `${d(-86)}T09:20`, motivo: "Desparasitación",
+    personalId: "v4", veterinario: "Dr. Luis Herrera", clinica: CLINICA.nombreComercial,
+    signos: { pesoKg: 6.0, temperatura: 38.5, frecuenciaCardiaca: 100 }, hallazgos: [],
+    diagnosticos: [{ padecimientoId: 14, descripcion: "" }],
+    tratamiento: { descripcion: "Desparasitante interno aplicado.", fechaInicio: d(-86), duracionDias: null }, receta: null, examenes: [] },
+  { id: "h3", mascotaId: "m12", inicio: `${d(-248)}T15:00`, fin: `${d(-248)}T15:40`, motivo: "Picazón en oído",
+    personalId: null, veterinario: "Dr. Pablo Reyes", clinica: "Clínica Veterinaria San Roque",
+    signos: { pesoKg: 5.8, temperatura: 38.9, frecuenciaCardiaca: 112 }, hallazgos: ["Secreción en oído derecho."],
+    diagnosticos: [{ padecimientoId: 3, descripcion: "" }], tratamiento: null,
+    receta: { observaciones: "", items: [{ medicamentoId: 5, dosis: "5 gotas", frecuencia: "Cada 12 h", duracionDias: 7 }] }, examenes: [] },
+  { id: "h4", mascotaId: "m10", inicio: `${d(-7)}T14:00`, fin: `${d(-7)}T14:45`, motivo: "Cojera",
+    personalId: "v4", veterinario: "Dr. Luis Herrera", clinica: CLINICA.nombreComercial,
+    signos: { pesoKg: 31.2, temperatura: 38.6, frecuenciaCardiaca: 92 }, hallazgos: ["Dolor a la extensión de la cadera izquierda."],
+    diagnosticos: [{ padecimientoId: 8, descripcion: "Leve, bilateral." }], tratamiento: null,
+    receta: { observaciones: "", items: [{ medicamentoId: 4, dosis: "1 tableta", frecuencia: "Cada 24 h", duracionDias: 10 }] },
+    examenes: [examen("ex2", 3, "Radiografía cadera — Bruno.jpg", "image/jpeg", 1258291, `${d(-7)}T14:30`)],
+    referidoA: "Dra. Karla Díaz" },
+  { id: "h5", mascotaId: "m4", inicio: `${d(-8)}T09:00`, fin: `${d(-8)}T09:30`, motivo: "Control de peso",
+    personalId: "v4", veterinario: "Dr. Luis Herrera", clinica: CLINICA.nombreComercial,
+    signos: { pesoKg: 6.3, temperatura: 38.3, frecuenciaCardiaca: 140 }, hallazgos: [],
+    diagnosticos: [{ padecimientoId: 7, descripcion: "" }],
+    tratamiento: { descripcion: "Dieta baja en calorías.", fechaInicio: d(-8), duracionDias: 60 }, receta: null, examenes: [] },
+];
+
+// Cartilla (dosis_preventivas). estado: PENDIENTE (601) · APLICADA (602) · VENCIDA (603)
+const DOSIS = [
+  { id: "ds1", mascotaId: "m12", productoId: 1, fechaProgramada: d(4), fechaAplicada: null, estado: "PENDIENTE", lote: null },
+  { id: "ds2", mascotaId: "m12", productoId: 2, fechaProgramada: d(-200), fechaAplicada: d(-200), estado: "APLICADA", lote: "PV-2231" },
+  { id: "ds3", mascotaId: "m12", productoId: 4, fechaProgramada: d(-86), fechaAplicada: d(-86), estado: "APLICADA", lote: null },
+  { id: "ds4", mascotaId: "m10", productoId: 2, fechaProgramada: d(-20), fechaAplicada: null, estado: "VENCIDA", lote: null },
+  { id: "ds5", mascotaId: "m9", productoId: 1, fechaProgramada: habil(-1), fechaAplicada: habil(-1), estado: "APLICADA", lote: "AR-1180" },
+  { id: "ds6", mascotaId: "m14", productoId: 3, fechaProgramada: d(-150), fechaAplicada: d(-150), estado: "APLICADA", lote: null },
+];
+// Una pendiente cuya fecha ya pasó se muestra como VENCIDA
+function dosisVista(ds) {
+  const p = productoPorId(ds.productoId);
+  const estado = ds.estado === "PENDIENTE" && ds.fechaProgramada < HOY ? "VENCIDA" : ds.estado;
+  return {
+    id: ds.id, productoId: p.id, nombre: p.nombre, tipo: p.tipo, fechaProgramada: ds.fechaProgramada,
+    fechaAplicada: ds.fechaAplicada, estado, lote: ds.lote,
+  };
+}
+const cartillaDe = (mascotaId) =>
+  DOSIS.filter((x) => x.mascotaId === mascotaId)
+    .map(dosisVista)
+    // Primero lo pendiente/vencido (por fecha), luego lo aplicado (lo más reciente arriba)
+    .sort((a, b) => (a.estado === "APLICADA") - (b.estado === "APLICADA") ||
+      (a.estado === "APLICADA" ? b.fechaAplicada.localeCompare(a.fechaAplicada) : a.fechaProgramada.localeCompare(b.fechaProgramada)));
+
+// ---------- Ayudas para "traducir" una consulta a lo que muestran las pantallas ----------
+const diagnosticosVista = (co) =>
+  co.diagnosticos.map((dx) => {
+    const p = padecimientoPorId(dx.padecimientoId);
+    return { padecimientoId: p.id, nombre: p.nombre, clasificacion: CLASIFICACIONES[p.clasificacionId], descripcion: dx.descripcion ?? "" };
+  });
+// "Otitis externa, Dermatitis atópica" (o null si aún no hay diagnóstico)
+const textoDiagnostico = (co) => co.diagnosticos.map((dx) => padecimientoPorId(dx.padecimientoId).nombre).join(", ") || null;
+const itemsReceta = (co) =>
+  (co.receta?.items ?? []).map((it) => {
+    const med = medicamentoPorId(it.medicamentoId);
+    return { ...it, nombre: med.nombre, presentacion: med.presentacion };
+  });
+// Forma corta para el expediente: { medicamento: "Meloxicam gotas 0.5 mg/ml", indicaciones: "0.3 ml cada 24 h × 5 días" }
+const recetaCorta = (co) =>
+  itemsReceta(co).map((it) => ({
+    medicamento: `${it.nombre} ${it.presentacion}`,
+    indicaciones: `${it.dosis} ${it.frecuencia.toLowerCase()} × ${it.duracionDias} días`,
+  }));
+const examenesVista = (co) =>
+  co.examenes.map((e) => ({ ...e, tipo: tipoExamenPorId(e.tipoExamenId).nombre, estado: "CON_RESULTADO", resultado: null }));
 
 // Lo que todavía le falta a una consulta abierta (para el aviso "faltan diagnóstico y receta")
 function faltantes(co) {
   const faltan = [];
   if (!co.signos) faltan.push("signos");
-  if (!co.diagnostico) faltan.push("diagnóstico");
-  if (co.receta.length === 0) faltan.push("receta");
+  if (co.diagnosticos.length === 0) faltan.push("diagnóstico");
+  if (!co.receta?.items.length) faltan.push("receta");
   return faltan;
 }
 
@@ -459,13 +610,14 @@ function citaVet(c) {
           iniciadaA: co.inicio.slice(11, 16),
           finalizada: Boolean(co.fin),
           faltan: faltantes(co),
-          diagnostico: co.diagnostico,
+          diagnostico: textoDiagnostico(co),
           control: co.control,
         }
       : null,
   };
 }
 
+// ---------- Mi agenda ----------
 // Horario de un día: entre semana con almuerzo; sábado solo hasta sabadoHasta; domingo no atiende
 function horarioDelDia(v, fecha) {
   const dia = diaSemana(fecha);
@@ -502,6 +654,18 @@ export function miAgenda(personalId, desde, hasta) {
   return { desde, hasta, duracionBloqueMin: CLINICA.duracionCitaMin, dias };
 }
 
+// "Mi horario" del perfil del veterinario (en la BD sale de horarios_personal)
+// → [{ dias: "Lunes a viernes", tramos: [{inicio, fin}, ...] }, ...]  (tramos vacío = no atiende)
+function horarioSemanal(personalId) {
+  const v = vetPorId(personalId);
+  return [
+    { dias: "Lunes a viernes", tramos: [{ inicio: v.horaInicio, fin: v.almuerzo }, { inicio: sig(v.almuerzo), fin: v.horaFin }] },
+    { dias: "Sábado", tramos: [{ inicio: v.horaInicio, fin: v.sabadoHasta ?? v.horaFin }] },
+    { dias: "Domingo", tramos: [] },
+  ];
+}
+
+// ---------- Atención de hoy ----------
 // GET /clinica/atencion/hoy → todas las citas de HOY del veterinario (la pantalla las agrupa)
 export function atencionHoy(personalId) {
   const v = vetPorId(personalId);
@@ -537,67 +701,7 @@ export function iniciarConsulta(personalId, citaId) {
   return { consultaId: nueva.id };
 }
 
-// "Mi horario" del perfil del veterinario (en la BD sale de horarios_personal)
-// → [{ dias: "Lunes a viernes", tramos: [{inicio, fin}, ...] }, ...]  (tramos vacío = no atiende)
-function horarioSemanal(personalId) {
-  const v = vetPorId(personalId);
-  return [
-    { dias: "Lunes a viernes", tramos: [{ inicio: v.horaInicio, fin: v.almuerzo }, { inicio: sig(v.almuerzo), fin: v.horaFin }] },
-    { dias: "Sábado", tramos: [{ inicio: v.horaInicio, fin: v.sabadoHasta ?? v.horaFin }] },
-    { dias: "Domingo", tramos: [] },
-  ];
-}
-
-
-
-
-// ===========================================================================
-// VETERINARIO · MIS CONSULTAS Y PACIENTES (expediente)
-// ===========================================================================
-
-// Examen pendiente de la consulta abierta de Bella (para "Esperando resultados")
-consultaDeCita("c20").examenes.push({ id: "ex1", tipo: "Hemograma", estado: "PENDIENTE", resultado: null });
-// Milo: el veterinario pidió control en 10 días y nadie lo agendó (para "Control sin agendar")
-consultaDeCita("c23").controlSinAgendar = true;
-
-// Consultas viejas que en el mock no tienen cita (otras clínicas, meses atrás).
-// En la BD real TODAS salen de una cita; esto solo es para tener historial que mostrar.
-const HISTORIAL = [
-  { id: "h1", mascotaId: "m12", inicio: `${d(-10)}T10:00`, fin: `${d(-10)}T11:30`, motivo: "Esterilización",
-    personalId: "v3", veterinario: "Dra. Karla Díaz", clinica: CLINICA.nombreComercial, diagnostico: "Ovariohisterectomía",
-    signos: { pesoKg: 6.1, temperatura: 38.4, frecuenciaCardiaca: 105 }, hallazgos: ["Cirugía sin complicaciones."],
-    receta: [{ medicamento: "Meloxicam 0.5 mg/ml", indicaciones: "0.3 ml c/24 h × 5 días" }, { medicamento: "Clorhexidina tópica", indicaciones: "c/12 h × 7 días" }],
-    examenes: [] },
-  { id: "h2", mascotaId: "m12", inicio: `${d(-86)}T09:00`, fin: `${d(-86)}T09:20`, motivo: "Desparasitación",
-    personalId: "v4", veterinario: "Dr. Luis Herrera", clinica: CLINICA.nombreComercial, diagnostico: "Sano",
-    signos: { pesoKg: 6.0, temperatura: 38.5, frecuenciaCardiaca: 100 }, hallazgos: [], receta: [], examenes: [],
-    tratamiento: "Desparasitante interno aplicado." },
-  { id: "h3", mascotaId: "m12", inicio: `${d(-248)}T15:00`, fin: `${d(-248)}T15:40`, motivo: "Picazón en oído",
-    personalId: null, veterinario: "Dr. Pablo Reyes", clinica: "Clínica Veterinaria San Roque", diagnostico: "Otitis externa",
-    signos: { pesoKg: 5.8, temperatura: 38.9, frecuenciaCardiaca: 112 }, hallazgos: ["Secreción en oído derecho."],
-    receta: [{ medicamento: "Otomax gotas óticas", indicaciones: "5 gotas c/12 h × 7 días" }], examenes: [] },
-  { id: "h4", mascotaId: "m10", inicio: `${d(-7)}T14:00`, fin: `${d(-7)}T14:45`, motivo: "Cojera",
-    personalId: "v4", veterinario: "Dr. Luis Herrera", clinica: CLINICA.nombreComercial, diagnostico: "Artrosis de cadera",
-    signos: { pesoKg: 31.2, temperatura: 38.6, frecuenciaCardiaca: 92 }, hallazgos: ["Dolor a la extensión de la cadera izquierda."],
-    receta: [{ medicamento: "Carprofeno 75 mg", indicaciones: "1 tableta c/24 h × 10 días" }],
-    examenes: [{ id: "ex2", tipo: "Radiografía de cadera", estado: "CON_RESULTADO", resultado: "Artrosis leve bilateral." }],
-    referidoA: "Dra. Karla Díaz" },
-  { id: "h5", mascotaId: "m4", inicio: `${d(-8)}T09:00`, fin: `${d(-8)}T09:30`, motivo: "Control de peso",
-    personalId: "v4", veterinario: "Dr. Luis Herrera", clinica: CLINICA.nombreComercial, diagnostico: "Sobrepeso",
-    signos: { pesoKg: 6.3, temperatura: 38.3, frecuenciaCardiaca: 140 }, hallazgos: [], receta: [], examenes: [],
-    tratamiento: "Dieta baja en calorías." },
-];
-
-// Cartilla (dosis_preventivas): vacunas y desparasitaciones
-const DOSIS = [
-  { id: "ds1", mascotaId: "m12", tipo: "VACUNA", nombre: "Antirrábica", fechaAplicada: null, proximaFecha: d(4), estado: "PENDIENTE" },
-  { id: "ds2", mascotaId: "m12", tipo: "VACUNA", nombre: "Séxtuple", fechaAplicada: d(-200), proximaFecha: d(165), estado: "APLICADA" },
-  { id: "ds3", mascotaId: "m12", tipo: "DESPARASITACION", nombre: "Desparasitación interna", fechaAplicada: d(-86), proximaFecha: d(4), estado: "APLICADA" },
-  { id: "ds4", mascotaId: "m10", tipo: "VACUNA", nombre: "Séxtuple", fechaAplicada: d(-385), proximaFecha: d(-20), estado: "VENCIDA" },
-  { id: "ds5", mascotaId: "m9", tipo: "VACUNA", nombre: "Antirrábica", fechaAplicada: habil(-1), proximaFecha: d(364), estado: "APLICADA" },
-  { id: "ds6", mascotaId: "m14", tipo: "VACUNA", nombre: "Triple felina", fechaAplicada: d(-150), proximaFecha: d(215), estado: "APLICADA" },
-];
-
+// ---------- Mis consultas y Pacientes ----------
 // Una consulta de CONSULTAS (que sí tiene cita) con la misma forma que las del HISTORIAL
 function consultaCompleta(co) {
   const c = buscar(co.citaId);
@@ -619,11 +723,11 @@ export function misConsultas(personalId) {
       return {
         id: co.id, citaId: co.citaId ?? null, inicio: co.inicio, abierta: !co.fin,
         esEmergencia: Boolean(co.esEmergencia), prioridad: co.prioridad ?? "NORMAL",
-        motivo: co.motivo, diagnostico: co.diagnostico,
+        motivo: co.motivo, diagnostico: textoDiagnostico(co),
         mascota: { id: m.id, nombre: m.nombre },
         propietario: { nombreCompleto: propPorId(m.propietarioId).nombreCompleto },
-        examenesPendientes: co.examenes.filter((e) => e.estado === "PENDIENTE").length,
-        control: co.control ?? null, referidoA: co.referidoA ?? null, tratamiento: co.tratamiento ?? "",
+        examenesPendientes: 0, // en resultados_examen siempre hay archivo: no hay "pendientes"
+        control: co.control ?? null, referidoA: co.referidoA ?? null, tratamiento: co.tratamiento?.descripcion ?? "",
       };
     });
   return { consultas };
@@ -632,9 +736,9 @@ export function misConsultas(personalId) {
 // Avisos de una mascota (para "Necesitan atención"). El frontend arma el texto.
 function alertasDe(mascotaId) {
   const alertas = [];
-  for (const ds of DOSIS.filter((x) => x.mascotaId === mascotaId)) {
-    if (ds.estado === "VENCIDA") alertas.push({ codigo: "DOSIS_VENCIDA", nombre: ds.nombre, fecha: ds.proximaFecha });
-    else if (ds.estado === "PENDIENTE" && ds.proximaFecha <= d(14)) alertas.push({ codigo: "DOSIS_PROXIMA", nombre: ds.nombre, fecha: ds.proximaFecha });
+  for (const ds of cartillaDe(mascotaId)) {
+    if (ds.estado === "VENCIDA") alertas.push({ codigo: "DOSIS_VENCIDA", nombre: ds.nombre, fecha: ds.fechaProgramada });
+    else if (ds.estado === "PENDIENTE" && ds.fechaProgramada <= d(14)) alertas.push({ codigo: "DOSIS_PROXIMA", nombre: ds.nombre, fecha: ds.fechaProgramada });
   }
   const ultima = todasLasConsultas().filter((co) => co.mascotaId === mascotaId).sort((a, b) => b.inicio.localeCompare(a.inicio))[0];
   const tieneCitaFutura = CITAS.some((c) => c.mascotaId === mascotaId && c.fecha >= HOY && ["SOLICITADA", "CONFIRMADA"].includes(c.estado));
@@ -675,8 +779,8 @@ export function expediente(mascotaId) {
     .map((co) => ({
       id: co.id, fecha: co.inicio.slice(0, 10), abierta: !co.fin, motivo: co.motivo,
       veterinario: co.veterinario, clinica: co.clinica, esEstaClinica: co.clinica === CLINICA.nombreComercial,
-      diagnostico: co.diagnostico, signos: co.signos, hallazgos: co.hallazgos, receta: co.receta,
-      examenes: co.examenes, tratamiento: co.tratamiento ?? "",
+      diagnostico: textoDiagnostico(co), signos: co.signos, hallazgos: co.hallazgos, receta: recetaCorta(co),
+      examenes: examenesVista(co), tratamiento: co.tratamiento?.descripcion ?? "",
     }));
   return {
     mascota: {
@@ -686,8 +790,170 @@ export function expediente(mascotaId) {
     propietario: { nombreCompleto: p.nombreCompleto, telefono: p.telefono },
     ultimoPeso: consultas.find((co) => co.signos)?.signos.pesoKg ?? null,
     consultas,
-    cartilla: DOSIS.filter((x) => x.mascotaId === mascotaId),
+    cartilla: cartillaDe(mascotaId),
     examenes: consultas.flatMap((co) => co.examenes.map((e) => ({ ...e, fecha: co.fecha, motivo: co.motivo }))),
     alertas: alertasDe(mascotaId),
   };
+}
+
+// ---------- Pantalla de consulta ----------
+function consultaPorId(id) {
+  const co = CONSULTAS.find((x) => x.id === id);
+  if (!co) throw new ErrorApi("No encontramos esa consulta.", 404);
+  return co;
+}
+const esSuya = (personalId, co) => buscar(co.citaId).veterinarioId === personalId;
+// Solo el veterinario que la atiende puede cambiarla, y solo mientras esté abierta
+function consultaEditable(personalId, id) {
+  const co = consultaPorId(id);
+  if (!esSuya(personalId, co)) throw new ErrorApi("Esta consulta no es tuya.", 403);
+  if (co.fin) throw new ErrorApi("La consulta ya está finalizada y no se puede editar.", 409);
+  return co;
+}
+
+// GET /clinica/consultas/:id → todo lo que necesita la pantalla
+export function obtenerConsulta(id) {
+  const co = consultaPorId(id);
+  const c = buscar(co.citaId);
+  const m = mascPorId(c.mascotaId);
+  const p = propPorId(m.propietarioId);
+  const v = vetPorId(c.veterinarioId);
+  // Peso de la consulta anterior (para mostrar "+0.3")
+  const anterior = todasLasConsultas()
+    .filter((x) => x.mascotaId === m.id && x.id !== co.id && x.signos && x.inicio < co.inicio)
+    .sort((a, b) => b.inicio.localeCompare(a.inicio))[0];
+  return {
+    consulta: {
+      id: co.id, citaId: c.id, abierta: !co.fin, iniciadaA: co.inicio.slice(11, 16), finalizadaEl: co.fin,
+      fecha: c.fecha, horaCita: c.horaInicio, motivo: c.motivoConsulta,
+      esEmergencia: c.esEmergencia, prioridad: c.prioridad,
+      veterinario: { personalId: v.id, nombreCompleto: v.nombreCompleto },
+      signos: co.signos, observaciones: co.observaciones, hallazgos: co.hallazgos,
+      diagnosticos: diagnosticosVista(co),
+      tratamiento: co.tratamiento,
+      receta: { observaciones: co.receta?.observaciones ?? "", items: itemsReceta(co) },
+      examenes: examenesVista(co),
+      control: co.control, referidoA: co.referidoA ?? null,
+    },
+    mascota: {
+      id: m.id, nombre: m.nombre, codigoUnico: m.codigoUnico, especie: m.especie, raza: m.raza,
+      sexo: m.sexo, edad: formatearEdad(m.edadActualMeses),
+    },
+    propietario: { nombreCompleto: p.nombreCompleto, telefono: p.telefono },
+    pesoAnterior: anterior?.signos.pesoKg ?? null,
+    cartilla: cartillaDe(m.id),
+    alertas: alertasDe(m.id),
+  };
+}
+
+// Revisa lo que llega del formulario igual que lo haría el backend (y las reglas de la BD)
+function validarCambios({ diagnosticos, tratamiento, receta }) {
+  if (diagnosticos) {
+    const ids = diagnosticos.map((dx) => Number(dx.padecimientoId));
+    if (ids.some((id) => !padecimientoPorId(id))) throw new ErrorApi("Hay un padecimiento que no existe en el catálogo.", 400);
+    if (new Set(ids).size !== ids.length) throw new ErrorApi("Ese padecimiento ya está en la consulta.", 400); // uq_diag
+  }
+  if (tratamiento) {
+    if (!tratamiento.descripcion?.trim()) throw new ErrorApi("Describe el tratamiento.", 400);
+    if (!tratamiento.fechaInicio) throw new ErrorApi("Elige la fecha en que inicia el tratamiento.", 400);
+  }
+  if (receta) {
+    for (const it of receta.items) {
+      if (!medicamentoPorId(it.medicamentoId)) throw new ErrorApi("Elige el medicamento de cada fila.", 400);
+      if (!it.dosis?.trim() || !it.frecuencia?.trim()) throw new ErrorApi("Escribe la dosis y la frecuencia de cada medicamento.", 400);
+      if (!(Number(it.duracionDias) > 0)) throw new ErrorApi("Los días de cada medicamento deben ser 1 o más.", 400);
+    }
+    const ids = receta.items.map((it) => Number(it.medicamentoId));
+    if (new Set(ids).size !== ids.length) throw new ErrorApi("Un medicamento está repetido en la receta.", 400); // uq_item
+  }
+}
+
+// PUT /clinica/consultas/:id → guarda lo que se mande
+// { signos, observaciones, hallazgos, diagnosticos, tratamiento, receta }
+const CAMPOS_EDITABLES = ["signos", "observaciones", "hallazgos", "diagnosticos", "tratamiento", "receta"];
+export function guardarConsulta(personalId, id, cambios) {
+  const co = consultaEditable(personalId, id);
+  validarCambios(cambios);
+  for (const campo of CAMPOS_EDITABLES) {
+    if (cambios[campo] !== undefined) co[campo] = cambios[campo];
+  }
+  return obtenerConsulta(id);
+}
+
+// POST /clinica/consultas/:id/finalizar → la consulta se cierra y la cita pasa a Finalizada (504)
+export function finalizarConsulta(personalId, id) {
+  const co = consultaEditable(personalId, id);
+  if (!co.signos) throw new ErrorApi("Registra los signos (peso, temperatura y frecuencia) antes de finalizar.", 400);
+  if (co.diagnosticos.length === 0) throw new ErrorApi("Agrega al menos un diagnóstico antes de finalizar.", 400);
+  co.fin = ahoraISO();
+  const c = buscar(co.citaId);
+  c.estado = "COMPLETADA";
+  anotar(c, "Finalizada", `${vetPorId(personalId).nombreCompleto} finalizó la consulta`);
+  return obtenerConsulta(id);
+}
+
+// POST /clinica/consultas/:id/examenes?tipoExamenId=1  (multipart, campo "archivo")
+// Se permite aunque la consulta esté finalizada (lo dice el diseño).
+const TIPOS_ARCHIVO = ["application/pdf", "image/jpeg", "image/png"];
+export function subirExamen(personalId, id, tipoExamenId, archivo) {
+  const co = consultaPorId(id);
+  if (!esSuya(personalId, co)) throw new ErrorApi("Esta consulta no es tuya.", 403);
+  if (!tipoExamenPorId(tipoExamenId)) throw new ErrorApi("Elige el tipo de examen.", 400);
+  if (!archivo) throw new ErrorApi("Adjunta el archivo del resultado.", 400);
+  if (!TIPOS_ARCHIVO.includes(archivo.type)) throw new ErrorApi("Solo se aceptan PDF, JPG o PNG.", 400);
+  if (archivo.size > 5 * 1024 * 1024) throw new ErrorApi("El archivo pesa más de 5 MB.", 400);
+  co.examenes.push({
+    id: `ex${++seq}`, tipoExamenId: Number(tipoExamenId), nombreOriginal: archivo.name, mimeType: archivo.type,
+    tamanoBytes: archivo.size, fechaCarga: ahoraISO(),
+    archivoUrl: URL.createObjectURL(archivo), // en el mock el archivo vive en el navegador
+  });
+  return obtenerConsulta(id);
+}
+
+// POST /clinica/consultas/:id/cita { tipo: "CONTROL" | "REFERIR", veterinarioId, fecha, horaInicio, motivo }
+// Control = cita nueva con él mismo · Referir = cita con un colega de ESTA clínica
+export function citaDesdeConsulta(personalId, id, { tipo, veterinarioId, fecha, horaInicio, motivo }) {
+  const co = consultaPorId(id);
+  const c = buscar(co.citaId);
+  if (c.veterinarioId !== personalId) throw new ErrorApi("Esta consulta no es tuya.", 403);
+  const destino = tipo === "CONTROL" ? personalId : veterinarioId;
+  if (!vetPorId(destino)) throw new ErrorApi("Elige un veterinario de tu clínica.", 400);
+  if (tipo === "REFERIR" && destino === personalId) throw new ErrorApi("Para referir elige a otro colega.", 400);
+  if (!fecha || fecha < HOY) throw new ErrorApi("Elige una fecha de hoy en adelante.", 400);
+  if (!horaInicio) throw new ErrorApi("Elige una hora.", 400);
+  const { cita: nueva } = crearCita({
+    veterinarioId: destino, fecha, horaInicio: horaInicio.slice(0, 5), mascotaId: c.mascotaId,
+    motivoConsulta: motivo?.trim() || (tipo === "CONTROL" ? `Control: ${c.motivoConsulta}` : `Referida: ${c.motivoConsulta}`),
+  });
+  if (tipo === "CONTROL") co.control = { fecha, hora: horaInicio.slice(0, 5) };
+  else co.referidoA = vetPorId(destino).nombreCompleto;
+  return { citaId: nueva.id };
+}
+
+// ---------- Vacunas (dosis_preventivas) ----------
+// POST /clinica/dosis/:id/aplicar { consultaId, lote } → el veterinario la aplica HOY.
+// Se guarda quién la aplicó (aplicada_por_personal_id) y en qué consulta (consulta_id).
+export function aplicarDosis(personalId, dosisId, { consultaId, lote }) {
+  const ds = DOSIS.find((x) => x.id === dosisId);
+  if (!ds) throw new ErrorApi("No encontramos esa dosis.", 404);
+  const co = consultaEditable(personalId, consultaId); // solo dentro de una consulta abierta suya
+  if (consultaCompleta(co).mascotaId !== ds.mascotaId) throw new ErrorApi("Esa dosis es de otra mascota.", 400);
+  if (ds.estado === "APLICADA") throw new ErrorApi("Esa dosis ya está aplicada.", 409);
+  Object.assign(ds, {
+    estado: "APLICADA", fechaAplicada: HOY, lote: lote?.trim() || null,
+    aplicadaPorPersonalId: personalId, consultaId: co.id,
+  });
+  return obtenerConsulta(co.id);
+}
+
+// POST /clinica/consultas/:id/dosis { productoId, fechaProgramada } → nueva fila PENDIENTE en su cartilla
+export function programarDosis(personalId, consultaId, { productoId, fechaProgramada }) {
+  const co = consultaEditable(personalId, consultaId);
+  if (!productoPorId(productoId)) throw new ErrorApi("Elige la vacuna o el desparasitante.", 400);
+  if (!fechaProgramada || fechaProgramada < HOY) throw new ErrorApi("La fecha debe ser de hoy en adelante.", 400);
+  DOSIS.push({
+    id: `ds${++seq}`, mascotaId: consultaCompleta(co).mascotaId, productoId: Number(productoId),
+    fechaProgramada, fechaAplicada: null, estado: "PENDIENTE", lote: null,
+  });
+  return obtenerConsulta(co.id);
 }

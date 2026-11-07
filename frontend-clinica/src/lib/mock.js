@@ -295,6 +295,42 @@ export async function simular(ruta, metodo = "GET", cuerpo = {}) {
   }
 
 
+   // ---------- Pantalla de consulta ----------
+  // Catálogos de las pestañas (padecimientos, medicamentos, tipos de examen, vacunas)
+  if (ruta === "/clinica/catalogos/consulta" && metodo === "GET") {
+    return respuestaOk(m.catalogosConsulta());
+  }
+
+  // "/clinica/consultas/co4", "/clinica/consultas/co4/finalizar", "/clinica/consultas/co4/examenes?tipoExamenId=1"…
+  // (la parte después del "?" se separa primero)
+  const [rutaSinQuery, query] = ruta.split("?");
+  const rutaConsulta = rutaSinQuery.match(/^\/clinica\/consultas\/([^/]+)(?:\/([a-z]+))?$/);
+  if (rutaConsulta) {
+    const [, consultaId, accion] = rutaConsulta;
+    if (!accion && metodo === "GET") return soloVeterinario(() => respuestaOk(m.obtenerConsulta(consultaId)));
+    if (!accion && metodo === "PUT") return soloVeterinario(() => respuestaOk(m.guardarConsulta(personalId, consultaId, cuerpo)));
+    if (accion === "finalizar" && metodo === "POST") return soloVeterinario(() => respuestaOk(m.finalizarConsulta(personalId, consultaId)));
+    if (accion === "cita" && metodo === "POST") return soloVeterinario(() => respuestaOk(m.citaDesdeConsulta(personalId, consultaId, cuerpo), 201));
+    if (accion === "dosis" && metodo === "POST") return soloVeterinario(() => respuestaOk(m.programarDosis(personalId, consultaId, cuerpo), 201));
+    if (accion === "examenes" && metodo === "POST") {
+      const tipoExamenId = new URLSearchParams(query).get("tipoExamenId");
+      return soloVeterinario(() => respuestaOk(m.subirExamen(personalId, consultaId, tipoExamenId, cuerpo.archivo), 201));
+    }
+  }
+
+  // Aplicar una vacuna/desparasitante: "/clinica/dosis/ds1/aplicar" { consultaId, lote }
+  const rutaDosis = ruta.match(/^\/clinica\/dosis\/([^/]+)\/aplicar$/);
+  if (rutaDosis && metodo === "POST") {
+    return soloVeterinario(() => respuestaOk(m.aplicarDosis(personalId, rutaDosis[1], cuerpo)));
+  }
+
+  // Horas libres de un veterinario (para programar control o referir):
+  // "/clinica/veterinarios/v4/disponibilidad?fecha=2026-11-10"
+  const rutaDisp = ruta.match(/^\/clinica\/veterinarios\/([^/?]+)\/disponibilidad/);
+  if (rutaDisp && metodo === "GET") {
+    const fecha = new URLSearchParams(ruta.split("?")[1]).get("fecha");
+    return respuestaOk(m.obtenerDisponibilidad(rutaDisp[1], fecha));
+  }
 
   // Abrir la consulta de una cita (Iniciar consulta / Atender ahora)
   if (ruta === "/clinica/consultas" && metodo === "POST") {
