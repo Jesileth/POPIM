@@ -36,3 +36,30 @@ export async function borrarImagen(carpeta, urlPublica) {
   if (!esNombreValido(nombre)) return;
   await fs.rm(path.join(RAIZ_UPLOADS, carpeta, nombre), { force: true });
 }
+
+
+
+// ---------- Resultados de exámenes (PDF, JPG o PNG) ----------
+// NO se sirven por /archivos: solo por /clinica/examenes/:id/archivo, que revisa permisos.
+export const CARPETA_EXAMENES = path.join(RAIZ_UPLOADS, "examenes");
+
+const MIME = { pdf: "application/pdf", jpg: "image/jpeg", png: "image/png" };
+
+// Igual que con las fotos: el tipo se decide por los primeros bytes, no por la extensión
+function detectarTipoExamen(buf) {
+  if (buf.length >= 5 && buf.subarray(0, 5).toString("ascii") === "%PDF-") return "pdf";
+  const imagen = detectarTipoImagen(buf);
+  return imagen === "jpg" || imagen === "png" ? imagen : null;
+}
+
+// Devuelve { nombre, mimeType } o null si no es PDF/JPG/PNG
+export async function guardarExamen(buffer) {
+  const tipo = detectarTipoExamen(buffer);
+  if (!tipo) return null;
+  const nombre = `${crypto.randomUUID()}.${tipo}`;
+  await fs.mkdir(CARPETA_EXAMENES, { recursive: true });
+  await fs.writeFile(path.join(CARPETA_EXAMENES, nombre), buffer);
+  return { nombre, mimeType: MIME[tipo] };
+}
+
+export const esNombreExamen = (nombre) => /^[a-f0-9-]{36}\.(pdf|jpg|png)$/.test(nombre);

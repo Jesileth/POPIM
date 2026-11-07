@@ -129,11 +129,16 @@ export async function crearCita(d) {
       ]
     );
 
-    await conexion.query(
-      `INSERT INTO cita_historial_estados
-         (cita_id, estado_anterior_id, estado_nuevo_id, cambiado_por_usuario_id, motivo)
-       VALUES (?, NULL, 502, ?, ?)`,
-      [id, d.usuarioId, d.esEmergencia ? "Emergencia registrada en recepción" : "Agendada en recepción"]
+        await conexion.query(
+      `INSERT INTO citas
+         (id, mascota_id, veterinario_id, creada_por_usuario_id, fecha, hora_inicio, hora_fin,
+          motivo_consulta, es_emergencia, prioridad, persona_presentador, referida_desde_consulta_id, estado_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 502)`,
+      [
+        id, d.mascotaId, d.veterinarioId, d.usuarioId, d.fecha, d.horaInicio, d.horaFin,
+        d.motivo, d.esEmergencia ? 1 : 0, d.prioridad ?? "NORMAL", d.personaPresentador ?? null,
+        d.referidaDesde ?? null, // consulta desde la que se agendó el control o se refirió
+      ]
     );
 
     await conexion.commit();

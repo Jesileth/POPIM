@@ -7,13 +7,16 @@ import { autenticar } from "../middlewares/autenticar.js";
 import { cargarPersonal } from "../middlewares/personal.js";
 import { requierePermiso } from "../middlewares/permisos.js";
 import { validar } from "../middlewares/validar.js";
+import { recibirExamen } from "../middlewares/subida.js";
 import {
   esquemaCitaClinica, esquemaEmergencia, esquemaCancelarCita, esquemaReprogramar,
-  esquemaRegistrarPropietario, esquemaEditarPropietario, esquemaMascota,
+  esquemaRegistrarPropietario, esquemaEditarPropietario, esquemaMascota, esquemaIniciarConsulta, esquemaGuardarConsulta,
+  esquemaAplicarDosis, esquemaCitaDesdeConsulta, esquemaProgramarDosis,
 } from "../schemas/clinica.schemas.js";
 import * as clinica from "../controllers/clinica.controller.js";
 import * as citasClinica from "../controllers/citasClinica.controller.js";
 import * as propietarios from "../controllers/propietariosClinica.controller.js";
+import * as vet from "../controllers/veterinario.controller.js";
 
 const router = Router();
 
@@ -56,5 +59,36 @@ router.post("/propietarios/:id/mascotas", requierePermiso("MASCOTAS_CLINICA_REGI
 // Mascotas (consulta)
 router.get("/mascotas", requierePermiso("MASCOTAS_CLINICA_VER"), propietarios.listarMascotas);
 router.get("/mascotas/:id", requierePermiso("MASCOTAS_CLINICA_VER"), propietarios.obtenerMascota);
+
+// ---------- Veterinario ----------
+// Mi agenda y Atención de hoy
+router.get("/mi-agenda", requierePermiso("AGENDA_VER"), vet.miAgenda);
+router.get("/atencion/hoy", requierePermiso("ATENCION_VER"), vet.atencionHoy);
+
+// Consultas
+router.get("/catalogos/consulta", requierePermiso("CONSULTA_ATENDER"), vet.catalogos);
+router.post("/consultas", requierePermiso("CONSULTA_ATENDER"), validar(esquemaIniciarConsulta), vet.iniciarConsulta);
+router.get("/consultas", requierePermiso("CONSULTA_ATENDER"), vet.misConsultas);
+router.get("/consultas/:id", requierePermiso("CONSULTA_ATENDER"), vet.obtenerConsulta);
+
+router.put("/consultas/:id", requierePermiso("CONSULTA_ATENDER"), validar(esquemaGuardarConsulta), vet.guardarConsulta);
+router.post("/consultas/:id/finalizar", requierePermiso("CONSULTA_ATENDER"), vet.finalizarConsulta);
+
+router.get("/consultas/:id/receta.pdf", requierePermiso("RECETA_EMITIR"), vet.recetaPdf);
+
+// Control y referir
+router.post("/consultas/:id/cita", requierePermiso("CITAS_AGENDAR_CONTROL"), validar(esquemaCitaDesdeConsulta), vet.citaDesdeConsulta);
+
+// Exámenes (recibirExamen va ANTES: es quien lee el archivo del formulario)
+router.post("/consultas/:id/examenes", requierePermiso("EXAMENES_GESTIONAR"), recibirExamen, vet.subirExamen);
+router.get("/examenes/:id/archivo", requierePermiso("EXPEDIENTE_CLINICO_VER"), vet.archivoExamen);
+
+// Vacunas
+router.post("/consultas/:id/dosis", requierePermiso("DOSIS_APLICAR"), validar(esquemaProgramarDosis), vet.programarDosis);
+router.post("/dosis/:id/aplicar", requierePermiso("DOSIS_APLICAR"), validar(esquemaAplicarDosis), vet.aplicarDosis);
+
+// Pacientes y expediente
+router.get("/pacientes", requierePermiso("PACIENTES_VER"), vet.misPacientes);
+router.get("/pacientes/:mascotaId", requierePermiso("EXPEDIENTE_CLINICO_VER"), vet.expediente);
 
 export default router;

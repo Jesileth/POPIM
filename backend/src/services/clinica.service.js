@@ -12,7 +12,7 @@ import * as agendaService from "./agenda.service.js";
 const MSG_OCUPADO = "Ese horario acaba de ser reservado. Elige otro.";
 
 // 30 → "2 años y 6 meses" (lo muestra la tarjeta de la mascota al agendar)
-function textoEdad(meses) {
+export function textoEdad(meses) {
   if (meses === null || meses === undefined) return "";
   if (meses < 1) return "Menos de 1 mes";
   if (meses < 12) return `${meses} ${meses === 1 ? "mes" : "meses"}`;
