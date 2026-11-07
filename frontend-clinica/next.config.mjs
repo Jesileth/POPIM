@@ -9,6 +9,12 @@ const nextConfig = {
       },
     },
   },
+
+   // Todo lo que empiece con /api se lo pasa al backend (mismo origen: la cookie viaja sola, sin CORS)
+  async rewrites() {
+    return [{ source: "/api/:path*", destination: "http://localhost:4000/api/:path*" }];
+  },
+
 };
 
 export default nextConfig;

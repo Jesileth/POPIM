@@ -133,7 +133,11 @@ function Perfil({ usuario, clinica, horario }) {
           {fila("Rol", usuario.rol)}
           {fila("Ingreso", fechaDia(usuario.fechaIngreso))}
           {fila("Estado", <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs text-emerald-700">{usuario.estado}</span>)}
-          {fila("Último acceso", usuario.ultimoAcceso)}
+          
+          {fila("Último acceso", usuario.ultimoAcceso
+            ? new Date(usuario.ultimoAcceso).toLocaleString("es-NI", { dateStyle: "medium", timeStyle: "short" })
+            : "—")}
+
         </dl>
         <p className="mt-4 flex items-start gap-2 rounded-xl border border-dashed border-popim-borde p-3 text-xs text-popim-muted"><IconLock size={13} className="mt-0.5 shrink-0" />Solo el administrador de la clínica puede cambiar estos datos.</p>
       </Tarjeta>
