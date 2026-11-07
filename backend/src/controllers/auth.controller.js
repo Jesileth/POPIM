@@ -63,7 +63,6 @@ export async function login(req, res) {
   });
 
   ponerCookieSesion(res, r.token, Boolean(b.recordarme));
-  res.json(r.sesion);
 
     res.json(r.sesion);
 }

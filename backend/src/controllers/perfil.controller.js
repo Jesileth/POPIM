@@ -8,7 +8,7 @@ const texto = (v) => (typeof v === "string" ? v.trim() : "");
 
 export async function obtener(req, res)
  {
-  res.json(await perfilService.obtener(req.usuarioId));
+  res.json(await perfilService.obtener(req.usuarioId, req.portal));
 }
 
 export async function guardar(req, res) 
@@ -17,15 +17,26 @@ export async function guardar(req, res)
   const nombreCompleto = texto(b.nombreCompleto);
   const telefono = texto(b.telefono).replace(/\s+/g, "");
   const direccion = texto(b.direccion) || null;
+    const presentacion = texto(b.presentacion) || null; // solo la usa el veterinario
 
   if (nombreCompleto.length < 3 || nombreCompleto.length > 160)
     throw new ErrorHttp(400, "Escribe tu nombre completo", "nombreCompleto");
+  
   if (!/^[0-9+\-]{7,20}$/.test(telefono))
     throw new ErrorHttp(400, "Teléfono no válido", "telefono");
+
   if (direccion && direccion.length > 255)
     throw new ErrorHttp(400, "La dirección es demasiado larga (máximo 255 letras)", "direccion");
 
-  res.json(await perfilService.guardar(req.usuarioId, { nombreCompleto, telefono, direccion }));
+    if (presentacion && presentacion.length > 500)
+    throw new ErrorHttp(400, "La presentación es demasiado larga (máximo 500 letras)", "presentacion");
+
+  // El personal de la clínica no tiene dirección; el propietario no tiene presentación
+  const datos = req.portal === "CLINICA"
+    ? { nombreCompleto, telefono, presentacion }
+    : { nombreCompleto, telefono, direccion };
+
+  res.json(await perfilService.guardar(req.usuarioId, datos, req.portal));
 }
 
 export async function subirFoto(req, res) 

@@ -94,3 +94,56 @@ export async function actualizarContrasena(usuarioId, hash)
          [hash, usuarioId]
     );
 }
+
+
+
+
+// ---------- PERSONAL de la clínica (no tiene fila en propietarios) ----------
+
+export async function obtenerUsuarioPersonal(usuarioId)
+{
+    const [filas] = await pool.query
+    (
+        `SELECT u.id, u.nombre_completo AS nombreCompleto, u.correo, u.telefono,
+                u.foto_perfil_url AS fotoPerfilUrl, u.ultimo_acceso AS ultimoAcceso,
+                ce.nombre AS estadoNombre
+           FROM usuarios u
+           JOIN catalogo_estados ce ON ce.id = u.estado_id AND ce.entidad = 'USUARIO'
+          WHERE u.id = ?`,
+        [usuarioId]
+    );
+    return filas[0] ?? null;
+}
+
+// Nombre y teléfono en usuarios; la presentación (solo veterinarios) en perfil_veterinario
+export async function actualizarPerfilPersonal({ usuarioId, nombreCompleto, telefono, presentacion, esVeterinario })
+{
+    const conexion = await pool.getConnection();
+    try
+    {
+        await conexion.beginTransaction();
+        await conexion.query
+        (
+            "UPDATE usuarios SET nombre_completo = ?, telefono = ? WHERE id = ?",
+            [nombreCompleto, telefono, usuarioId]
+        );
+        if (esVeterinario)
+        {
+            await conexion.query
+            (
+                "UPDATE perfil_veterinario SET presentacion = ? WHERE usuario_id = ?",
+                [presentacion, usuarioId]
+            );
+        }
+        await conexion.commit();
+    }
+    catch (error)
+    {
+        await conexion.rollback();
+        throw error;
+    }
+    finally
+    {
+        conexion.release();
+    }
+}

@@ -12,6 +12,7 @@ import { plantillaRecuperacion } from "../plantillas/recuperacion.js";
 import { plantillaPasswordCambiada } from "../plantillas/passwordCambiada.js";
 import { fechaHoraManagua } from "../utils/fechas.js";
 import { plantillaActivacion } from "../plantillas/activacion.js";
+import * as personalRepo from "../repositories/personal.repository.js";
 
 export async function registrarPropietario(datos) {
     // encriptamos la contraseña antes de guardarla en la bd
@@ -44,22 +45,34 @@ export async function registrarPropietario(datos) {
 }
 
 async function armarSesion(usuario, portal) {
-  const [permisos, menu] = await Promise.all([
+  const [permisos, menu, vinculo] = await Promise.all([
     usuariosRepo.obtenerPermisos(usuario.id),
     usuariosRepo.obtenerMenu(usuario.id, portal),
+    // Solo el personal de la clínica tiene vínculo (personal_clinica)
+    portal === "CLINICA" ? personalRepo.buscarVinculo(usuario.id) : null,
   ]);
-  return {
-    usuario: {
-      id: usuario.id,
-      nombreCompleto: usuario.nombre_completo,
-      correo: usuario.correo,
-      telefono: usuario.telefono,
-      fotoPerfilUrl: usuario.foto_perfil_url,
-      rol: portal,
-    },
-    menu,
-    permisos,
+
+  const datosUsuario = {
+    id: usuario.id,
+    nombreCompleto: usuario.nombre_completo,
+    correo: usuario.correo,
+    telefono: usuario.telefono,
+    fotoPerfilUrl: usuario.foto_perfil_url,
+    rol: portal,
   };
+
+  // Portal de la clínica: el frontend necesita el rol real, la clínica y (si es veterinario) su personalId
+  if (vinculo) {
+    Object.assign(datosUsuario, {
+      rol: vinculo.rol, // RECEPCIONISTA, VETERINARIO, ADMINISTRADOR
+      fotoUrl: usuario.foto_perfil_url, // el Encabezado del portal clínica lo lee con este nombre
+      personalId: vinculo.personalId,
+      especialidad: vinculo.especialidad, // null si no es veterinario
+      clinica: { id: vinculo.clinicaId, nombreComercial: vinculo.nombreComercial, logoUrl: vinculo.logoUrl },
+    });
+  }
+
+  return { usuario: datosUsuario, menu, permisos };
 }
 
 

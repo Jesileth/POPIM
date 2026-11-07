@@ -7,6 +7,7 @@ import { aMomentoUtc } from "../utils/fechas.js";
 import { guardarImagen, borrarImagen } from "../config/archivos.js";
 import * as perfilRepo from "../repositories/perfil.repository.js";
 import * as usuariosRepo from "../repositories/usuarios.repository.js";
+import * as personalRepo from "../repositories/personal.repository.js";
 
 function formatear(f) {
   return {
@@ -24,19 +25,31 @@ function formatear(f) {
   };
 }
 
-export async function obtener(usuarioId)
+export async function obtener(usuarioId, portal)
 {
+  if (portal === "CLINICA") return obtenerPersonal(usuarioId);
   const fila = await perfilRepo.obtenerPerfil(usuarioId);
   if (!fila) throw new ErrorHttp(404, "No encontramos tu perfil");
   return formatear(fila);     
 }
 
-export async function guardar(usuarioId, datos) 
+export async function guardar(usuarioId, datos, portal) 
 {
   try 
   {
-    await perfilRepo.actualizarPerfil({ usuarioId, ...datos });
-  } 
+    if (portal === "CLINICA")
+    {
+      const vinculo = await personalRepo.buscarVinculo(usuarioId);
+      if (!vinculo) throw new ErrorHttp(404, "No encontramos tu perfil");
+      await perfilRepo.actualizarPerfilPersonal({
+        usuarioId, ...datos, esVeterinario: vinculo.rol === "VETERINARIO",
+      });
+    }
+    else
+    {
+      await perfilRepo.actualizarPerfil({ usuarioId, ...datos });
+    }
+  }
   
   catch (error) 
   {
@@ -45,7 +58,7 @@ export async function guardar(usuarioId, datos)
     throw error;
   }
 
-  return obtener(usuarioId);
+    return obtener(usuarioId, portal);
 }
 
 export async function subirFoto(usuarioId, archivo) 
@@ -91,4 +104,78 @@ export async function cambiarPassword(usuarioId, passwordActual, passwordNueva)
 
   await perfilRepo.actualizarContrasena(usuarioId, await bcrypt.hash(passwordNueva, 12));
   return {};
+}
+
+
+
+
+// ---------- PERSONAL de la clínica ----------
+
+const NOMBRE_DIA = {
+  LUNES: "Lunes", MARTES: "Martes", MIERCOLES: "Miércoles", JUEVES: "Jueves",
+  VIERNES: "Viernes", SABADO: "Sábado", DOMINGO: "Domingo",
+};
+
+// Filas de horarios_personal → [{ dias: "Lunes a viernes", tramos: [{inicio, fin}, ...] }, ...]
+// Junta los días SEGUIDOS que tienen exactamente el mismo horario. tramos vacío = "No atiende".
+function agruparHorario(filas)
+{
+  const dias = Object.keys(NOMBRE_DIA).map((dia) => ({
+    dia,
+    tramos: filas.filter((f) => f.dia === dia).map((f) => ({ inicio: f.inicio, fin: f.fin })),
+  }));
+
+  const grupos = [];
+  for (const d of dias)
+  {
+    const clave = JSON.stringify(d.tramos);
+    const ultimo = grupos.at(-1);
+    if (ultimo && ultimo.clave === clave) ultimo.hasta = d.dia;
+    else grupos.push({ desde: d.dia, hasta: d.dia, clave, tramos: d.tramos });
+  }
+
+  return grupos.map((g) => ({
+    dias: g.desde === g.hasta
+      ? NOMBRE_DIA[g.desde]
+      : `${NOMBRE_DIA[g.desde]} a ${NOMBRE_DIA[g.hasta].toLowerCase()}`,
+    tramos: g.tramos,
+  }));
+}
+
+async function obtenerPersonal(usuarioId)
+{
+  const [fila, vinculo] = await Promise.all([
+    perfilRepo.obtenerUsuarioPersonal(usuarioId),
+    personalRepo.buscarVinculo(usuarioId),
+  ]);
+  if (!fila || !vinculo) throw new ErrorHttp(404, "No encontramos tu perfil");
+
+  const esVeterinario = vinculo.rol === "VETERINARIO";
+  const horario = esVeterinario ? agruparHorario(await personalRepo.horariosDe(vinculo.personalId)) : null;
+
+  return {
+    usuario: {
+      id: fila.id,
+      nombreCompleto: fila.nombreCompleto,
+      correo: fila.correo,
+      telefono: fila.telefono,
+      fotoPerfilUrl: fila.fotoPerfilUrl,
+      rol: vinculo.rolNombre,            // "Recepcionista", "Veterinario"…
+      estado: fila.estadoNombre,         // "Activo"
+      ultimoAcceso: aMomentoUtc(fila.ultimoAcceso),
+      fechaIngreso: vinculo.fechaIngreso,
+      // Solo el veterinario lleva estos datos (el frontend decide qué tarjetas mostrar con personalId)
+      personalId: esVeterinario ? vinculo.personalId : null,
+      licencia: vinculo.licencia,
+      especialidad: vinculo.especialidad,
+      presentacion: vinculo.presentacion ?? "",
+    },
+    clinica: {
+      id: vinculo.clinicaId,
+      nombreComercial: vinculo.nombreComercial,
+      direccion: vinculo.direccion,
+      logoUrl: vinculo.logoUrl,
+    },
+    horario,
+  };
 }
