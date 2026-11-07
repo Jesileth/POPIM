@@ -18,8 +18,7 @@ const MAX_PRESENTACION = 500; // perfil_veterinario.presentacion
 function Perfil({ usuario, clinica, horario }) {
   // Solo el veterinario tiene personalId + licencia/especialidad, presentación y horario
   const esVeterinario = Boolean(usuario.personalId);
-  const [d, setD] = useState({ nombre: usuario.nombreCompleto, telefono: usuario.telefono, presentacion: usuario.presentacion ?? "" });
-  const [clave, setClave] = useState({ actual: "", nueva: "", confirmar: "" });
+  const [d, setD] = useState({ nombre: usuario.nombreCompleto, telefono: usuario.telefono ?? "", presentacion: usuario.presentacion ?? "" });  const [clave, setClave] = useState({ actual: "", nueva: "", confirmar: "" });
   const [foto, setFoto] = useState(null);
   const [errD, setErrD] = useState({});
   const [errC, setErrC] = useState({});

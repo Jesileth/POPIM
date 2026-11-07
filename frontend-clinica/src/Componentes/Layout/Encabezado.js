@@ -10,8 +10,10 @@ const NOMBRES_ROL = {
 };
 
 // "Clínica San Roque" → "CS"
+// "Dra. Mariana Rojas" → "MR" · "Clínica San Roque" → "CS" (se salta Dr./Dra.)
 function iniciales(texto = "") {
   return texto
+    .replace(/^Dra?\.\s*/, "")
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
