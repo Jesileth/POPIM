@@ -20,6 +20,7 @@ const RECEPCIONISTA = {
   telefono: "8555-0101", correo: "recepcion@clinica.com",
   fechaIngreso: "2025-03-10", estado: "Activo", ultimoAcceso: "Hoy, 07:52",
 };
+
 export const obtenerSesion = () => ({ usuario: RECEPCIONISTA, clinica: CLINICA });
 export function actualizarPerfil({ nombreCompleto, telefono }) {
   Object.assign(RECEPCIONISTA, { nombreCompleto, telefono });

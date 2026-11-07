@@ -22,13 +22,15 @@ export const iniciarSesion = (datos) =>
     cuerpo: {
       identificador: datos.identificador ?? datos.email,
       contrasena: datos.password,
-      portal: "PROPIETARIO",
+      portal: "CLINICA", // este es el portal de la clínica (antes decía PROPIETARIO por venir copiado)
       recordarme: Boolean(datos.recordarme),
     },
   });
 
 export const buscarPerfilPendiente = post("/auth/activacion/buscar");
 export const verificarActivacion = post("/auth/activacion/verificar");
+// La persona pide su código: el backend lo manda SOLO al correo guardado en la cuenta pendiente
+export const solicitarCodigoActivacion = post("/auth/activacion/solicitar");
 export const activarCuenta = (datos) =>
   post("/auth/activacion/confirmar")({
     tokenConfirmacion: datos.tokenConfirmacion,

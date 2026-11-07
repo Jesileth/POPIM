@@ -147,6 +147,15 @@ const veterinarios = () =>
 // "8888-1234" y "88881234" deben encontrarse igual: quitamos espacios y guiones
 const paraBuscar = (texto) => (texto ?? "").toLowerCase().replace(/[\s-]/g, "");
 
+// Cuenta que el administrador "registró" y todavía no se activa (estado 101)
+const CUENTA_PENDIENTE = {
+  correo: "nuevo@prueba.popim",
+  codigo: "123456",
+  nombre: "Luis Herrera",
+  rol: "VETERINARIO",
+  clinica: "POPIM Central - Managua",
+};
+
 export async function simular(ruta, metodo = "GET", cuerpo = {}) {
   await esperar(400);
 
@@ -174,6 +183,29 @@ export async function simular(ruta, metodo = "GET", cuerpo = {}) {
   if (ruta === "/auth/logout" && metodo === "POST") {
     guardarSesion(false);
     return { ok: true, estado: 200, datos: {} };
+  }
+
+  // ---------- Activar cuenta del personal ----------
+  // Para probar: correo nuevo@prueba.popim y código 123456
+  if (ruta === "/auth/activacion/verificar" && metodo === "POST") {
+    const coincide = cuerpo.correo === CUENTA_PENDIENTE.correo && cuerpo.codigo === CUENTA_PENDIENTE.codigo;
+    if (!coincide) return respuestaError(400, "El código no es correcto o ya venció.");
+    return respuestaOk({
+      tokenConfirmacion: "token-de-prueba",
+      nombre: CUENTA_PENDIENTE.nombre,
+      rol: CUENTA_PENDIENTE.rol,
+      clinica: CUENTA_PENDIENTE.clinica,
+    });
+  }
+  if (ruta === "/auth/activacion/confirmar" && metodo === "POST") {
+    if (cuerpo.tokenConfirmacion !== "token-de-prueba") {
+      return respuestaError(400, "Tu verificación venció. Vuelve a escribir el código.");
+    }
+    return respuestaOk({});
+  }
+  if (ruta === "/auth/activacion/solicitar" && metodo === "POST") {
+    // Siempre ok, exista o no el correo (el backend real hace lo mismo)
+    return respuestaOk({});
   }
 
   // Todo lo que empieza con /clinica/ necesita sesión
