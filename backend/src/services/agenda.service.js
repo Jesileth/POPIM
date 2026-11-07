@@ -26,7 +26,7 @@ export async function veterinarios(clinicaId) {
   };
 }
 // Convierte un "2026-11-05 08:00:00" en minutos dentro del día pedido
-function minutosEnElDia(fechaHora, fecha) {
+export function minutosEnElDia(fechaHora, fecha) {
   const dia = fechaHora.slice(0, 10);
   if (dia < fecha) return 0;
   if (dia > fecha) return 1440;

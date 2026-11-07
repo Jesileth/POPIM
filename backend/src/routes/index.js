@@ -10,6 +10,7 @@ import archivosRoutes from "./archivos.routes.js";
 import agendaRoutes from "./agenda.routes.js";
 import citasRoutes from "./citas.routes.js";
 import perfilRoutes from "./perfil.routes.js";
+import clinicaRoutes from "./clinica.routes.js";
 
 
 const router = Router();
@@ -30,5 +31,6 @@ router.use("/archivos", archivosRoutes);
 router.use(agendaRoutes);
 router.use("/citas", citasRoutes);
 router.use("/perfil", perfilRoutes)
+router.use("/clinica", clinicaRoutes);
 
 export default router;
