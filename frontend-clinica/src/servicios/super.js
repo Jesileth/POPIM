@@ -19,3 +19,6 @@ export const registrarClinica = (datos) => peticion("/super/clinicas", { metodo:
 export const actualizarClinica = (id, datos) => peticion(`/super/clinicas/${id}`, { metodo: "PUT", cuerpo: datos });
 export const cambiarEstadoClinica = (id, activa) =>
   peticion(`/super/clinicas/${id}/estado`, { metodo: "PATCH", cuerpo: { activa } });
+
+export const asignarAdministrador = (id, datos) =>
+  peticion(`/super/clinicas/${id}/administrador`, { metodo: "POST", cuerpo: datos });

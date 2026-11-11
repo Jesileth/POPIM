@@ -70,10 +70,78 @@ function revisarHorario(dias) {
   return "";
 }
 
+// Formulario pequeño para darle administrador a una clínica que no tiene.
+// No es un <form>: vive dentro del formulario de la clínica y HTML no permite un form dentro de otro.
+function AsignarAdministrador({ onAsignar }) {
+  const [abierto, setAbierto] = useState(false);
+  const [a, setA] = useState({ adminNombre: "", adminCorreo: "", adminTelefono: "" });
+  const [errores, setErrores] = useState({});
+  const [aviso, setAviso] = useState("");
+  const [guardando, setGuardando] = useState(false);
+  const set = (campo, f = (v) => v) => (e) => setA((x) => ({ ...x, [campo]: f(e.target.value) }));
+
+  async function asignar() {
+    const err = {
+      adminNombre: validarObligatorio(a.adminNombre, "Escribe el nombre del administrador."),
+      adminCorreo: validarEmail(a.adminCorreo),
+      adminTelefono: a.adminTelefono ? validarTelefono(a.adminTelefono) : "",
+    };
+    setErrores(err);
+    if (Object.values(err).some(Boolean)) return;
+
+    setGuardando(true);
+    const respuesta = await onAsignar({
+      adminNombre: a.adminNombre.trim(),
+      adminCorreo: normalizarEmail(a.adminCorreo),
+      adminTelefono: a.adminTelefono || null,
+    });
+    setGuardando(false);
+    if (!respuesta.ok) {
+      if (respuesta.campo) setErrores((x) => ({ ...x, [respuesta.campo]: respuesta.error }));
+      setAviso(respuesta.error);
+    }
+    // Si salió bien no hace falta nada más: la página recarga la clínica y este recuadro
+    // se cambia solo por la tarjeta del administrador
+  }
+
+  if (!abierto) {
+    return (
+      <div className="flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-red-800">Esta clínica no tiene un administrador activo.</p>
+        <Boton variante="secundario" onClick={() => setAbierto(true)}>
+          <IconPlus size={16} /> Asignar administrador
+        </Boton>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Campo id="asignarNombre" etiqueta="Nombre completo" obligatorio value={a.adminNombre} onChange={set("adminNombre")}
+          error={errores.adminNombre} placeholder="Ej.: Andrea Solís" maxLength={160} />
+        <Campo id="asignarCorreo" etiqueta="Correo" obligatorio type="email" value={a.adminCorreo} onChange={set("adminCorreo")}
+          error={errores.adminCorreo} placeholder="correo@dominio.com" />
+        <Campo id="asignarTelefono" etiqueta="Teléfono" type="tel" value={a.adminTelefono} onChange={set("adminTelefono", formatearTelefono)}
+          error={errores.adminTelefono} placeholder="8888-8888" />
+      </div>
+      <Aviso>
+        Si el correo es nuevo, su cuenta queda <strong>Pendiente de activación</strong> hasta que entre en
+        «Activar mi cuenta». Si ya tiene cuenta en POPIM, se usa esa misma.
+      </Aviso>
+      {aviso && <Aviso tipo="error">{aviso}</Aviso>}
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <Boton variante="neutro" onClick={() => { setAbierto(false); setErrores({}); setAviso(""); }}>Cancelar</Boton>
+        <Boton onClick={asignar} disabled={guardando}>{guardando ? "Asignando…" : "Asignar administrador"}</Boton>
+      </div>
+    </div>
+  );
+}
+
 // modo = "registrar" | "editar"
 // inicial = la clínica que devuelve GET /super/clinicas/:id (solo al editar)
 // onGuardar(datos) debe devolver lo que devuelve el servicio: { ok, error, campo }
-export default function FormularioClinica({ modo, inicial = null, onGuardar }) {
+export default function FormularioClinica({ modo, inicial = null, onGuardar, onAsignarAdmin }) {
   const esRegistro = modo === "registrar";
 
   const [d, setD] = useState({
@@ -287,8 +355,8 @@ export default function FormularioClinica({ modo, inicial = null, onGuardar }) {
                 {ESTADOS_CUENTA[admin.estado]?.texto ?? admin.estado}
               </span>
             </div>
-          ) : (
-            <Aviso tipo="error">Esta clínica no tiene un administrador activo.</Aviso>
+           ) : (
+            <AsignarAdministrador onAsignar={onAsignarAdmin} />
           )}
         </Paso>
 

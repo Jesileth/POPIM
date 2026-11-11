@@ -1,6 +1,3 @@
-
-//
-
 "use client";
 
 import { useState } from "react";
@@ -11,19 +8,37 @@ import EncabezadoVista from "@/Componentes/ui/EncabezadoVista";
 import FormularioClinica from "@/Componentes/super/FormularioClinica";
 import { IconArrowLeft } from "@/Componentes/Iconos";
 import { useCarga } from "@/lib/useCarga";
-import { actualizarClinica, obtenerClinica } from "@/servicios/super";
+import { actualizarClinica, asignarAdministrador, obtenerClinica } from "@/servicios/super";
 
 export default function EditarClinicaPage() {
   const { id } = useParams();
-  const { datos, error, cargando } = useCarga(() => obtenerClinica(id), [id]);
-  const [guardada, setGuardada] = useState(false);
+  const { datos, error, cargando, recargar } = useCarga(() => obtenerClinica(id), [id]);
+  const [mensaje, setMensaje] = useState("");
+
+  const subirAlAviso = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   async function guardar(cambios) {
-    setGuardada(false);
+    setMensaje("");
     const respuesta = await actualizarClinica(id, cambios);
     if (respuesta.ok) {
-      setGuardada(true);
-      window.scrollTo({ top: 0, behavior: "smooth" }); // para que vea el aviso verde
+      setMensaje("Los cambios de la clínica quedaron guardados.");
+      subirAlAviso();
+    }
+    return respuesta;
+  }
+
+  async function asignarAdmin(datosAdmin) {
+    setMensaje("");
+    const respuesta = await asignarAdministrador(id, datosAdmin);
+    if (respuesta.ok) {
+      const admin = respuesta.datos.clinica.administrador;
+      setMensaje(
+        admin?.estado === "PENDIENTE"
+          ? `${admin.nombreCompleto} quedó como administrador. Debe activar su cuenta en «Activar mi cuenta» del login de clínicas.`
+          : `${admin?.nombreCompleto ?? "El administrador"} quedó como administrador y ya puede iniciar sesión.`
+      );
+      recargar(); // vuelve a pedir la clínica: el recuadro rojo cambia por la tarjeta del administrador
+      subirAlAviso();
     }
     return respuesta;
   }
@@ -43,10 +58,10 @@ export default function EditarClinicaPage() {
         <Boton variante="neutro" href="/super/clinicas"><IconArrowLeft size={16} /> Volver</Boton>
       </EncabezadoVista>
 
-      {guardada && <Aviso tipo="ok">Los cambios de la clínica quedaron guardados.</Aviso>}
+      {mensaje && <Aviso tipo="ok">{mensaje}</Aviso>}
 
       {/* key: si cambiara de clínica, el formulario se vuelve a crear con sus datos */}
-      <FormularioClinica key={clinica.id} modo="editar" inicial={clinica} onGuardar={guardar} />
+      <FormularioClinica key={clinica.id} modo="editar" inicial={clinica} onGuardar={guardar} onAsignarAdmin={asignarAdmin} />
     </div>
   );
 }
