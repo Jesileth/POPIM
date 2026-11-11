@@ -11,6 +11,7 @@ import agendaRoutes from "./agenda.routes.js";
 import citasRoutes from "./citas.routes.js";
 import perfilRoutes from "./perfil.routes.js";
 import clinicaRoutes from "./clinica.routes.js";
+import superRoutes from "./super.routes.js";
 
 
 const router = Router();
@@ -32,5 +33,6 @@ router.use(agendaRoutes);
 router.use("/citas", citasRoutes);
 router.use("/perfil", perfilRoutes)
 router.use("/clinica", clinicaRoutes);
+router.use("/super", superRoutes);
 
 export default router;
