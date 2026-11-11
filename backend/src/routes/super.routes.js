@@ -10,7 +10,9 @@ import { autenticar } from "../middlewares/autenticar.js";
 import { requierePermiso } from "../middlewares/permisos.js";
 import { validar } from "../middlewares/validar.js";
 import { ErrorHttp } from "../utils/errores.js";
-import { esquemaRegistrarClinica, esquemaEditarClinica, esquemaEstadoClinica } from "../schemas/super.schemas.js";
+import {
+  esquemaRegistrarClinica, esquemaEditarClinica, esquemaEstadoClinica, esquemaAsignarAdministrador,
+} from "../schemas/super.schemas.js";
 import * as clinicas from "../controllers/superClinicas.controller.js";
 
 const router = Router();
@@ -29,5 +31,6 @@ router.post("/clinicas", requierePermiso("CLINICAS_REGISTRAR"), validar(esquemaR
 router.get("/clinicas/:id", requierePermiso("CLINICAS_VER"), clinicas.obtenerClinica);
 router.put("/clinicas/:id", requierePermiso("CLINICAS_EDITAR"), validar(esquemaEditarClinica), clinicas.actualizarClinica);
 router.patch("/clinicas/:id/estado", requierePermiso("CLINICAS_CAMBIAR_ESTADO"), validar(esquemaEstadoClinica), clinicas.cambiarEstadoClinica);
+router.post("/clinicas/:id/administrador", requierePermiso("CLINICAS_EDITAR"), validar(esquemaAsignarAdministrador), clinicas.asignarAdministrador);
 
 export default router;

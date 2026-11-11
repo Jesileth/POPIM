@@ -25,3 +25,7 @@ export async function actualizarClinica(req, res) {
 export async function cambiarEstadoClinica(req, res) {
   res.json(await servicio.cambiarEstado(req.params.id, req.body.activa));
 }
+
+export async function asignarAdministrador(req, res) {
+  res.status(201).json(await servicio.asignarAdministrador(req.usuarioId, req.params.id, req.body));
+}

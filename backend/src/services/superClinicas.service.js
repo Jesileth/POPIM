@@ -112,6 +112,26 @@ export async function registrar(superAdminId, d) {
   }
 }
 
+// Para una clínica que no tiene administrador activo
+export async function asignarAdministrador(superAdminId, clinicaId, d) {
+  const [clinica, actual] = await Promise.all([repo.buscar(clinicaId), repo.administradorDe(clinicaId)]);
+  if (!clinica) throw new ErrorHttp(404, "No encontramos esa clínica");
+  if (actual) throw new ErrorHttp(409, `Esta clínica ya tiene administrador: ${actual.nombreCompleto}`);
+
+  const existenteId = await revisarAdministrador(d.adminCorreo);
+  try {
+    await repo.asignarAdministrador(
+      clinicaId,
+      { existenteId, nombreCompleto: d.adminNombre, correo: d.adminCorreo, telefono: d.adminTelefono },
+      superAdminId
+    );
+  } catch (error) {
+    throw errorDuplicado(error) ?? error;
+  }
+  return obtener(clinicaId);
+}
+
+
 export async function actualizar(clinicaId, d) {
   try {
     const hecho = await repo.actualizar(clinicaId, { clinica: soloClinica(d), horarios: d.horarios });

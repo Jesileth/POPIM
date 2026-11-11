@@ -87,14 +87,18 @@ export const esquemaEditarClinica = datosClinica.superRefine(revisarHorarios);
 // POST /super/clinicas → la clínica + su administrador (el dueño)
 // Los datos del administrador van "planos" (adminCorreo y no administrador.correo)
 // para que, si algo falla, el campo del error sea el input exacto del formulario.
+const datosAdministrador = {
+  adminNombre: texto("el nombre del administrador", 3, 160),
+  adminCorreo: z.string("Escribe el correo del administrador").trim().toLowerCase().pipe(z.email("Correo no válido")),
+  adminTelefono: telefonoOpcional,
+};
+
 export const esquemaRegistrarClinica = datosClinica
-  .extend({
-    activa: z.boolean().default(true),
-    adminNombre: texto("el nombre del administrador", 3, 160),
-    adminCorreo: z.string("Escribe el correo del administrador").trim().toLowerCase().pipe(z.email("Correo no válido")),
-    adminTelefono: telefonoOpcional,
-  })
+  .extend({ activa: z.boolean().default(true), ...datosAdministrador })
   .superRefine(revisarHorarios);
+
+// POST /super/clinicas/:id/administrador → para una clínica que no tiene
+export const esquemaAsignarAdministrador = z.object(datosAdministrador);
 
 // PATCH /super/clinicas/:id/estado
 export const esquemaEstadoClinica = z.object({

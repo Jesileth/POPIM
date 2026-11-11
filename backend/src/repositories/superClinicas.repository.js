@@ -125,8 +125,36 @@ async function guardarHorarios(conexion, clinicaId, horarios) {
   );
 }
 
+// Le da a una persona el rol ADMINISTRADOR y la vincula a la clínica (dentro de una transacción).
+// admin.existenteId = la persona ya tenía cuenta; si no, se crea PENDIENTE (101) y sin contraseña:
+// la activará ella misma con "Activar mi cuenta" (ahí recibe el código).
+async function vincularAdministrador(conexion, clinicaId, admin, creadoPor) {
+  let adminId = admin.existenteId;
+  if (!adminId) {
+    adminId = crypto.randomUUID();
+    await conexion.query(
+      `INSERT INTO usuarios (id, nombre_completo, correo, telefono, estado_id, creado_por_usuario_id)
+       VALUES (?, ?, ?, ?, 101, ?)`,
+      [adminId, admin.nombreCompleto, admin.correo, admin.telefono, creadoPor]
+    );
+  }
+
+  // IGNORE: si ya era administrador, el rol no se repite
+  await conexion.query(
+    "INSERT IGNORE INTO usuario_roles (usuario_id, rol_id) SELECT ?, id FROM roles WHERE codigo = 'ADMINISTRADOR'",
+    [adminId]
+  );
+
+  // Si alguna vez estuvo en esta clínica (vínculo inactivo 302), uq_personal no deja otra fila:
+  // ON DUPLICATE KEY UPDATE reactiva la que ya existe en vez de fallar
+  await conexion.query(
+    `INSERT INTO personal_clinica (id, usuario_id, clinica_id) VALUES (?, ?, ?)
+     ON DUPLICATE KEY UPDATE estado_id = 301`,
+    [crypto.randomUUID(), adminId, clinicaId]
+  );
+}
+
 // Crea la clínica, su horario y su administrador, todo o nada.
-// admin.existenteId = la persona ya tenía cuenta (solo se le da el rol y el vínculo).
 export async function crear({ clinica, horarios, activa, admin, creadoPor }) {
   const conexion = await pool.getConnection();
   try {
@@ -146,30 +174,26 @@ export async function crear({ clinica, horarios, activa, admin, creadoPor }) {
     // 2) Su horario de atención
     await guardarHorarios(conexion, clinicaId, horarios);
 
-    // 3) El administrador: si no tenía cuenta, nace PENDIENTE (101) y sin contraseña.
-    //    La activará él mismo con "Activar mi cuenta" (ahí recibe el código).
-    let adminId = admin.existenteId;
-    if (!adminId) {
-      adminId = crypto.randomUUID();
-      await conexion.query(
-        `INSERT INTO usuarios (id, nombre_completo, correo, telefono, estado_id, creado_por_usuario_id)
-         VALUES (?, ?, ?, ?, 101, ?)`,
-        [adminId, admin.nombreCompleto, admin.correo, admin.telefono, creadoPor]
-      );
-    }
-
-    // 4) Su rol (IGNORE: si ya era administrador, no se repite) y su vínculo con la clínica
-    await conexion.query(
-      "INSERT IGNORE INTO usuario_roles (usuario_id, rol_id) SELECT ?, id FROM roles WHERE codigo = 'ADMINISTRADOR'",
-      [adminId]
-    );
-    await conexion.query(
-      "INSERT INTO personal_clinica (id, usuario_id, clinica_id) VALUES (?, ?, ?)",
-      [crypto.randomUUID(), adminId, clinicaId]
-    );
+    // 3) Su administrador
+    await vincularAdministrador(conexion, clinicaId, admin, creadoPor);
 
     await conexion.commit();
     return clinicaId;
+  } catch (error) {
+    await conexion.rollback();
+    throw error;
+  } finally {
+    conexion.release();
+  }
+}
+
+// Asigna administrador a una clínica que ya existe (las de prueba no tenían)
+export async function asignarAdministrador(clinicaId, admin, creadoPor) {
+  const conexion = await pool.getConnection();
+  try {
+    await conexion.beginTransaction();
+    await vincularAdministrador(conexion, clinicaId, admin, creadoPor);
+    await conexion.commit();
   } catch (error) {
     await conexion.rollback();
     throw error;
