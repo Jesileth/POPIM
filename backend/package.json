@@ -9,7 +9,8 @@
     "medir-latencia": "node --env-file=.env scripts/medir-latencia.js",
     "probar-correo": "node --env-file=.env scripts/probar-correo.js",
     "probar-plantilla": "node scripts/probar-plantilla.js",
-    "probar-codigos": "node --env-file=.env scripts/probar-codigos.js"
+    "probar-codigos": "node --env-file=.env scripts/probar-codigos.js",
+    "crear-super-admin": "node --env-file=.env scripts/crear-super-admin.js"
   },
   "keywords": [],
   "author": "",

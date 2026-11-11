@@ -71,7 +71,15 @@ async function armarSesion(usuario, portal) {
       clinica: { id: vinculo.clinicaId, nombreComercial: vinculo.nombreComercial, logoUrl: vinculo.logoUrl },
     });
   }
-
+    else if (portal === "CLINICA") {
+    // Sin vínculo con una clínica: es el Super Administrador (administra toda la red).
+    // Leemos su rol real para que el frontend sepa quién es.
+    Object.assign(datosUsuario, {
+      rol: await usuariosRepo.obtenerRolDePortal(usuario.id, "CLINICA"), // "SUPER_ADMIN"
+      fotoUrl: usuario.foto_perfil_url,
+      clinica: null,
+    });
+  }
   return { usuario: datosUsuario, menu, permisos };
 }
 
