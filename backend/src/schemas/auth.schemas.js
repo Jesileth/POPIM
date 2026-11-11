@@ -1,0 +1,41 @@
+import { z } from "zod";
+
+const correo = z
+  .string("Escribe tu correo")
+  .trim()
+  .toLowerCase()
+  .pipe(z.email("Correo no válido"));
+
+const codigo = z.string("Escribe el código").trim().regex(/^\d{6}$/, "El código tiene 6 números");
+
+const contrasena = z
+  .string("Escribe tu nueva contraseña")
+  .min(8, "La contraseña debe tener al menos 8 caracteres")
+  .max(72, "La contraseña es demasiado larga");
+
+export const esquemaSolicitarRecuperacion = z.object({ correo });
+export const esquemaVerificarRecuperacion = z.object({ correo, codigo });
+export const esquemaRestablecerContrasena = z.object({
+  tokenRestablecimiento: z
+    .string("Falta la verificación del código")
+    .min(1, "Falta la verificación del código"),
+  contrasenaNueva: contrasena,
+});
+
+export const esquemaBuscarActivacion = z.object({
+  identificador: z
+    .string("Escribe tu correo, teléfono o cédula")
+    .trim()
+    .min(3, "Escribe tu correo, teléfono o cédula")
+    .max(150, "El dato es demasiado largo"),
+});
+
+export const esquemaVerificarActivacion = z.object({
+  tokenActivacion: z.string("Falta la verificación").min(1, "Falta la verificación"),
+  codigo,
+});
+
+export const esquemaConfirmarActivacion = z.object({
+  tokenConfirmacion: z.string("Falta la verificación").min(1, "Falta la verificación"),
+  contrasena: contrasena.optional(),
+});

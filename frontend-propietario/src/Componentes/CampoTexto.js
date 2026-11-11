@@ -22,6 +22,8 @@ export default function CampoTexto({
   obligatorio = true,
   min,
   max,
+  valorInicial,
+  ayuda,
 }) 
 {
   const [visible, setVisible] = useState(false);
@@ -62,6 +64,7 @@ export default function CampoTexto({
           max={max}
           aria-invalid={error ? "true" : undefined}
           aria-describedby={error ? idError : undefined}
+          defaultValue={valorInicial}
           className={`h-12 w-full rounded-xl border bg-popim-campo text-sm text-popim-ink outline-none transition placeholder:text-popim-placeholder focus:border-popim-primary focus:ring-4 focus:ring-popim-primary/15 disabled:cursor-not-allowed disabled:opacity-60 ${
             IconoCampo ? "pl-11" : "pl-4"
           } ${esPassword ? "pr-12" : "pr-4"} ${
@@ -86,6 +89,7 @@ export default function CampoTexto({
       {error && (
         <p id={idError} role="alert" className="mt-1 text-xs text-red-700">
           {error}
+          {ayuda && !error && <p className="mt-1 text-xs text-popim-muted">{ayuda}</p>}
         </p>
       )}
     </div>

@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import CampoTexto from "@/Componentes/CampoTexto";
 import BotonPrimario from "@/Componentes/BotonPrimario";
 import Mensaje from "@/Componentes/Mensaje";
-import { registrarPropietario } from "@/servicios/auth";
 import {
   formatearCedula,
   normalizarCedula,
@@ -21,13 +20,23 @@ import {
   normalizarTelefono,
   formatearTelefono
 } from "@/lib/validaciones";
+import PanelCodigo from "@/Componentes/PanelCodigo";
+import { activarCuenta, buscarPerfilPendiente, registrarPropietario, verificarActivacion } from "@/servicios/auth";
+import { guardarAviso } from "@/lib/aviso";
 
+// El backend llama "correo" a lo que este formulario llama "email"
+const NOMBRES_CAMPOS = { correo: "email" };
 
 export default function RegistroPage() {
   const router = useRouter();
   const [errores, setErrores] = useState({});
   const [errorGeneral, setErrorGeneral] = useState("");
   const [cargando, setCargando] = useState(false);
+  // dentro del componente, junto a los otros useState:
+  const [paso, setPaso] = useState("formulario"); // "formulario" o "codigo"
+  const [correo, setCorreo] = useState("");
+  const [tokenActivacion, setTokenActivacion] = useState("");
+  const [correoEnmascarado, setCorreoEnmascarado] = useState("");
 
   async function enviar(evento) {
     evento.preventDefault();
@@ -54,13 +63,47 @@ export default function RegistroPage() {
     });
     setCargando(false);
 
-    if (!respuesta.ok) {
+      if (!respuesta.ok) {
       // Si el backend dice qué campo falló (correo o cédula repetidos), se marca ese input
-      if (respuesta.campo) setErrores({ [respuesta.campo]: respuesta.error });
+      const campo = NOMBRES_CAMPOS[respuesta.campo] ?? respuesta.campo;
+      if (campo in nuevosErrores) setErrores({ [campo]: respuesta.error });
       else setErrorGeneral(respuesta.error);
       return;
     }
-    router.push("/registro-mascota");
+
+    setCorreo(normalizarEmail(datos.email));
+    setTokenActivacion(respuesta.datos.tokenActivacion);
+    setCorreoEnmascarado(respuesta.datos.correoEnmascarado);
+    setPaso("codigo");
+  } // <- aquí se cierra enviar()
+
+  async function reenviar() {
+    const respuesta = await buscarPerfilPendiente({ identificador: correo });
+    if (respuesta.ok) setTokenActivacion(respuesta.datos.tokenActivacion);
+    return respuesta;
+  }
+
+  async function verificar(codigo) {
+  const verificada = await verificarActivacion({ tokenActivacion, codigo });
+  if (!verificada.ok) return verificada;
+
+  // Ya trae contraseña (la escribió al registrarse): solo se confirma
+  const activada = await activarCuenta({ tokenConfirmacion: verificada.datos.tokenConfirmacion });
+   if (activada.ok) {
+    guardarAviso("¡Cuenta creada con éxito!");
+    router.push(activada.datos.sesionIniciada ? "/registro-mascota" : "/login");
+  }
+  return activada;
+}
+
+  if (paso === "codigo") {
+    return (
+      <PanelCodigo
+        correoEnmascarado={correoEnmascarado}
+        onVerificar={verificar}
+        onReenviar={reenviar}
+      />
+    );
   }
 
   return (
