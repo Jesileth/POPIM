@@ -6,17 +6,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import PawIcon from "@/Componentes/Paneles/PawIcon";
 import {
+  IconBarChart,
   IconBoxArrowRight,
+  IconBuilding,
   IconCalendarCheck,
   IconCalendarEvent,
   IconChevronRight,
   IconClipboardPulse,
   IconClock,
   IconFileMedical,
+  IconGrid,
   IconHeartPulse,
   IconList,
   IconPerson,
   IconPersonBadge,
+  IconShieldCheck,
 } from "@/Componentes/Iconos";
 import { rutaActiva } from "@/lib/permisos";
 
@@ -31,6 +35,12 @@ const ICONOS = {
   consultas: IconClipboardPulse,
   pacientes: IconFileMedical,
   personal: IconPersonBadge,
+    personal: IconPersonBadge,
+  // Super Administrador
+  panel: IconGrid,
+  clinicas: IconBuilding,
+  reportes: IconBarChart,
+  escudo: IconShieldCheck,  
 };
 
 // Muestra el ícono del menú; si el nombre no existe, usa el de lista
