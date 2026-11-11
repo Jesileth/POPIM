@@ -24,7 +24,7 @@ export async function listarDosis(mascotaId) {
 
 export async function listarConsultas(mascotaId) {
   const [filas] = await pool.query(
-    `SELECT c.id, c.fecha_inicio AS fechaInicio, c.es_emergencia AS esEmergencia, c.prioridad,
+    `SELECT c.id, c.fecha_inicio AS fechaInicio, ci.es_emergencia AS esEmergencia, ci.prioridad,
             ci.motivo_consulta AS motivo,
             u.nombre_completo AS vetNombre, esp.nombre AS vetEspecialidad,
             (SELECT COUNT(*) FROM diagnosticos d WHERE d.consulta_id = c.id) AS totalDiagnosticos,
