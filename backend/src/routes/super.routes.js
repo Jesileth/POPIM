@@ -14,6 +14,7 @@ import {
   esquemaRegistrarClinica, esquemaEditarClinica, esquemaEstadoClinica, esquemaAsignarAdministrador,
 } from "../schemas/super.schemas.js";
 import * as clinicas from "../controllers/superClinicas.controller.js";
+import * as usuarios from "../controllers/superUsuarios.controller.js";
 
 const router = Router();
 
@@ -32,5 +33,10 @@ router.get("/clinicas/:id", requierePermiso("CLINICAS_VER"), clinicas.obtenerCli
 router.put("/clinicas/:id", requierePermiso("CLINICAS_EDITAR"), validar(esquemaEditarClinica), clinicas.actualizarClinica);
 router.patch("/clinicas/:id/estado", requierePermiso("CLINICAS_CAMBIAR_ESTADO"), validar(esquemaEstadoClinica), clinicas.cambiarEstadoClinica);
 router.post("/clinicas/:id/administrador", requierePermiso("CLINICAS_EDITAR"), validar(esquemaAsignarAdministrador), clinicas.asignarAdministrador);
+
+// ---------- Usuarios y accesos ----------
+router.get("/usuarios", requierePermiso("USUARIOS_VER"), usuarios.listarUsuarios);
+router.post("/usuarios/:id/desbloquear", requierePermiso("CUENTAS_DESBLOQUEAR"), usuarios.desbloquearUsuario);
+
 
 export default router;
