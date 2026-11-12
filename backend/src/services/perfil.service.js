@@ -40,9 +40,12 @@ export async function guardar(usuarioId, datos, portal)
     if (portal === "CLINICA")
     {
       const vinculo = await personalRepo.buscarVinculo(usuarioId);
-      if (!vinculo) throw new ErrorHttp(404, "No encontramos tu perfil");
+
+      // Sin clínica solo puede ser el Super Administrador
+      if (!vinculo && !(await esSuperAdmin(usuarioId))) throw new ErrorHttp(404, "No encontramos tu perfil");
+      
       await perfilRepo.actualizarPerfilPersonal({
-        usuarioId, ...datos, esVeterinario: vinculo.rol === "VETERINARIO",
+        usuarioId, ...datos, esVeterinario: vinculo?.rol === "VETERINARIO",
       });
     }
     else
@@ -142,13 +145,44 @@ function agruparHorario(filas)
   }));
 }
 
+// ¿Es el Super Administrador? (el único del portal CLINICA sin vínculo con una clínica)
+async function esSuperAdmin(usuarioId) {
+  return (await usuariosRepo.obtenerRolDePortal(usuarioId, "CLINICA")) === "SUPER_ADMIN";
+}
+
 async function obtenerPersonal(usuarioId)
 {
   const [fila, vinculo] = await Promise.all([
     perfilRepo.obtenerUsuarioPersonal(usuarioId),
     personalRepo.buscarVinculo(usuarioId),
   ]);
-  if (!fila || !vinculo) throw new ErrorHttp(404, "No encontramos tu perfil");
+
+    if (!fila) throw new ErrorHttp(404, "No encontramos tu perfil");
+
+  // Sin vínculo con una clínica: solo es válido para el Super Administrador (administra toda la red)
+  if (!vinculo) {
+
+    if (!(await esSuperAdmin(usuarioId))) throw new ErrorHttp(404, "No encontramos tu perfil");
+    return {
+      usuario: {
+        id: fila.id,
+        nombreCompleto: fila.nombreCompleto,
+        correo: fila.correo,
+        telefono: fila.telefono,
+        fotoPerfilUrl: fila.fotoPerfilUrl,
+        rol: "Super Administrador",
+        estado: fila.estadoNombre,
+        ultimoAcceso: aMomentoUtc(fila.ultimoAcceso),
+        fechaIngreso: fila.fechaRegistro,   // no tiene fecha_ingreso: se usa cuándo se creó su cuenta
+        personalId: null,
+        licencia: null,
+        especialidad: null,
+        presentacion: "",
+      },
+      clinica: { id: null, nombreComercial: "Red POPIM", direccion: "Administra todas las clínicas de la red", logoUrl: null },
+      horario: null,
+    };
+  }
 
   const esVeterinario = vinculo.rol === "VETERINARIO";
   const horario = esVeterinario ? agruparHorario(await personalRepo.horariosDe(vinculo.personalId)) : null;
