@@ -22,3 +22,19 @@ export const cambiarEstadoClinica = (id, activa) =>
 
 export const asignarAdministrador = (id, datos) =>
   peticion(`/super/clinicas/${id}/administrador`, { metodo: "POST", cuerpo: datos });
+
+
+
+// ---------- Usuarios y accesos ----------
+
+// filtros = { q: "texto", rol: "VETERINARIO", estado: "BLOQUEADO" } (todos opcionales)
+export function listarUsuarios({ q = "", rol = "", estado = "" } = {}) {
+  const parametros = new URLSearchParams();
+  if (q.trim()) parametros.set("q", q.trim());
+  if (rol) parametros.set("rol", rol);
+  if (estado) parametros.set("estado", estado);
+  const texto = parametros.toString();
+  return peticion(`/super/usuarios${texto ? `?${texto}` : ""}`);
+}
+
+export const desbloquearUsuario = (id) => peticion(`/super/usuarios/${id}/desbloquear`, { metodo: "POST" });
