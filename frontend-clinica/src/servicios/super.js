@@ -1,6 +1,6 @@
 //
 
-import { peticion } from "@/lib/api";
+import { descargarArchivo, peticion } from "@/lib/api";
 
 // ---------- Clínicas (Super Administrador) ----------
 
@@ -38,3 +38,20 @@ export function listarUsuarios({ q = "", rol = "", estado = "" } = {}) {
 }
 
 export const desbloquearUsuario = (id) => peticion(`/super/usuarios/${id}/desbloquear`, { metodo: "POST" });
+
+
+
+// ---------- Reportes globales ----------
+
+// filtros = { desde: "2026-11-01", hasta: "2026-11-30", clinicaId: "" }
+function textoFiltros({ desde, hasta, clinicaId }) {
+  const parametros = new URLSearchParams({ desde, hasta });
+  if (clinicaId) parametros.set("clinicaId", clinicaId);
+  return parametros.toString();
+}
+
+export const obtenerReporte = (filtros) => peticion(`/super/reportes?${textoFiltros(filtros)}`);
+
+// Pide el PDF que dibuja el backend (pdfkit) y lo descarga con el nombre sugerido
+export const descargarReportePdf = (filtros) =>
+  descargarArchivo(`/super/reportes.pdf?${textoFiltros(filtros)}`, `reporte-popim-${filtros.desde}-al-${filtros.hasta}.pdf`);

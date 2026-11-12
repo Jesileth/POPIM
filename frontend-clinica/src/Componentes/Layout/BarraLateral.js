@@ -70,8 +70,7 @@ export default function BarraLateral({ menu, alCerrarSesion, insignias = {} }) {
   const cerrarMovil = () => setAbiertoMovil(false);
 
   return (
-    <aside className="bg-popim-panel-oscuro text-white lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-64 lg:shrink-0 lg:flex-col">
-      {/* Logo + botón de menú (este último solo en celular) */}
+    <aside className="bg-popim-panel-oscuro text-white print:hidden lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-64 lg:shrink-0 lg:flex-col">      {/* Logo + botón de menú (este último solo en celular) */}
       <div className="flex items-center justify-between gap-3 px-5 py-5 lg:py-6">
         <div className="flex items-center gap-3">
           <span className="flex h-10.5 w-10.5 items-center justify-center rounded-xl bg-popim-primary">
