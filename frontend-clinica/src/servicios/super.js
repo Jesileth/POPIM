@@ -55,3 +55,7 @@ export const obtenerReporte = (filtros) => peticion(`/super/reportes?${textoFilt
 // Pide el PDF que dibuja el backend (pdfkit) y lo descarga con el nombre sugerido
 export const descargarReportePdf = (filtros) =>
   descargarArchivo(`/super/reportes.pdf?${textoFiltros(filtros)}`, `reporte-popim-${filtros.desde}-al-${filtros.hasta}.pdf`);
+
+
+// ---------- Panel general ----------
+export const obtenerPanel = () => peticion("/super/panel");
