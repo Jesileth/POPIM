@@ -15,6 +15,7 @@ import {
 } from "../schemas/super.schemas.js";
 import * as clinicas from "../controllers/superClinicas.controller.js";
 import * as usuarios from "../controllers/superUsuarios.controller.js";
+import * as reportes from "../controllers/superReportes.controller.js";
 
 const router = Router();
 
@@ -37,6 +38,10 @@ router.post("/clinicas/:id/administrador", requierePermiso("CLINICAS_EDITAR"), v
 // ---------- Usuarios y accesos ----------
 router.get("/usuarios", requierePermiso("USUARIOS_VER"), usuarios.listarUsuarios);
 router.post("/usuarios/:id/desbloquear", requierePermiso("CUENTAS_DESBLOQUEAR"), usuarios.desbloquearUsuario);
+
+// ---------- Reportes globales (REQ-021) ----------
+router.get("/reportes", requierePermiso("REPORTES_GLOBALES_VER"), reportes.obtenerReporte);
+router.get("/reportes.pdf", requierePermiso("REPORTES_GLOBALES_EXPORTAR"), reportes.reportePdf);
 
 
 export default router;
