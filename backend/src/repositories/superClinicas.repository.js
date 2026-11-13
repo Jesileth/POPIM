@@ -5,6 +5,7 @@
 
 import crypto from "node:crypto";
 import { pool } from "../config/db.js";
+import { hoyLocal } from "../utils/fechas.js";
 
 // Columnas que comparten la lista y el detalle
 const COLUMNAS = `c.id, c.razon_social AS razonSocial, c.nombre_comercial AS nombreComercial, c.ruc,
@@ -148,9 +149,9 @@ async function vincularAdministrador(conexion, clinicaId, admin, creadoPor) {
   // Si alguna vez estuvo en esta clínica (vínculo inactivo 302), uq_personal no deja otra fila:
   // ON DUPLICATE KEY UPDATE reactiva la que ya existe en vez de fallar
   await conexion.query(
-    `INSERT INTO personal_clinica (id, usuario_id, clinica_id) VALUES (?, ?, ?)
+    `INSERT INTO personal_clinica (id, usuario_id, clinica_id, fecha_ingreso) VALUES (?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE estado_id = 301`,
-    [crypto.randomUUID(), adminId, clinicaId]
+  [crypto.randomUUID(), adminId, clinicaId, hoyLocal()]
   );
 }
 

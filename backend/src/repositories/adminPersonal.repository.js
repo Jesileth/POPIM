@@ -5,6 +5,7 @@
 
 import crypto from "node:crypto";
 import { pool } from "../config/db.js";
+import { hoyLocal } from "../utils/fechas.js";
 
 // Columnas de una persona del personal (se usan en la lista y al buscar una sola)
 const COLUMNAS = `pc.id AS personalId, pc.estado_id AS vinculoEstadoId, pc.fecha_ingreso AS fechaIngreso,
@@ -115,9 +116,9 @@ export async function vincular({ clinicaId, existenteId, persona, rol, veterinar
     // 4) El vínculo. Si ya estuvo en esta clínica (vínculo inactivo), uq_personal no deja
     //    otra fila: ON DUPLICATE KEY UPDATE reactiva la que ya existe.
     await conexion.query(
-      `INSERT INTO personal_clinica (id, usuario_id, clinica_id) VALUES (?, ?, ?)
+      `INSERT INTO personal_clinica (id, usuario_id, clinica_id, fecha_ingreso) VALUES (?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE estado_id = 301`,
-      [crypto.randomUUID(), usuarioId, clinicaId]
+      [crypto.randomUUID(), usuarioId, clinicaId, hoyLocal()]
     );
     const [[vinculo]] = await conexion.query(
       "SELECT id FROM personal_clinica WHERE usuario_id = ? AND clinica_id = ?",
