@@ -243,9 +243,8 @@ function Contenido() {
   // Solo el personal con vínculo activo tiene horario
   const activos = (datos?.personal ?? []).filter((p) => p.vinculoActivo);
   // La persona elegida va en la URL (?persona=...): así "Ver y editar su horario" y "Vincular" llegan directo
-  // (en la URL viene como texto "12"; en la lista es número 12, por eso Number)
-  const deLaUrl = parametros.get("persona");
-  const elegidoId = (deLaUrl ? Number(deLaUrl) : null)
+  
+    const elegidoId = parametros.get("persona")
     ?? (activos.find((p) => p.rol === "VETERINARIO") ?? activos[0])?.personalId
     ?? null;
 
