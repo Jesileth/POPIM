@@ -22,6 +22,21 @@ export const desbloquearPersonal = (personalId) =>
 export const cambiarVinculo = (personalId, activo) =>
   peticion(`/admin/personal/${personalId}/vinculo`, { metodo: "PATCH", cuerpo: { activo } });
 
+// ---------- Horarios y bloqueos ----------
+
+// Horario semanal, horario de la clínica y bloqueos de una persona
+export const obtenerHorario = (personalId) => peticion(`/admin/horarios/${personalId}`);
+
+// turnos = [{ dia: "LUNES", inicio: "08:00", fin: "12:00" }, ...] (reemplaza el horario completo)
+export const guardarHorario = (personalId, turnos) =>
+  peticion(`/admin/horarios/${personalId}`, { metodo: "PUT", cuerpo: { turnos } });
+
+// datos = { inicio: "2026-11-20T08:00", fin: "2026-11-20T12:00", motivo: "Vacaciones" }
+export const crearBloqueo = (personalId, datos) =>
+  peticion(`/admin/horarios/${personalId}/bloqueos`, { metodo: "POST", cuerpo: datos });
+
+export const borrarBloqueo = (bloqueoId) => peticion(`/admin/bloqueos/${bloqueoId}`, { metodo: "DELETE" });
+
 // ---------- Mi clínica ----------
 // TEMPORAL: todavía es de demostración. Se conecta en el paso de "Mi clínica".
 export const guardarClinica = async (datos) => ({ ...datos });
