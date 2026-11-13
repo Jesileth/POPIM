@@ -77,7 +77,6 @@ export default function ActivarCuentaPage() {
     setCargando(true);
     const respuesta = await solicitarCodigoActivacion({
       correo: normalizarEmail(correo),
-      portal: "CLINICA",
     });
     setCargando(false);
 
@@ -87,10 +86,12 @@ export default function ActivarCuentaPage() {
     }
     
     setTokenActivacion(respuesta.datos.tokenActivacion);
+
     setCodigo("");
     setAviso(`Si ${enmascararEmail(correo)} tiene una cuenta pendiente, te enviamos un código. Vence en 15 minutos.`);
     irA("codigo");
   }
+
 
   // ---------- Paso 2: revisar el código ----------
   async function verificar(evento) {
@@ -101,6 +102,7 @@ export default function ActivarCuentaPage() {
     if (error) return;
 
     setCargando(true);
+    // Mandamos el pase + el código (ya NO el correo)
     const respuesta = await verificarActivacion({ tokenActivacion, codigo });
     setCargando(false);
 
