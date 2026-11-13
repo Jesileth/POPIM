@@ -9,8 +9,11 @@ import { autenticar } from "../middlewares/autenticar.js";
 import { cargarPersonal } from "../middlewares/personal.js";
 import { requierePermiso } from "../middlewares/permisos.js";
 import { validar } from "../middlewares/validar.js";
-import { esquemaVincularPersonal, esquemaDatosProfesionales, esquemaVinculo } from "../schemas/admin.schemas.js";
+import {
+  esquemaVincularPersonal, esquemaDatosProfesionales, esquemaVinculo, esquemaHorarioPersonal, esquemaBloqueo,
+} from "../schemas/admin.schemas.js";
 import * as personal from "../controllers/adminPersonal.controller.js";
+import * as horarios from "../controllers/adminHorarios.controller.js";
 
 const router = Router();
 
@@ -25,5 +28,11 @@ router.post("/personal", requierePermiso("PERSONAL_VINCULAR"), validar(esquemaVi
 router.put("/personal/:id/profesional", requierePermiso("PERSONAL_EDITAR"), validar(esquemaDatosProfesionales), personal.actualizarProfesional);
 router.post("/personal/:id/desbloquear", requierePermiso("CUENTAS_DESBLOQUEAR"), personal.desbloquear);
 router.patch("/personal/:id/vinculo", requierePermiso("PERSONAL_DESACTIVAR"), validar(esquemaVinculo), personal.cambiarVinculo);
+
+// ---------- Horarios y bloqueos ----------
+router.get("/horarios/:personalId", requierePermiso("HORARIOS_GESTIONAR"), horarios.obtenerHorario);
+router.put("/horarios/:personalId", requierePermiso("HORARIOS_GESTIONAR"), validar(esquemaHorarioPersonal), horarios.guardarHorario);
+router.post("/horarios/:personalId/bloqueos", requierePermiso("BLOQUEOS_GESTIONAR"), validar(esquemaBloqueo), horarios.crearBloqueo);
+router.delete("/bloqueos/:id", requierePermiso("BLOQUEOS_GESTIONAR"), horarios.borrarBloqueo);
 
 export default router;
