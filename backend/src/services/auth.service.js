@@ -227,9 +227,11 @@ export async function verificarActivacion({ tokenActivacion, codigo }) {
   if (!perfil || perfil.estadoId !== 101) throw ERROR_CODIGO();
 
   const token = await verificacion.validarCodigo(usuarioId, "ACTIVACION", codigo);
-  return {
+  
+    return {
     tokenConfirmacion: verificacion.crearTokenConfirmacion(usuarioId, token.id),
     requiereContrasena: Boolean(perfil.sinContrasena),
+    nombre: perfil.nombreCompleto,
   };
 }
 
