@@ -290,7 +290,7 @@ export default function ActivarCuentaPage() {
             <div className="min-w-0">
               <p className="truncate font-semibold text-popim-ink">{cuenta.nombre}</p>
               <p className="truncate text-sm text-popim-texto">
-                {NOMBRES_ROL[cuenta.rol] ?? cuenta.rol} · {cuenta.clinica}
+              {[NOMBRES_ROL[cuenta.rol] ?? cuenta.rol, cuenta.clinica].filter(Boolean).join(" · ")}
               </p>
             </div>
           </div>
