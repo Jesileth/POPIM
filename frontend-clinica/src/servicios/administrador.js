@@ -1,4 +1,4 @@
-import { peticion } from "@/lib/api";
+import { peticion, subirArchivo } from "@/lib/api";
 
 // ---------- Personal (Administrador de la clínica) ----------
 // Todas van a /api/admin/...: el backend sabe de qué clínica eres por tu sesión,
@@ -38,5 +38,18 @@ export const crearBloqueo = (personalId, datos) =>
 export const borrarBloqueo = (bloqueoId) => peticion(`/admin/bloqueos/${bloqueoId}`, { metodo: "DELETE" });
 
 // ---------- Mi clínica ----------
-// TEMPORAL: todavía es de demostración. Se conecta en el paso de "Mi clínica".
-export const guardarClinica = async (datos) => ({ ...datos });
+
+export const obtenerMiClinica = () => peticion("/admin/clinica");
+
+// datos = { telefono, correo, duracionCitaMin } (lo único que puede cambiar el administrador)
+export const guardarMiClinica = (datos) => peticion("/admin/clinica", { metodo: "PUT", cuerpo: datos });
+
+// archivo = el File que eligió en el <input type="file">; viaja en el campo "foto"
+export const subirLogo = (archivo) => subirArchivo("/admin/clinica/logo", archivo);
+
+export const quitarLogo = () => peticion("/admin/clinica/logo", { metodo: "DELETE" });
+
+// ---------- Inicio ----------
+
+// Tarjetas, citas de hoy por veterinario, avisos, resumen del mes y próximos bloqueos
+export const obtenerInicio = () => peticion("/admin/inicio");
