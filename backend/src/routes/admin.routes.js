@@ -11,13 +11,20 @@ import { requierePermiso } from "../middlewares/permisos.js";
 import { validar } from "../middlewares/validar.js";
 import {
   esquemaVincularPersonal, esquemaDatosProfesionales, esquemaVinculo, esquemaHorarioPersonal, esquemaBloqueo,
+  esquemaMiClinica,
 } from "../schemas/admin.schemas.js";
+import { recibirFoto } from "../middlewares/subida.js";
 import * as personal from "../controllers/adminPersonal.controller.js";
 import * as horarios from "../controllers/adminHorarios.controller.js";
+import * as clinica from "../controllers/adminClinica.controller.js";
+import * as inicio from "../controllers/adminInicio.controller.js";
 
 const router = Router();
 
 router.use(autenticar, cargarPersonal);
+
+// ---------- Inicio ----------
+router.get("/inicio", requierePermiso("ADMIN_INICIO_VER"), inicio.resumen);
 
 // ---------- Personal ----------
 // !! El orden: "/personal/buscar" va antes que las rutas con ":id"
@@ -34,5 +41,11 @@ router.get("/horarios/:personalId", requierePermiso("HORARIOS_GESTIONAR"), horar
 router.put("/horarios/:personalId", requierePermiso("HORARIOS_GESTIONAR"), validar(esquemaHorarioPersonal), horarios.guardarHorario);
 router.post("/horarios/:personalId/bloqueos", requierePermiso("BLOQUEOS_GESTIONAR"), validar(esquemaBloqueo), horarios.crearBloqueo);
 router.delete("/bloqueos/:id", requierePermiso("BLOQUEOS_GESTIONAR"), horarios.borrarBloqueo);
+
+// ---------- Mi clínica ----------
+router.get("/clinica", requierePermiso("CLINICA_PROPIA_VER"), clinica.obtener);
+router.put("/clinica", requierePermiso("CLINICA_PROPIA_EDITAR"), validar(esquemaMiClinica), clinica.actualizar);
+router.post("/clinica/logo", requierePermiso("CLINICA_PROPIA_EDITAR"), recibirFoto, clinica.subirLogo);
+router.delete("/clinica/logo", requierePermiso("CLINICA_PROPIA_EDITAR"), clinica.quitarLogo);
 
 export default router;

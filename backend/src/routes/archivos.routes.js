@@ -29,7 +29,7 @@ router.get("/mascotas/:nombre", (req, res) => {
 */
 //#endregion
 
-const CARPETAS = ["mascotas", "perfiles"];
+const CARPETAS = ["mascotas", "perfiles", "logos"];
 
 router.get("/:carpeta/:nombre", (req, res) => {
   const { carpeta, nombre } = req.params;
