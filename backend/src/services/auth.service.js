@@ -227,11 +227,17 @@ export async function verificarActivacion({ tokenActivacion, codigo }) {
   if (!perfil || perfil.estadoId !== 101) throw ERROR_CODIGO();
 
   const token = await verificacion.validarCodigo(usuarioId, "ACTIVACION", codigo);
-  
-    return {
+
+  // Si es personal de una clínica, también mandamos su rol y la clínica para mostrarlos en el paso 3.
+  // Un propietario o el Super Administrador no tienen vínculo: quedan en null.
+  const vinculo = await personalRepo.buscarVinculo(usuarioId);
+
+  return {
     tokenConfirmacion: verificacion.crearTokenConfirmacion(usuarioId, token.id),
     requiereContrasena: Boolean(perfil.sinContrasena),
     nombre: perfil.nombreCompleto,
+    rol: vinculo?.rol ?? null,                    // "VETERINARIO", "RECEPCIONISTA" o "ADMINISTRADOR"
+    clinica: vinculo?.nombreComercial ?? null,    // "Hospital veterinario Royal Pets"
   };
 }
 
