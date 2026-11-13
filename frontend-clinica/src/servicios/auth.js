@@ -29,8 +29,12 @@ export const iniciarSesion = (datos) =>
 
 export const buscarPerfilPendiente = post("/auth/activacion/buscar");
 export const verificarActivacion = post("/auth/activacion/verificar");
+
 // La persona pide su código: el backend lo manda SOLO al correo guardado en la cuenta pendiente
-export const solicitarCodigoActivacion = post("/auth/activacion/solicitar");
+// La persona pide su código: usamos /buscar, que manda el código SOLO al correo guardado
+export const solicitarCodigoActivacion = (datos) =>
+  post("/auth/activacion/buscar")({ identificador: datos.correo });
+
 export const activarCuenta = (datos) =>
   post("/auth/activacion/confirmar")({
     tokenConfirmacion: datos.tokenConfirmacion,

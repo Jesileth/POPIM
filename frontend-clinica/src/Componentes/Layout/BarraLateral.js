@@ -35,7 +35,6 @@ const ICONOS = {
   consultas: IconClipboardPulse,
   pacientes: IconFileMedical,
   personal: IconPersonBadge,
-    personal: IconPersonBadge,
   // Super Administrador
   panel: IconGrid,
   clinicas: IconBuilding,

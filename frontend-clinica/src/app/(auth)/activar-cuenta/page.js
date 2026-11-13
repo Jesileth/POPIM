@@ -49,6 +49,7 @@ export default function ActivarCuentaPage() {
   const { fijarLema } = usePanel();
   const [paso, setPaso] = useState("correo");
   const [correo, setCorreo] = useState("");
+  const [tokenActivacion, setTokenActivacion] = useState("");
   const [codigo, setCodigo] = useState(""); // las 6 cajitas son "controladas": el valor vive aquí
   const [cuenta, setCuenta] = useState(null); // { tokenConfirmacion, nombre, rol, clinica }
   const [errores, setErrores] = useState({});
@@ -84,6 +85,8 @@ export default function ActivarCuentaPage() {
       setErrorGeneral(respuesta.error);
       return;
     }
+    
+    setTokenActivacion(respuesta.datos.tokenActivacion);
     setCodigo("");
     setAviso(`Si ${enmascararEmail(correo)} tiene una cuenta pendiente, te enviamos un código. Vence en 15 minutos.`);
     irA("codigo");
@@ -98,7 +101,7 @@ export default function ActivarCuentaPage() {
     if (error) return;
 
     setCargando(true);
-    const respuesta = await verificarActivacion({ correo: normalizarEmail(correo), codigo });
+    const respuesta = await verificarActivacion({ tokenActivacion, codigo });
     setCargando(false);
 
     if (!respuesta.ok) {
