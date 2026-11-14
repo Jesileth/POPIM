@@ -13,6 +13,7 @@ import perfilRoutes from "./perfil.routes.js";
 import clinicaRoutes from "./clinica.routes.js";
 import superRoutes from "./super.routes.js";
 import adminRoutes from "./admin.routes.js";
+import consultasRoutes from "./consultas.routes.js";
 
 
 const router = Router();
@@ -29,6 +30,7 @@ router.get("/salud", async (req, res) => {
 router.use("/auth", authRoutes);
 router.use("/catalogos", catalogosRoutes);
 router.use("/mascotas", mascotasRoutes);
+router.use("/consultas", consultasRoutes);
 router.use("/archivos", archivosRoutes);
 router.use(agendaRoutes);
 router.use("/citas", citasRoutes);

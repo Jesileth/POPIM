@@ -13,3 +13,7 @@ export async function consultas(req, res) {
 export async function examenes(req, res) {
   res.json(await expedienteService.examenes(req.usuarioId, req.params.id));
 }
+
+export async function consulta(req, res) {
+  res.json(await expedienteService.consulta(req.usuarioId, req.params.id));
+}
