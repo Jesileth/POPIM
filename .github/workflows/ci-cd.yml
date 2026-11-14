@@ -66,14 +66,18 @@ jobs:
             docker push "$etiqueta"
           done
 
-  # ---------- CD: redesplegar en Railway ----------
-  deploy-railway:
-    needs: build-test-push                    # solo si la prueba pasó
-    if: github.event_name != 'pull_request'   # los PR no despliegan
-    runs-on: ubuntu-latest
-    container: ghcr.io/railwayapp/cli:latest  # imagen oficial del CLI de Railway
-    env:
-      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-    steps:
-      - name: Redesplegar (Railway descarga la nueva imagen :latest)
-        run: railway redeploy --service popim --yes
+  # ---------- CD: Railway despliega solo desde GitHub ----------
+  # Railway está conectado al repo (rama main) con "Wait for CI":
+  # espera a que build-test-push salga el check de listo y entonces construye y despliega.
+  # Este job solo se usaría con un RAILWAY_TOKEN (requiere cuenta verificada).
+  #
+  # deploy-railway:
+  #   needs: build-test-push
+  #   if: github.event_name != 'pull_request'
+  #   runs-on: ubuntu-latest
+  #   container: ghcr.io/railwayapp/cli:latest
+  #   env:
+  #     RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+  #   steps:
+  #     - name: Redesplegar (Railway descarga la nueva imagen :latest)
+  #       run: railway redeploy --service popim --yes
