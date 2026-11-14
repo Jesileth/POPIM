@@ -104,9 +104,10 @@ export async function obtenerUsuarioPersonal(usuarioId)
 {
     const [filas] = await pool.query
     (
-        `SELECT u.id, u.nombre_completo AS nombreCompleto, u.correo, u.telefono,
-                u.foto_perfil_url AS fotoPerfilUrl, u.ultimo_acceso AS ultimoAcceso,
-                ce.nombre AS estadoNombre
+        ` SELECT u.id, u.nombre_completo AS nombreCompleto, u.correo, u.telefono,
+          u.foto_perfil_url AS fotoPerfilUrl, u.ultimo_acceso AS ultimoAcceso,
+          DATE(u.fecha_registro) AS fechaRegistro,
+          ce.nombre AS estadoNombre
            FROM usuarios u
            JOIN catalogo_estados ce ON ce.id = u.estado_id AND ce.entidad = 'USUARIO'
           WHERE u.id = ?`,

@@ -71,7 +71,15 @@ async function armarSesion(usuario, portal) {
       clinica: { id: vinculo.clinicaId, nombreComercial: vinculo.nombreComercial, logoUrl: vinculo.logoUrl },
     });
   }
-
+    else if (portal === "CLINICA") {
+    // Sin vínculo con una clínica: es el Super Administrador (administra toda la red).
+    // Leemos su rol real para que el frontend sepa quién es.
+    Object.assign(datosUsuario, {
+      rol: await usuariosRepo.obtenerRolDePortal(usuario.id, "CLINICA"), // "SUPER_ADMIN"
+      fotoUrl: usuario.foto_perfil_url,
+      clinica: null,
+    });
+  }
   return { usuario: datosUsuario, menu, permisos };
 }
 
@@ -219,9 +227,17 @@ export async function verificarActivacion({ tokenActivacion, codigo }) {
   if (!perfil || perfil.estadoId !== 101) throw ERROR_CODIGO();
 
   const token = await verificacion.validarCodigo(usuarioId, "ACTIVACION", codigo);
+
+  // Si es personal de una clínica, también mandamos su rol y la clínica para mostrarlos en el paso 3.
+  // Un propietario o el Super Administrador no tienen vínculo: quedan en null.
+  const vinculo = await personalRepo.buscarVinculo(usuarioId);
+
   return {
     tokenConfirmacion: verificacion.crearTokenConfirmacion(usuarioId, token.id),
     requiereContrasena: Boolean(perfil.sinContrasena),
+    nombre: perfil.nombreCompleto,
+    rol: vinculo?.rol ?? null,                    // "VETERINARIO", "RECEPCIONISTA" o "ADMINISTRADOR"
+    clinica: vinculo?.nombreComercial ?? null,    // "Hospital veterinario Royal Pets"
   };
 }
 

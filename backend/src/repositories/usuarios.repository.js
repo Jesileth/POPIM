@@ -212,3 +212,19 @@ export async function activarCuentaConCodigo({ usuarioId, tokenId, hash }) {
     conexion.release();
   }
 }
+
+
+
+// Rol del usuario en un portal (ej. SUPER_ADMIN en CLINICA).
+// Sirve para quien no tiene vínculo con una clínica: el Super Administrador.
+export async function obtenerRolDePortal(usuarioId, portal) {
+  const [filas] = await pool.query(
+    `SELECT r.codigo
+       FROM usuario_roles ur
+       JOIN roles r ON r.id = ur.rol_id
+      WHERE ur.usuario_id = ? AND r.portal = ?
+      LIMIT 1`,
+    [usuarioId, portal]
+  );
+  return filas[0]?.codigo ?? null;
+}

@@ -24,11 +24,11 @@ function iniciales(texto = "") {
 
 export default function Encabezado({ usuario, titulo }) {
   const clinica = usuario?.clinica;
-  const nombreClinica = clinica?.nombreComercial ?? "Mi clínica";
+    // El Super Administrador no pertenece a una clínica: administra toda la red
+  const nombreClinica = clinica?.nombreComercial ?? (usuario?.rol === "SUPER_ADMIN" ? "Red POPIM" : "Mi clínica");
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-popim-linea bg-white px-5 py-3.5 lg:px-8">
-      {/* Clínica */}
+    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-popim-linea bg-white px-5 py-3.5 print:hidden lg:px-8">      {/* Clínica */}
       <div className="flex items-center gap-3">
         {clinica?.logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

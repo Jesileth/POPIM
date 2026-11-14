@@ -49,6 +49,7 @@ export default function ActivarCuentaPage() {
   const { fijarLema } = usePanel();
   const [paso, setPaso] = useState("correo");
   const [correo, setCorreo] = useState("");
+  const [tokenActivacion, setTokenActivacion] = useState("");
   const [codigo, setCodigo] = useState(""); // las 6 cajitas son "controladas": el valor vive aquí
   const [cuenta, setCuenta] = useState(null); // { tokenConfirmacion, nombre, rol, clinica }
   const [errores, setErrores] = useState({});
@@ -76,7 +77,6 @@ export default function ActivarCuentaPage() {
     setCargando(true);
     const respuesta = await solicitarCodigoActivacion({
       correo: normalizarEmail(correo),
-      portal: "CLINICA",
     });
     setCargando(false);
 
@@ -84,10 +84,14 @@ export default function ActivarCuentaPage() {
       setErrorGeneral(respuesta.error);
       return;
     }
+    
+    setTokenActivacion(respuesta.datos.tokenActivacion);
+
     setCodigo("");
     setAviso(`Si ${enmascararEmail(correo)} tiene una cuenta pendiente, te enviamos un código. Vence en 15 minutos.`);
     irA("codigo");
   }
+
 
   // ---------- Paso 2: revisar el código ----------
   async function verificar(evento) {
@@ -98,7 +102,8 @@ export default function ActivarCuentaPage() {
     if (error) return;
 
     setCargando(true);
-    const respuesta = await verificarActivacion({ correo: normalizarEmail(correo), codigo });
+    // Mandamos el pase + el código (ya NO el correo)
+    const respuesta = await verificarActivacion({ tokenActivacion, codigo });
     setCargando(false);
 
     if (!respuesta.ok) {
@@ -285,7 +290,7 @@ export default function ActivarCuentaPage() {
             <div className="min-w-0">
               <p className="truncate font-semibold text-popim-ink">{cuenta.nombre}</p>
               <p className="truncate text-sm text-popim-texto">
-                {NOMBRES_ROL[cuenta.rol] ?? cuenta.rol} · {cuenta.clinica}
+              {[NOMBRES_ROL[cuenta.rol] ?? cuenta.rol, cuenta.clinica].filter(Boolean).join(" · ")}
               </p>
             </div>
           </div>

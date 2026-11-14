@@ -49,7 +49,9 @@ export default function LoginPage() {
       return;
     }
     // replace: así el botón "atrás" no regresa al login
-    router.replace(respuesta.datos?.usuario?.rol === "ADMINISTRADOR" ? "/admin-inicio" : "/agenda");
+       // Cada rol tiene su pantalla de inicio; el resto (recepción y veterinario) va a la agenda
+    const INICIO_POR_ROL = { ADMINISTRADOR: "/admin-inicio", SUPER_ADMIN: "/super" };
+    router.replace(INICIO_POR_ROL[respuesta.datos?.usuario?.rol] ?? "/agenda");
   }
 
   return (
