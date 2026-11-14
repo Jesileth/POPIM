@@ -1,0 +1,79 @@
+name: CI/CD POPIM -> GHCR -> Railway
+
+on:
+  push:
+    branches: [main]          # solo main despliega
+  pull_request:
+    branches: [main]          # un PR hacia main solo construye y prueba
+  workflow_dispatch:          # botón "Run workflow" para correrlo a mano
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  # ---------- CI: construir, probar y publicar la imagen ----------
+  build-test-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: 1. Descargar el código
+        uses: actions/checkout@v4
+
+      - name: 2. Construir la imagen (backend + 2 portales + nginx)
+        run: docker build -t popim:test .
+
+      - name: 3. Prueba sencilla (levantar el contenedor y hacer curl)
+        run: |
+          docker run -d --name app -p 8080:8080 popim:test
+          sleep 10
+          curl -s  http://localhost:8080/api/salud      | grep -q '"servidor":"ok"'
+          echo "✅ backend responde por /api"
+          curl -sL http://localhost:8080/login          | grep -qi 'POPIM'
+          echo "✅ portal del propietario responde en /"
+          curl -sL http://localhost:8080/clinica/login  | grep -qi 'POPIM'
+          echo "✅ portal de la clínica responde en /clinica"
+
+      - name: 4. Logs del contenedor (solo si falló)
+        if: failure()
+        run: docker logs app
+
+      - name: 5. Login en GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 6. Calcular tags (latest + sha)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/popim
+          tags: |
+            type=raw,value=latest
+            type=sha
+
+      - name: 7. Publicar en GHCR la misma imagen que se probó
+        if: github.event_name != 'pull_request'
+        env:
+          ETIQUETAS: ${{ steps.meta.outputs.tags }}
+        run: |
+          for etiqueta in $ETIQUETAS; do
+            docker tag popim:test "$etiqueta"
+            docker push "$etiqueta"
+          done
+
+  # ---------- CD: redesplegar en Railway ----------
+  deploy-railway:
+    needs: build-test-push                    # solo si la prueba pasó
+    if: github.event_name != 'pull_request'   # los PR no despliegan
+    runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest  # imagen oficial del CLI de Railway
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    steps:
+      - name: Redesplegar (Railway descarga la nueva imagen :latest)
+        run: railway redeploy --service popim --yes

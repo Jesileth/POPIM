@@ -1,0 +1,12 @@
+
+
+**/node_modules
+**/.next
+**/.env
+**/.env*
+**/*.pem
+backend/uploads
+backend/scripts/salida
+.git
+.github
+**/*.md
