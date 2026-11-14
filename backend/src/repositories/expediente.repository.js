@@ -37,7 +37,7 @@ export async function listarConsultas(mascotaId) {
        LEFT JOIN usuarios u ON u.id = pc.usuario_id
        LEFT JOIN perfil_veterinario pv ON pv.usuario_id = pc.usuario_id
        LEFT JOIN especialidades esp ON esp.id = pv.especialidad_id
-      WHERE ex.mascota_id = ?
+      WHERE ex.mascota_id = ? AND c.fecha_cierre IS NOT NULL
       ORDER BY c.fecha_inicio DESC`,
     [mascotaId]
   );
@@ -53,7 +53,7 @@ export async function listarExamenes(mascotaId) {
        FROM resultados_examen re
        JOIN expedientes_clinicos ex ON ex.id = re.expediente_id
        JOIN tipos_examen te ON te.id = re.tipo_examen_id
-      WHERE ex.mascota_id = ? AND c.fecha_cierre IS NOT NULL
+      WHERE ex.mascota_id = ?
       ORDER BY re.fecha_carga DESC`,
     [mascotaId]
   );
