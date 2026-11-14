@@ -15,7 +15,8 @@ export default function EnConstruccion({ modulo = "Este módulo", pendiente = "P
     <section className="mx-auto flex max-w-3xl flex-col items-center gap-6 rounded-3xl border border-popim-linea bg-white px-6 py-10 text-center sm:px-10">
       <div className="w-full max-w-md overflow-hidden rounded-2xl border border-popim-linea">
         <Image
-          src="/Imagenes/Perrito Programador.jpg"
+          //src="/Imagenes/Perrito Programador.jpg"
+          src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/Imagenes/Perrito Programador.jpg`}
           alt="Perrito con lentes trabajando frente a una computadora"
           width={736}
           height={541}

@@ -10,7 +10,8 @@ export default function HeaderPopim() {
       }}
     >
       <Image
-        src="/Imagenes/LogoPopim.png"
+        // src="/Imagenes/LogoPopim.png"
+        src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/Imagenes/LogoPopim.png`}
         alt="Mascota de POPIM"
         width={72}
         height={72}
